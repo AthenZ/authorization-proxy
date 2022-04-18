@@ -38,8 +38,8 @@ contributors:
 	git log --format='%aN <%aE>' | sort -fu > CONTRIBUTORS
 
 docker-push:
-	sudo docker build --pull=true --file=Dockerfile -t yahoojapan/authorization-proxy:latest .
-	sudo docker push yahoojapan/authorization-proxy:latest
+	sudo docker build --pull=true --file=Dockerfile -t docker.io/yahoojapan/authorization-proxy:latest .
+	sudo docker push docker.io/yahoojapan/authorization-proxy:latest
 
 coverage:
 	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...

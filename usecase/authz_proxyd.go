@@ -26,13 +26,13 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/yahoojapan/authorization-proxy/v4/config"
-	"github.com/yahoojapan/authorization-proxy/v4/handler"
-	"github.com/yahoojapan/authorization-proxy/v4/infra"
-	"github.com/yahoojapan/authorization-proxy/v4/router"
-	"github.com/yahoojapan/authorization-proxy/v4/service"
+	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/handler"
+	"github.com/AthenZ/authorization-proxy/v4/infra"
+	"github.com/AthenZ/authorization-proxy/v4/router"
+	"github.com/AthenZ/authorization-proxy/v4/service"
 
-	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 )
 
 // AuthzProxyDaemon represents Authorization Proxy daemon behavior.

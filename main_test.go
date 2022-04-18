@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
 )
 
 func TestParseParams(t *testing.T) {

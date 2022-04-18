@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 
 	"github.com/kpango/glg"
 )

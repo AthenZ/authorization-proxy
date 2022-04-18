@@ -29,8 +29,8 @@ import (
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
 
-	"github.com/yahoojapan/authorization-proxy/v4/config"
-	"github.com/yahoojapan/authorization-proxy/v4/service"
+	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/service"
 )
 
 // Func represents the a handle function type

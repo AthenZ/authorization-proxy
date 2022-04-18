@@ -3,7 +3,7 @@ package service
 import (
 	"net/http"
 
-	"github.com/yahoojapan/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/config"
 )
 
 // Option represents a functional option

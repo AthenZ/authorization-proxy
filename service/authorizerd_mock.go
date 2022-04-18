@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"net/http"
 
-	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 )
 
 // AuthorizerdMock is a mock of Authorizerd

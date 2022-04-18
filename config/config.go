@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 
 	"github.com/pkg/errors"
 	yaml "gopkg.in/yaml.v2"

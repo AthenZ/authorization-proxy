@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/pkg/errors"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
 )
 
 func TestWithServerConfig(t *testing.T) {
