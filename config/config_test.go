@@ -23,9 +23,8 @@ import (
 	"testing"
 	"time"
 
-	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
-
 	"github.com/kpango/glg"
+	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
 )
 
 func TestNew(t *testing.T) {
