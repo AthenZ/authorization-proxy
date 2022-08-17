@@ -2,7 +2,7 @@
 
 [![License: Apache](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
-[![Docker Image Version (tag latest)](https://img.shields.io/docker/v/yahoojapan/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/yahoojapan/authorization-proxy/tags)
+[![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)
 [![Go Report Card](https://goreportcard.com/badge/github.com/AthenZ/authorization-proxy)](https://goreportcard.com/report/github.com/AthenZ/authorization-proxy)
 [![GoDoc](http://godoc.org/github.com/AthenZ/authorization-proxy?status.svg)](http://godoc.org/github.com/AthenZ/authorization-proxy)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
@@ -21,10 +21,8 @@
     - [HTTP request headers](#http-request-headers)
 - [Features to Debug](#features-to-debug)
 - [Configuration](#configuration)
-- [License](#license)
 - [Contributor License Agreement](#contributor-license-agreement)
 - [About releases](#about-releases)
-- [Authors](#authors)
 
 <!-- /TOC -->
 
@@ -37,7 +35,7 @@ Client request can be authenticated and authorized by:
 1. Role token in the HTTP/HTTPS request header
 1. Role certificate on mTLS
 
-Requires go 1.16 or later.
+Requires go 1.18 or later.
 
 ## Use case
 
@@ -115,4 +113,4 @@ Note that only for contributions to the `authorization-proxy` repository on the 
 
 - Releases
     - [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
-    - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/yahoojapan/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/yahoojapan/authorization-proxy/tags)
+    - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)
