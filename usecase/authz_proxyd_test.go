@@ -775,6 +775,10 @@ func Test_newAuthzD(t *testing.T) {
 						Policy: config.Policy{
 							ResourcePrefix: "/public",
 						},
+						RoleToken: config.RoleToken{
+							Enable:         true,
+							RoleAuthHeader: "Athenz-Role-Auth",
+						},
 					},
 				},
 			},
