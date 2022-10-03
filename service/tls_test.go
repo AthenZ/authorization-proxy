@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yahoojapan/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/config"
 )
 
 func TestNewTLSConfig(t *testing.T) {
