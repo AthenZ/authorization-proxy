@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/yahoojapan/authorization-proxy/v4/config"
-	"github.com/yahoojapan/authorization-proxy/v4/service"
+	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/service"
 )
 
 // Option represents a functional option for gRPC Handler

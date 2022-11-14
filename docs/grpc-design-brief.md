@@ -31,7 +31,7 @@ We have updated/changed the implementation in the following layers:
 
 In this layer, we create gRPC handler and pass it to service layer.
 
-[Reference](https://github.com/yahoojapan/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/usecase/authz_proxyd.go#L71-L84)
+[Reference](https://github.com/AthenZ/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/usecase/authz_proxyd.go#L71-L84)
 
 #### Service layer
 
@@ -43,11 +43,11 @@ In this layer, we implemented gRPC reverse proxy handler.
 
 When the value of the configuration `proxy.scheme` is set to `grpc`, the gRPC handler will be created, and the server will start with gRPC mode.
 
-[Reference](https://github.com/yahoojapan/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/config/config.go#L133)
+[Reference](https://github.com/AthenZ/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/config/config.go#L133)
 
 If it is not `grpc`, nil will be returned, and the service layer will start with HTTP mode.
 
-[Reference](https://github.com/yahoojapan/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/handler/grpc.go)
+[Reference](https://github.com/AthenZ/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/handler/grpc.go)
 
 It retrieves the role token from the gRPC metadata, and authorize it using the athenz-authorizer.
 
@@ -143,7 +143,7 @@ Due to the limitation of gRPC, each RPC endpoint support only 1 resource, a sepa
 
 For the reasons above, currently Vald team decided to hardcode `grpc` in the action field and use the when performing authentication and authorization check.
 
-[Reference](https://github.com/yahoojapan/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/handler/grpc.go#L67)
+[Reference](https://github.com/AthenZ/authorization-proxy/blob/1e14186eb1dd959e246a18be98c92d40a677a56e/handler/grpc.go#L67)
 
 #### Policy Resources
 

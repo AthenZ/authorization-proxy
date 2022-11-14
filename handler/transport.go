@@ -21,9 +21,9 @@ import (
 	"strconv"
 	"strings"
 
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
-	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
 
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
