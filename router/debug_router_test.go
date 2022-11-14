@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/handler"
+	"github.com/AthenZ/authorization-proxy/v4/service"
 	"github.com/kpango/glg"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
-	"github.com/yahoojapan/authorization-proxy/v4/handler"
-	"github.com/yahoojapan/authorization-proxy/v4/service"
 )
 
 func TestNewDebugRouter(t *testing.T) {

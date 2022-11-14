@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/pkg/errors"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
 	"google.golang.org/grpc"
 )
 

@@ -31,8 +31,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/kpango/glg"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
 )
 
 // Server represents a authorization proxy server behavior

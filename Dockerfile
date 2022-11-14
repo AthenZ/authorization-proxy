@@ -4,7 +4,7 @@ RUN set -eux \
     && apk --no-cache add ca-certificates \
     && apk --no-cache add --virtual build-dependencies cmake g++ make unzip curl git
 
-WORKDIR ${GOPATH}/src/github.com/yahoojapan/authorization-proxy
+WORKDIR ${GOPATH}/src/github.com/AthenZ/authorization-proxy
 
 COPY go.mod .
 COPY go.sum .
@@ -39,7 +39,7 @@ RUN ldd "/usr/bin/${APP_NAME}"\
 # Start From Scratch For Running Environment
 FROM scratch
 # FROM alpine:latest
-LABEL maintainer "kpango <i.can.feel.gravity@gmail.com>"
+LABEL maintainer "cncf-athenz-maintainers@lists.cncf.io"
 
 ENV APP_NAME authorization-proxy
 

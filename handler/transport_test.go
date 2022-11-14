@@ -6,10 +6,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/service"
 	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
-
-	"github.com/yahoojapan/authorization-proxy/v4/config"
-	"github.com/yahoojapan/authorization-proxy/v4/service"
 )
 
 type readCloseCounter struct {

@@ -21,8 +21,8 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/pkg/errors"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
 )
 
 // NewTLSConfig returns a *tls.Config struct or error.
