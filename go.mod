@@ -4,14 +4,14 @@ go 1.19
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.106.0
-	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.5.1-0.20221114084208-78de9daaa7d5
+	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.5.1
 	github.com/golang/mock => github.com/golang/mock v1.6.0
 	github.com/golang/protobuf => github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp => github.com/google/go-cmp v0.5.9
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20221112000123-84eb7ad69597
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	golang.org/x/crypto => golang.org/x/crypto v0.2.0
-	golang.org/x/exp => golang.org/x/exp v0.0.0-20221111204811-129d8d6c17ab
+	golang.org/x/exp => golang.org/x/exp v0.0.0-20221114191408-850992195362
 	golang.org/x/image => golang.org/x/image v0.1.0
 	golang.org/x/lint => golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/mobile => golang.org/x/mobile v0.0.0-20221110043201-43a038452099
@@ -27,7 +27,7 @@ replace (
 	golang.org/x/xerrors => golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/api => google.golang.org/api v0.103.0
 	google.golang.org/appengine => google.golang.org/appengine v1.6.7
-	google.golang.org/genproto => google.golang.org/genproto v0.0.0-20221111202108-142d8a6fa32e
+	google.golang.org/genproto => google.golang.org/genproto v0.0.0-20221114212237-e4508ebdbee1
 	google.golang.org/grpc => google.golang.org/grpc v1.50.1
 	google.golang.org/protobuf => google.golang.org/protobuf v1.28.1
 )

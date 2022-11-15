@@ -19,7 +19,7 @@ When the user uses the legacy provider sidecar configuration file with the new v
 
 File changes:
 
-https://github.com/yahoojapan/authorization-proxy/pull/83/files
+https://github.com/AthenZ/authorization-proxy/commit/79614ab05d4becffb48e1ed89f493a13b1f8791e
 
 We have updated/changed the implementation in the following layers:
 
