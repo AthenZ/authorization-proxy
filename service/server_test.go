@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/mwitkow/grpc-proxy/proxy"
 	"github.com/pkg/errors"
-	"github.com/yahoojapan/authorization-proxy/v4/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/protobuf/types/known/emptypb"

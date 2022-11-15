@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/infra"
 	"github.com/AthenZ/authorization-proxy/v4/service"
 	"github.com/pkg/errors"
-	authorizerd "github.com/yahoojapan/athenz-authorizer/v5"
 )
 
 func TestNew(t *testing.T) {
