@@ -4,7 +4,6 @@ go 1.19
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.106.0
-	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.5.1
 	github.com/golang/mock => github.com/golang/mock v1.6.0
 	github.com/golang/protobuf => github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp => github.com/google/go-cmp v0.5.9
@@ -33,9 +32,9 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 v5.0.0-00010101000000-000000000000
+	github.com/AthenZ/athenz-authorizer/v5 v5.5.1
 	github.com/kpango/glg v1.6.13
-	github.com/mwitkow/grpc-proxy v0.0.0-00010101000000-000000000000
+	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
 	golang.org/x/sync v0.1.0
 	google.golang.org/grpc v1.50.1
