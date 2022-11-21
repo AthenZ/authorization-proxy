@@ -71,6 +71,13 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 
 			*r = *req
 		},
+		ModifyResponse: func(res *http.Response) error {
+			statusCode := res.StatusCode
+			if statusCode != 200 {
+				glg.Debugf("%s -> %s %d", res.Request.RemoteAddr, res.Request.URL, res.StatusCode)
+			}
+			return nil
+		},
 		Transport: &transport{
 			prov:         prov,
 			RoundTripper: transportFromCfg(cfg.Transport),
