@@ -44,6 +44,10 @@ proxy:
     writeBufferSize: 0
     readBufferSize: 0
     forceAttemptHTTP2: true
+  originLog:
+    statusCode:
+      all: false
+      exclude: [200,400]
 authorization:
   athenzDomains:
   - provider-domain1

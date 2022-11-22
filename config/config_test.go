@@ -127,6 +127,12 @@ func TestNew(t *testing.T) {
 						ReadBufferSize:         0,
 						ForceAttemptHTTP2:      true,
 					},
+					OriginLog: OriginLog{
+						StatusCode: StatusCode{
+							All:     false,
+							Exclude: []int{200, 400},
+						},
+					},
 				},
 				Authorization: Authorization{
 					PublicKey: PublicKey{

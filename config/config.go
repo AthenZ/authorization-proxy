@@ -154,6 +154,9 @@ type Proxy struct {
 
 	// Transport exposes http.Transport parameters
 	Transport Transport `yaml:"transport,omitempty"`
+
+	// OriginLog represents log configuration from origin
+	OriginLog OriginLog `yaml:"originLog"`
 }
 
 // Authorization represents the detail authorization configuration.
@@ -285,6 +288,17 @@ type Transport struct {
 	WriteBufferSize        int           `yaml:"writeBufferSize,omitempty"`
 	ReadBufferSize         int           `yaml:"readBufferSize,omitempty"`
 	ForceAttemptHTTP2      bool          `yaml:"forceAttemptHTTP2,omitempty"`
+}
+
+// OriginLog represents log configuration from origin
+type OriginLog struct {
+	StatusCode StatusCode `yaml:"statusCode"`
+}
+
+// StatusCode represents statuscode log configuration
+type StatusCode struct {
+	All     bool  `yaml:"all"`
+	Exclude []int `yaml:"exclude"`
 }
 
 // New returns the decoded configuration YAML file as *Config struct. Returns non-nil error if any.

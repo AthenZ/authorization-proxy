@@ -72,9 +72,14 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 			*r = *req
 		},
 		ModifyResponse: func(res *http.Response) error {
-			statusCode := res.StatusCode
-			if statusCode != 200 {
-				glg.Infof("%s -> %s %d", res.Request.RemoteAddr, res.Request.URL, res.StatusCode)
+			if cfg.OriginLog.StatusCode.All {
+				glg.Infof("method: %s, origin: %s, status code: %d", res.Request.Method, res.Request.URL, res.StatusCode)
+			} else {
+				for _, statusCode := range cfg.OriginLog.StatusCode.Exclude {
+					if statusCode != res.StatusCode {
+						glg.Infof("method: %s, origin: %s, status code: %d", res.Request.Method, res.Request.URL, res.StatusCode)
+					}
+				}
 			}
 			return nil
 		},
