@@ -297,7 +297,7 @@ type OriginLog struct {
 
 // StatusCode represents statuscode log configuration
 type StatusCode struct {
-	All     bool  `yaml:"all"`
+	Enable  bool  `yaml:"enable"`
 	Exclude []int `yaml:"exclude"`
 }
 

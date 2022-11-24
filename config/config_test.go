@@ -129,8 +129,8 @@ func TestNew(t *testing.T) {
 					},
 					OriginLog: OriginLog{
 						StatusCode: StatusCode{
-							All:     false,
-							Exclude: []int{200, 400},
+							Enable:  true,
+							Exclude: []int{200},
 						},
 					},
 				},
