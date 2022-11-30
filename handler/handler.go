@@ -45,6 +45,19 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 
 	host := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 
+	var modifyResponse func(res *http.Response) error = nil
+	if cfg.OriginLog.StatusCode.Enable {
+		modifyResponse = func(res *http.Response) error {
+			for _, statusCode := range cfg.OriginLog.StatusCode.Exclude {
+				if statusCode == res.StatusCode {
+					return nil
+				}
+			}
+			glg.Infof("Origin request: %s %s, Response: status code: %d", res.Request.Method, res.Request.URL, res.StatusCode)
+			return nil
+		}
+	}
+
 	return &httputil.ReverseProxy{
 		BufferPool: bp,
 		Director: func(r *http.Request) {
@@ -71,6 +84,7 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 
 			*r = *req
 		},
+		ModifyResponse: modifyResponse,
 		Transport: &transport{
 			prov:         prov,
 			RoundTripper: transportFromCfg(cfg.Transport),

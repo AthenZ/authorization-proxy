@@ -534,6 +534,25 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			name: "check originlog is used",
+			args: args{
+				cfg: config.Proxy{
+					OriginLog: config.OriginLog{
+						StatusCode: config.StatusCode{
+							Enable:  true,
+							Exclude: []int{},
+						},
+					},
+				},
+			},
+			checkFunc: func(h http.Handler) error {
+				if h.(*httputil.ReverseProxy).ModifyResponse == nil {
+					return errors.Errorf("unexpected ModifyResponse")
+				}
+				return nil
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
