@@ -101,7 +101,7 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 		pch := g.athenz.Start(ctx)
 
 		for err := range pch {
-			if err != nil {
+			if err != nil && err != ctx.Err() {
 				glg.Errorf("pch: %v", err)
 				// count errors by cause
 				cause := errors.Cause(err).Error()
@@ -120,12 +120,11 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 	// handle proxy server error, return on server shutdown done
 	eg.Go(func() error {
 		errs := <-g.server.ListenAndServe(ctx)
+		if len(errs) == 0 || len(errs) == 1 && errors.Cause(errs[0]) == ctx.Err() {
+			return nil
+		}
 		glg.Errorf("sch: %v", errs)
 
-		if len(errs) == 0 {
-			// cannot be nil so that the context can cancel
-			return errors.New("")
-		}
 		var baseErr error
 		for i, err := range errs {
 			if i == 0 {
@@ -156,8 +155,10 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 			perrs = append(perrs, errors.WithMessagef(errors.New(errMsg), "authorizerd: %d times appeared", count))
 		}
 
-		// proxy server go func, should always return not nil error
-		ech <- append(perrs, err)
+		if err != nil {
+			ech <- append(perrs, err)
+		}
+		ech <- perrs
 	}()
 
 	return ech

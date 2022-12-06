@@ -118,13 +118,19 @@ func run(cfg config.Config) []error {
 
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
 
+	isSignal := false
 	for {
 		select {
-		case <-sigCh:
+		case sig := <-sigCh:
+			glg.Infof("authorization-proxy received signal: %v", sig)
+			isSignal = true
 			cancel()
-			glg.Warn("Got authorization-proxy server shutdown signal...")
+			glg.Warn("authorization-proxy main process shutdown...")
 		case errs := <-ech:
-			return errs
+			if !isSignal || len(errs) != 1 || errs[0] != ctx.Err() {
+				return errs
+			}
+			return nil
 		}
 	}
 }
@@ -172,6 +178,8 @@ func main() {
 		glg.Fatal(emsg)
 		return
 	}
+	glg.Info("authorization-proxy main process shutdown success")
+	os.Exit(1)
 }
 
 func getVersion() string {
