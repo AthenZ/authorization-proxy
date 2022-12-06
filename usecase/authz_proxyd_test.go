@@ -219,10 +219,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				args: args{
 					ctx: ctx,
 				},
-				wantErrs: []error{
-					errors.WithMessage(context.Canceled, "authorizerd: 1 times appeared"),
-					context.Canceled,
-				},
+				wantErrs: []error{},
 				checkFunc: func(got <-chan []error, wantErrs []error) error {
 					cancel()
 					mux := &sync.Mutex{}
@@ -287,7 +284,6 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 					ctx: ctx,
 				},
 				wantErrs: []error{
-					errors.WithMessage(context.Canceled, "authorizerd: 1 times appeared"),
 					errors.WithMessage(dummyErr, "server fails"),
 				},
 				checkFunc: func(got <-chan []error, wantErrs []error) error {
@@ -366,8 +362,6 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				},
 				wantErrs: []error{
 					errors.WithMessage(errors.Cause(errors.WithMessage(dummyErr, "authorizer daemon fails")), "authorizerd: 3 times appeared"),
-					errors.WithMessage(context.Canceled, "authorizerd: 1 times appeared"),
-					context.Canceled,
 				},
 				checkFunc: func(got <-chan []error, wantErrs []error) error {
 					cancel()
@@ -436,10 +430,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				args: args{
 					ctx: ctx,
 				},
-				wantErrs: []error{
-					errors.WithMessage(context.Canceled, "authorizerd: 1 times appeared"),
-					errors.New(""),
-				},
+				wantErrs: []error{},
 				checkFunc: func(got <-chan []error, wantErrs []error) error {
 					cancel()
 					mux := &sync.Mutex{}
@@ -509,7 +500,6 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 					ctx: ctx,
 				},
 				wantErrs: []error{
-					errors.WithMessage(context.Canceled, "authorizerd: 1 times appeared"),
 					errors.Wrap(dummyErr, context.Canceled.Error()),
 				},
 				checkFunc: func(got <-chan []error, wantErrs []error) error {
