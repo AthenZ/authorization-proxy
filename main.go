@@ -122,10 +122,10 @@ func run(cfg config.Config) []error {
 	for {
 		select {
 		case sig := <-sigCh:
-			glg.Infof("authorization-proxy received signal: %v", sig)
+			glg.Infof("authorization proxy received signal: %v", sig)
 			isSignal = true
 			cancel()
-			glg.Warn("authorization-proxy main process shutdown...")
+			glg.Warn("authorization proxy main process shutdown...")
 		case errs := <-ech:
 			if !isSignal || len(errs) != 1 || errs[0] != ctx.Err() {
 				return errs
@@ -178,7 +178,7 @@ func main() {
 		glg.Fatal(emsg)
 		return
 	}
-	glg.Info("authorization-proxy main process shutdown success")
+	glg.Info("authorization proxy main process shutdown success")
 	os.Exit(1)
 }
 
