@@ -271,7 +271,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 			return errs
 		}
 
-		shutdownSrvs := func(errs []error) {
+		shutdownSrvs := func(errs []error) []error {
 			if s.hcRunning {
 				glg.Info("authorization proxy health check server will shutdown...")
 				errs = appendErr(errs, s.hcShutdown(context.Background()))
@@ -286,9 +286,12 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 			}
 			if s.dRunning {
 				glg.Info("authorization proxy debug server will shutdown...")
-				appendErr(errs, s.dShutdown(context.Background()))
+				errs = appendErr(errs, s.dShutdown(context.Background()))
 			}
-			glg.Info("authorization proxy has already shutdown gracefully")
+			if len(errs) == 0 {
+				glg.Info("authorization proxy has already shutdown gracefully")
+			}
+			return errs
 		}
 
 		errs := make([]error, 0, 3)
@@ -296,7 +299,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 			select {
 			case <-ctx.Done(): // when context receive done signal, close running servers and return any error
 				s.mu.RLock()
-				shutdownSrvs(errs)
+				errs = shutdownSrvs(errs)
 				s.mu.RUnlock()
 				echan <- appendErr(errs, ctx.Err())
 				return
@@ -307,7 +310,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 				}
 
 				s.mu.RLock()
-				shutdownSrvs(errs)
+				errs = shutdownSrvs(errs)
 				s.mu.RUnlock()
 				echan <- errs
 				return
@@ -318,7 +321,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 				}
 
 				s.mu.RLock()
-				shutdownSrvs(errs)
+				errs = shutdownSrvs(errs)
 				s.mu.RUnlock()
 				echan <- errs
 				return
@@ -329,7 +332,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 				}
 
 				s.mu.RLock()
-				shutdownSrvs(errs)
+				errs = shutdownSrvs(errs)
 				s.mu.RUnlock()
 				echan <- errs
 				return
@@ -340,7 +343,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 				}
 
 				s.mu.RLock()
-				shutdownSrvs(errs)
+				errs = shutdownSrvs(errs)
 				s.mu.RUnlock()
 				echan <- errs
 				return
