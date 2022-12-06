@@ -65,7 +65,7 @@ func routing(m []string, t time.Duration, h handler.Func) http.Handler {
 				for {
 					select {
 					case err := <-ech:
-						if err != nil {
+						if err == nil {
 							return
 						}
 
