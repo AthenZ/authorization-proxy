@@ -66,13 +66,20 @@ func routing(m []string, t time.Duration, h handler.Func) http.Handler {
 					select {
 					case err := <-ech:
 						if err != nil {
-							http.Error(w,
-								fmt.Sprintf("Error: %s\t%s",
-									err.Error(),
-									http.StatusText(http.StatusInternalServerError)),
-								http.StatusInternalServerError)
-							glg.Error(err)
+							return
 						}
+
+						if err == ctx.Err() {
+							glg.Info("Stopped debug router") // TODO: the log message should be checked by wfan
+							return 
+						}
+
+						http.Error(w,
+							fmt.Sprintf("Error: %s\t%s",
+								err.Error(),
+								http.StatusText(http.StatusInternalServerError)),
+							http.StatusInternalServerError)
+						glg.Error(err)
 						return
 					case <-ctx.Done():
 						glg.Errorf("Handler Time Out: %v", time.Since(start))

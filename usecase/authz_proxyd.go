@@ -101,16 +101,24 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 		pch := g.athenz.Start(ctx)
 
 		for err := range pch {
-			if err != nil {
-				glg.Errorf("pch: %v", err)
-				// count errors by cause
-				cause := errors.Cause(err).Error()
-				_, ok := emap[cause]
-				if !ok {
-					emap[cause] = 1
-				} else {
-					emap[cause]++
-				}
+			if err == nil {
+				continue
+			}
+
+			if err == ctx.Err() {
+				 // TODO: the log message should be checked by wfan
+				glg.Info("Stopped Athenz Proxy Daemon Channel")
+				continue 
+			}
+
+			glg.Errorf("pch: %v", err)
+			// count errors by cause
+			cause := errors.Cause(err).Error()
+			_, ok := emap[cause]
+			if !ok {
+				emap[cause] = 1
+			} else {
+				emap[cause]++
 			}
 		}
 
@@ -128,6 +136,12 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 		}
 		var baseErr error
 		for i, err := range errs {
+			if err == ctx.Err() {
+				// TODO: the log message should be checked by wfan
+				glg.Info("Stopped Athenz Proxy Daemon Server")
+				continue 
+			}
+
 			if i == 0 {
 				baseErr = err
 			} else {
