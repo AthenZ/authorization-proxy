@@ -135,13 +135,8 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 			return errors.New("")
 		}
 		var baseErr error
+		// TODO: This part might have to be fixed
 		for i, err := range errs {
-			if err == ctx.Err() {
-				// TODO: the log message should be checked by wfan
-				glg.Info("Stopped Athenz Proxy Daemon Server")
-				continue 
-			}
-
 			if i == 0 {
 				baseErr = err
 			} else {
