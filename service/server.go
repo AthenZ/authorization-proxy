@@ -271,7 +271,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 			return errs
 		}
 
-		shutdownSrvs := func(errs []error) {
+		shutdownSrvs := func(errs []error) []error {
 			if s.hcRunning {
 				glg.Info("authorization proxy health check server will shutdown...")
 				errs = appendErr(errs, s.hcShutdown(context.Background()))
@@ -286,65 +286,50 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 			}
 			if s.dRunning {
 				glg.Info("authorization proxy debug server will shutdown...")
-				appendErr(errs, s.dShutdown(context.Background()))
+				errs = appendErr(errs, s.dShutdown(context.Background()))
 			}
-			glg.Info("authorization proxy has already shutdown gracefully")
+			if len(errs) == 0 {
+				glg.Info("authorization proxy has already shutdown gracefully")
+			}
+			return errs
 		}
 
 		errs := make([]error, 0, 3)
+
+		handleErr := func(err error) {
+			if err != nil {
+				errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
+			}
+			s.mu.RLock()
+			errs = shutdownSrvs(errs)
+			s.mu.RUnlock()
+			echan <- errs
+		}
+
 		for {
 			select {
 			case <-ctx.Done(): // when context receive done signal, close running servers and return any error
 				s.mu.RLock()
-				shutdownSrvs(errs)
+				errs = shutdownSrvs(errs)
 				s.mu.RUnlock()
 				echan <- appendErr(errs, ctx.Err())
 				return
 
 			case err := <-sech: // when authorization proxy server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
 
 			case err := <-gsech: // when authorization proxy grpc server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
 
 			case err := <-hech: // when health check server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
 
 			case err := <-dech: // when debug server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
-
 			}
 		}
 	}()
@@ -364,7 +349,7 @@ func (s *server) dShutdown(ctx context.Context) error {
 	return s.dsrv.Shutdown(dctx)
 }
 
-// apiShutdown returns any error when shutdown the authorization proxy server.
+// apiShutdown returns any error when shutdown the authorization proxy API server.
 // Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s
 func (s *server) apiShutdown(ctx context.Context) error {
 	time.Sleep(s.sdd)
@@ -373,7 +358,7 @@ func (s *server) apiShutdown(ctx context.Context) error {
 	return s.srv.Shutdown(sctx)
 }
 
-// apiShutdown returns any error when shutdown the authorization proxy server.
+// grpcShutdown returns any error when shutdown the authorization proxy gPRC server.
 // Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s
 func (s *server) grpcShutdown() {
 	time.Sleep(s.sdd)

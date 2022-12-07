@@ -43,7 +43,7 @@ func TestNew(t *testing.T) {
 		{
 			name: "Test file content not valid",
 			args: args{
-				path: "../test/data/not_valid_config.yaml",
+				path: "../test/data/invalid_config.yaml",
 			},
 			wantErr: fmt.Errorf("decode file failed: yaml: line 11: could not find expected ':'"),
 		},
