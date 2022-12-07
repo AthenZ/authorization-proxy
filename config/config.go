@@ -63,7 +63,7 @@ type Server struct {
 	// ShutdownTimeout represents the duration before force shutdown.
 	ShutdownTimeout string `yaml:"shutdownTimeout"`
 
-	// ShutdownDelay represents the delay duration between the health check server shutdown and the client sidecar server shutdown.
+	// ShutdownDelay represents the delay duration between the health check server shutdown and the api server shutdown.
 	ShutdownDelay string `yaml:"shutdownDelay"`
 
 	// TLS represents the TLS configuration of the authorization proxy.
