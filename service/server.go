@@ -295,6 +295,17 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 		}
 
 		errs := make([]error, 0, 3)
+
+		handleErr := func(err error) {
+			if err != nil {
+				errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
+			}
+			s.mu.RLock()
+			errs = shutdownSrvs(errs)
+			s.mu.RUnlock()
+			echan <- errs
+		}
+
 		for {
 			select {
 			case <-ctx.Done(): // when context receive done signal, close running servers and return any error
@@ -305,49 +316,20 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 				return
 
 			case err := <-sech: // when authorization proxy server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				errs = shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
 
 			case err := <-gsech: // when authorization proxy grpc server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				errs = shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
 
 			case err := <-hech: // when health check server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				errs = shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
 
 			case err := <-dech: // when debug server returns, close running servers and return any error
-				if err != nil {
-					errs = append(errs, errors.Wrap(err, "close running servers and return any error"))
-				}
-
-				s.mu.RLock()
-				errs = shutdownSrvs(errs)
-				s.mu.RUnlock()
-				echan <- errs
+				handleErr(err)
 				return
-
 			}
 		}
 	}()
