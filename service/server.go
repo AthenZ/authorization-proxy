@@ -349,7 +349,7 @@ func (s *server) dShutdown(ctx context.Context) error {
 	return s.dsrv.Shutdown(dctx)
 }
 
-// apiShutdown returns any error when shutdown the authorization proxy server.
+// apiShutdown returns any error when shutdown the authorization proxy API server.
 // Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s
 func (s *server) apiShutdown(ctx context.Context) error {
 	time.Sleep(s.sdd)
@@ -358,7 +358,7 @@ func (s *server) apiShutdown(ctx context.Context) error {
 	return s.srv.Shutdown(sctx)
 }
 
-// apiShutdown returns any error when shutdown the authorization proxy server.
+// grpcShutdown returns any error when shutdown the authorization proxy gPRC server.
 // Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s
 func (s *server) grpcShutdown() {
 	time.Sleep(s.sdd)
