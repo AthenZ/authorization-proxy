@@ -1,4 +1,3 @@
-<a id="markdown-graceful-shutdown" name="graceful-shutdown"></a>
 # Graceful shutdown
 
 The sidecar server supports graceful shutdown.
@@ -6,12 +5,11 @@ To enable it, set `shutdownTimeout` and `shutdownDelay` to value > 0 in the `con
 
 <!-- TOC -->
 
-- [Graceful shutdown](#graceful-shutdown)
-    - [Rolling update in K8s with graceful shutdown](#rolling-update-in-k8s-with-graceful-shutdown)
+- [Rolling update in K8s with graceful shutdown](#rolling-update-in-k8s-with-graceful-shutdown)
 
 <!-- /TOC -->
+<!--markdownlint-disable MD013-->
 
-<a id="markdown-rolling-update-in-k8s-with-graceful-shutdown" name="rolling-update-in-k8s-with-graceful-shutdown"></a>
 ## Rolling update in K8s with graceful shutdown
 
 1. make sure the `strategy` is set in the deployment

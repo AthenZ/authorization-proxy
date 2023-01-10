@@ -1,5 +1,23 @@
 # Athenz provider sidecar with gRPC support
 
+<!-- TOC -->
+
+- [How do we implement this feature?](#how-do-we-implement-this-feature)
+- [Making code changes](#making-code-changes)
+  - [Implementation](#implementation)
+    - [Usecase layer](#usecase-layer)
+    - [Service layer](#service-layer)
+    - [Handler layer](#handler-layer)
+- [Configuration](#configuration)
+- [Design](#design)
+  - [Athenz Provider Sidecar](#athenz-provider-sidecar)
+  - [Athenz Policy](#athenz-policy)
+    - [Policy Action](#policy-action)
+    - [Policy Resources](#policy-resources)
+
+<!-- /TOC -->
+<!--markdownlint-disable MD013-->
+
 ## How do we implement this feature?
 
 Since provider sidecar is implemented in go, we decided to find a library that supports like reverse proxy feature in gRPC interface, and we found [this library](https://github.com/mwitkow/grpc-proxy).
@@ -19,7 +37,7 @@ When the user uses the legacy provider sidecar configuration file with the new v
 
 File changes:
 
-https://github.com/AthenZ/authorization-proxy/commit/79614ab05d4becffb48e1ed89f493a13b1f8791e
+<https://github.com/AthenZ/authorization-proxy/commit/79614ab05d4becffb48e1ed89f493a13b1f8791e>
 
 We have updated/changed the implementation in the following layers:
 
@@ -65,7 +83,7 @@ The resource name is defined in the proto files [here](https://github.com/vdaas/
 
 For example, Vald provides an interface for users to insert vector. Here is the proto file:
 
-https://github.com/vdaas/vald/blob/master/apis/proto/v1/vald/insert.proto
+<https://github.com/vdaas/vald/blob/master/apis/proto/v1/vald/insert.proto>
 
 ```proto
 syntax = "proto3";

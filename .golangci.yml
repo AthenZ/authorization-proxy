@@ -27,3 +27,4 @@ linters:
     - maligned
     - dupword
     - godox
+    - gomoddirectives
