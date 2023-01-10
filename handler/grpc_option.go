@@ -5,26 +5,26 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/service"
 )
 
-// Option represents a functional option for gRPC Handler
+// Option represents a functional option for gRPC Handler.
 type GRPCOption func(*GRPCHandler)
 
 var defaultGRPCOptions = []GRPCOption{}
 
-// WithProxyConfig returns a proxy config functional option
+// WithProxyConfig returns a proxy config functional option.
 func WithProxyConfig(cfg config.Proxy) GRPCOption {
 	return func(h *GRPCHandler) {
 		h.proxyCfg = cfg
 	}
 }
 
-// WithRoleTokenConfig returns a role token config functional option
+// WithRoleTokenConfig returns a role token config functional option.
 func WithRoleTokenConfig(cfg config.RoleToken) GRPCOption {
 	return func(h *GRPCHandler) {
 		h.roleCfg = cfg
 	}
 }
 
-// WithAuthorizationd returns a authorizationd functional option
+// WithAuthorizationd returns a authorizationd functional option.
 func WithAuthorizationd(a service.Authorizationd) GRPCOption {
 	return func(h *GRPCHandler) {
 		h.authorizationd = a

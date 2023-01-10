@@ -33,7 +33,7 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/service"
 )
 
-// Func represents the a handle function type
+// Func represents the a handle function type.
 type Func func(http.ResponseWriter, *http.Request) error
 
 // New creates a handler for handling different HTTP requests based on the given services. It also contains a reverse proxy for handling proxy request.
@@ -64,7 +64,7 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 			u := *r.URL
 			u.Scheme = scheme
 			u.Host = host
-			req, err := http.NewRequest(r.Method, u.String(), r.Body)
+			req, err := http.NewRequestWithContext(r.Context(), r.Method, u.String(), r.Body)
 			if err != nil {
 				glg.Error(errors.Wrap(err, "NewRequest returned error"))
 				r.URL.Scheme = scheme

@@ -42,10 +42,9 @@ type AuthzProxyDaemon interface {
 }
 
 type authzProxyDaemon struct {
-	cfg        config.Config
-	athenz     service.Authorizationd
-	server     service.Server
-	grpcServer service.Server
+	cfg    config.Config
+	athenz service.Authorizationd
+	server service.Server
 }
 
 // New returns a Authorization Proxy daemon, or error occurred.

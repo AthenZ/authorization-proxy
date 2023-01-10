@@ -550,7 +550,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 	}
 }
 
-// this requires integration test
+// this requires integration test.
 func Test_newAuthzD(t *testing.T) {
 	type args struct {
 		cfg config.Config

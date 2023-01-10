@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"reflect"
@@ -56,7 +57,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -101,7 +102,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -151,7 +152,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -187,7 +188,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -224,7 +225,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz/", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -254,7 +255,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz/", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -277,7 +278,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz", nil)
+					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -299,6 +300,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 				tt.args.r.Body = tt.args.body
 			}
 			got, err := tr.RoundTrip(tt.args.r)
+			defer got.Body.Close()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("transport.RoundTrip() error = %v, wantErr %v", err, tt.wantErr)
 				return

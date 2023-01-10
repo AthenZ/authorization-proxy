@@ -34,18 +34,18 @@ type InvalidParam struct {
 }
 
 const (
-	// ProblemJSONContentType represents the media type of the error response
+	// ProblemJSONContentType represents the media type of the error response.
 	ProblemJSONContentType = "application/problem+json"
 
-	// HTTPStatusClientClosedRequest represents a non-standard status code meaning that the client closed the connection before the server answered the request
+	// HTTPStatusClientClosedRequest represents a non-standard status code meaning that the client closed the connection before the server answered the request.
 	HTTPStatusClientClosedRequest = 499
 
-	// ErrMsgUnverified "unauthenticated/unauthorized"
+	// ErrMsgUnverified "unauthenticated/unauthorized".
 	ErrMsgUnverified = "unauthenticated/unauthorized"
 
-	// ErrGRPCMetadataNotFound "grpc metadata not found"
+	// ErrGRPCMetadataNotFound "grpc metadata not found".
 	ErrGRPCMetadataNotFound = "grpc metadata not found"
 
-	// ErrRoleTokenNotFound "role token not found"
+	// ErrRoleTokenNotFound "role token not found".
 	ErrRoleTokenNotFound = "role token not found"
 )

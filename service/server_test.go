@@ -264,10 +264,15 @@ func Test_server_ListenAndServe(t *testing.T) {
 	}
 
 	checkSrvRunning := func(addr string) error {
-		res, err := http.DefaultClient.Get(addr)
+		req, err := http.NewRequestWithContext(context.Background(), "GET", addr, nil)
 		if err != nil {
 			return err
 		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
 		if res.StatusCode != 200 {
 			return fmt.Errorf("Response status code invalid, %v", res.StatusCode)
 		}
@@ -1309,11 +1314,9 @@ func Test_server_grpcShutdown(t *testing.T) {
 		sdd        time.Duration
 		sdt        time.Duration
 	}
-	type args struct{}
 	type test struct {
 		name       string
 		fields     fields
-		args       args
 		beforeFunc func() error
 		checkFunc  func(*server) error
 		afterFunc  func() error
@@ -1493,6 +1496,7 @@ func Test_server_handleHealthCheckRequest(t *testing.T) {
 				},
 				checkFunc: func() error {
 					result := rw.Result()
+					defer result.Body.Close()
 					if header := result.StatusCode; header != http.StatusOK {
 						return fmt.Errorf("Header is not correct, got: %v", header)
 					}

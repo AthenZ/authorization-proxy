@@ -31,7 +31,7 @@ import (
 	"github.com/kpango/glg"
 )
 
-// NewDebugRouter return the ServeMux with debug endpoints
+// NewDebugRouter returns the ServeMux with debug endpoints.
 func NewDebugRouter(cfg config.Server, a service.Authorizationd) *http.ServeMux {
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 32
 	mux := http.NewServeMux()
