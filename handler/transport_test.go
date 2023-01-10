@@ -300,7 +300,9 @@ func Test_transport_RoundTrip(t *testing.T) {
 				tt.args.r.Body = tt.args.body
 			}
 			got, err := tr.RoundTrip(tt.args.r)
-			defer got.Body.Close()
+			if got != nil && got.Body != nil {
+				defer got.Body.Close()
+			}
 			if (err != nil) != tt.wantErr {
 				t.Errorf("transport.RoundTrip() error = %v, wantErr %v", err, tt.wantErr)
 				return
