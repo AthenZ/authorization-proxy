@@ -32,6 +32,7 @@
 Authorization Proxy is an implementation of [Kubernetes sidecar container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/) to provide a common interface for API endpoint authentication and authorization. It caches the policies from [Athenz](https://github.com/yahoo/athenz), and provides a reverse proxy interface to control access on specific URL endpoints.
 
 Client request can be authenticated and authorized by:
+
 1. OAuth2 access token
 1. Role token in the HTTP/HTTPS request header
 1. Role certificate on mTLS

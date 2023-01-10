@@ -181,4 +181,4 @@ We can easily control the authorization rule for each functionality by using wil
 
 For example we can easily enable or disable all insert resources for the user by configuring the Athenz policy like:
 
-`ALLOW	grpc	<athenz.domain>:<role.name>	<athenz.domain>:/vald.v1.insert/*`
+`ALLOW grpc <athenz.domain>:<role.name> <athenz.domain>:/vald.v1.insert/*`
