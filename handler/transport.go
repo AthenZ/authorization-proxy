@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
+	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
 
@@ -32,8 +33,9 @@ import (
 type transport struct {
 	http.RoundTripper
 
-	prov service.Authorizationd
-	cfg  config.Proxy
+	prov        service.Authorizationd
+	cfg         config.Proxy
+	noAuthPaths []*policy.Assertion
 }
 
 // Based on the following.
@@ -41,6 +43,13 @@ type transport struct {
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	for _, urlPath := range t.cfg.OriginHealthCheckPaths {
 		if urlPath == r.URL.Path {
+			glg.Info("Authorization checking skipped on: " + r.URL.Path)
+			r.TLS = nil
+			return t.RoundTripper.RoundTrip(r)
+		}
+	}
+	for _, ass := range t.noAuthPaths {
+		if ass.ResourceRegexp.MatchString(strings.ToLower(r.URL.Path)) {
 			glg.Info("Authorization checking skipped on: " + r.URL.Path)
 			r.TLS = nil
 			return t.RoundTripper.RoundTrip(r)
