@@ -41,18 +41,21 @@ type transport struct {
 // Based on the following.
 // https://github.com/golang/oauth2/blob/bf48bf16ab8d622ce64ec6ce98d2c98f916b6303/transport.go
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
-	for _, urlPath := range t.cfg.OriginHealthCheckPaths {
-		if urlPath == r.URL.Path {
-			glg.Info("Authorization checking skipped on: " + r.URL.Path)
-			r.TLS = nil
-			return t.RoundTripper.RoundTrip(r)
+	// bypass authoriztion
+	if len(r.URL.Path) != 0 { // prevent bypassing empty path on default config
+		for _, urlPath := range t.cfg.OriginHealthCheckPaths {
+			if urlPath == r.URL.Path {
+				glg.Info("Authorization checking skipped on: " + r.URL.Path)
+				r.TLS = nil
+				return t.RoundTripper.RoundTrip(r)
+			}
 		}
-	}
-	for _, ass := range t.noAuthPaths {
-		if ass.ResourceRegexp.MatchString(strings.ToLower(r.URL.Path)) {
-			glg.Info("Authorization checking skipped on: " + r.URL.Path)
-			r.TLS = nil
-			return t.RoundTripper.RoundTrip(r)
+		for _, ass := range t.noAuthPaths {
+			if ass.ResourceRegexp.MatchString(strings.ToLower(r.URL.Path)) {
+				glg.Infof("Authorization checking skipped by %s on: %s", ass.ResourceRegexpString, r.URL.Path)
+				r.TLS = nil
+				return t.RoundTripper.RoundTrip(r)
+			}
 		}
 	}
 

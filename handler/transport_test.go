@@ -548,7 +548,7 @@ func Test_transport_RoundTrip_WildcardBypass(t *testing.T) {
 			wantCloseCount: 0,
 		},
 		{
-			name: "NoAuthPaths '?' NOT match, bypass role token verification",
+			name: "NoAuthPaths '?' NOT match, verify role token",
 			fields: fields{
 				RoundTripper: nil,
 				prov: &service.AuthorizerdMock{
@@ -582,6 +582,37 @@ func Test_transport_RoundTrip_WildcardBypass(t *testing.T) {
 				},
 				{
 					r: wrapRequest("GET", "http://athenz.io/no-auth/123456", nil),
+					body: &readCloseCounter{
+						ReadErr: errors.New("readCloseCounter.Read not implemented"),
+					},
+				},
+			},
+			wantErr:        true,
+			wantCloseCount: 1,
+		},
+		{
+			name: "NoAuthPaths empty string NOT match, verify role token",
+			fields: fields{
+				RoundTripper: nil,
+				prov: &service.AuthorizerdMock{
+					VerifyFunc: func(r *http.Request, act, res string) (authorizerd.Principal, error) {
+						return nil, errors.New("role token error")
+					},
+				},
+				cfg: config.Proxy{},
+				noAuthPaths: []*policy.Assertion{
+					wrapAssertion(""),
+				},
+			},
+			argss: []args{
+				{
+					r: wrapRequest("GET", "http://athenz.io", nil),
+					body: &readCloseCounter{
+						ReadErr: errors.New("readCloseCounter.Read not implemented"),
+					},
+				},
+				{
+					r: wrapRequest("GET", "http://athenz.io/", nil),
 					body: &readCloseCounter{
 						ReadErr: errors.New("readCloseCounter.Read not implemented"),
 					},
