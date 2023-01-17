@@ -114,7 +114,7 @@ func TestNew(t *testing.T) {
 					NoAuthPaths: []string{
 						"/no-auth/any/*",
 						"/no-auth/single/a?c",
-						`/no-auth/no-regex/^$|([{`,
+						"/no-auth/no-regex/^$|([{",
 					},
 					PreserveHost: true,
 					Transport: Transport{
