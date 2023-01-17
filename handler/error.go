@@ -48,4 +48,7 @@ const (
 
 	// ErrRoleTokenNotFound "role token not found"
 	ErrRoleTokenNotFound = "role token not found"
+
+	// ErrInvalidConfig "invalid proxy config".
+	ErrInvalidProxyConfig = "invalid proxy config"
 )

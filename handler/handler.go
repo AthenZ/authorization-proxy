@@ -90,17 +90,7 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 			prov:         prov,
 			RoundTripper: transportFromCfg(cfg.Transport),
 			cfg:          cfg,
-			noAuthPaths: func(paths []string) []*policy.Assertion {
-				as := make([]*policy.Assertion, len(paths))
-				for i, p := range paths {
-					var err error
-					as[i], err = policy.NewAssertion("", ":"+p, "")
-					if err != nil {
-						glg.Fatalf("Invalid proxy.noAuthPaths: %s", p)
-					}
-				}
-				return as
-			}(cfg.NoAuthPaths),
+			noAuthPaths:  mapPathToAssertion(cfg.NoAuthPaths),
 		},
 		ErrorHandler: handleError,
 	}
@@ -166,6 +156,20 @@ func transportFromCfg(cfg config.Transport) *http.Transport {
 
 	glg.Debugf("proxy transport: %+v\n", t)
 	return t
+}
+
+func mapPathToAssertion(paths []string) []*policy.Assertion {
+	as := make([]*policy.Assertion, len(paths))
+	for i, p := range paths {
+		var err error
+		as[i], err = policy.NewAssertion("", ":"+p, "")
+		if err != nil {
+			// NewAssertion() escapes all regex characters and should NOT return ANY errors.
+			glg.Errorf("Invalid proxy.noAuthPaths: %s", p)
+			panic(ErrInvalidProxyConfig)
+		}
+	}
+	return as
 }
 
 func handleError(rw http.ResponseWriter, r *http.Request, err error) {
