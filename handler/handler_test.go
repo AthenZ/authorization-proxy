@@ -15,6 +15,7 @@ import (
 	"time"
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
+	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/infra"
 	"github.com/AthenZ/authorization-proxy/v4/service"
@@ -620,6 +621,93 @@ func Test_transportFromCfg(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := transportFromCfg(tt.args.cfg); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("transportFromCfg() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_mapPathToAssertion(t *testing.T) {
+	type args struct {
+		paths []string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		want      []*policy.Assertion
+		wantPanic any
+	}{
+		{
+			name: "nil list",
+			args: args{
+				paths: nil,
+			},
+			want: []*policy.Assertion{},
+		},
+		{
+			name: "empty list",
+			args: args{
+				paths: []string{},
+			},
+			want: []*policy.Assertion{},
+		},
+		{
+			name: "single assertion",
+			args: args{
+				paths: []string{
+					"/path/656",
+				},
+			},
+			want: func() (as []*policy.Assertion) {
+				a, err := policy.NewAssertion("", ":/path/656", "")
+				if err != nil {
+					panic(err)
+				}
+				as = append(as, a)
+				return as
+			}(),
+		},
+		{
+			name: "multiple assertion",
+			args: args{
+				paths: []string{
+					"/path/672",
+					"/path/673",
+				},
+			},
+			want: func() (as []*policy.Assertion) {
+				a1, err := policy.NewAssertion("", ":/path/672", "")
+				if err != nil {
+					panic(err)
+				}
+				a2, err := policy.NewAssertion("", ":/path/673", "")
+				if err != nil {
+					panic(err)
+				}
+				as = append(as, a1, a2)
+				return as
+			}(),
+		},
+		// {
+		// 	name: "invalid assertion",
+		// 	args: args{
+		// 		paths: []string{
+		// 			"no invalid value",
+		// 		},
+		// 	},
+		// 	want:      nil,
+		// 	wantPanic: ErrInvalidProxyConfig,
+		// },
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				err := recover()
+				if err != tt.wantPanic {
+					t.Errorf("mapPathToAssertion() panic = %v, want panic %v", err, tt.wantPanic)
+				}
+			}()
+			if got := mapPathToAssertion(tt.args.paths); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("mapPathToAssertion() = %v, want %v", got, tt.want)
 			}
 		})
 	}

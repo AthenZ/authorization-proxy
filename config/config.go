@@ -146,6 +146,9 @@ type Proxy struct {
 	// Tips for performance: define your health check endpoint with a different length from the most frequently used endpoint, for example, use `/healthcheck` (len: 12) when `/most_used` (len: 10), instead of `/healthccc` (len: 10)
 	OriginHealthCheckPaths []string `yaml:"originHealthCheckPaths"`
 
+	// NoAuthPaths represents endpoints that requires NO authorization. Wildcard characters supported in Athenz policy are supported too.
+	NoAuthPaths []string `yaml:"noAuthPaths"`
+
 	// PreserveHost represents whether to preserve the host header from the request.
 	PreserveHost bool `yaml:"preserveHost"`
 
