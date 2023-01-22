@@ -36,6 +36,13 @@ func Test_transport_RoundTrip(t *testing.T) {
 		}
 		return a
 	}
+	wrapRequest := func(method, url string, body io.Reader) *http.Request {
+		r, err := http.NewRequestWithContext(context.Background(), method, url, body)
+		if err != nil {
+			panic(err)
+		}
+		return r
+	}
 	type fields struct {
 		RoundTripper http.RoundTripper
 		prov         service.Authorizationd
@@ -67,7 +74,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io", nil)
+					r := wrapRequest("GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -112,7 +119,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io", nil)
+					r := wrapRequest("GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -162,7 +169,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io", nil)
+					r := wrapRequest("GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -198,7 +205,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -235,7 +242,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz/", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -265,7 +272,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz/", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -288,7 +295,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://athenz.io/healthz", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -320,7 +327,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/no-auth", nil)
+					r := wrapRequest("GET", "http://athenz.io/no-auth", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -349,7 +356,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/no-auth/", nil)
+					r := wrapRequest("GET", "http://athenz.io/no-auth/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -372,7 +379,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/no-auth", nil)
+					r := wrapRequest("GET", "http://athenz.io/no-auth", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
