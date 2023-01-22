@@ -423,7 +423,7 @@ func Test_transport_RoundTrip_WildcardBypass(t *testing.T) {
 		return a
 	}
 	wrapRequest := func(method, url string, body io.Reader) *http.Request {
-		r, err := http.NewRequest(method, url, body)
+		r, err := http.NewRequestWithContext(context.Background(), method, url, body)
 		if err != nil {
 			panic(err)
 		}
@@ -685,6 +685,9 @@ func Test_transport_RoundTrip_WildcardBypass(t *testing.T) {
 					args.r.Body = args.body
 				}
 				got, err := tr.RoundTrip(args.r)
+				if got != nil && got.Body != nil {
+					defer got.Body.Close()
+				}
 				if (err != nil) != tt.wantErr {
 					t.Errorf("transport.RoundTrip() error = %v, wantErr %v", err, tt.wantErr)
 					return
