@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net/http"
@@ -35,6 +36,13 @@ func Test_transport_RoundTrip(t *testing.T) {
 		}
 		return a
 	}
+	wrapRequest := func(method, url string, body io.Reader) *http.Request {
+		r, err := http.NewRequestWithContext(context.Background(), method, url, body)
+		if err != nil {
+			panic(err)
+		}
+		return r
+	}
 	type fields struct {
 		RoundTripper http.RoundTripper
 		prov         service.Authorizationd
@@ -66,7 +74,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r := wrapRequest("GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -111,7 +119,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r := wrapRequest("GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -161,7 +169,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r := wrapRequest("GET", "http://athenz.io", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -197,7 +205,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -234,7 +242,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz/", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -264,7 +272,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz/", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -287,7 +295,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/healthz", nil)
+					r := wrapRequest("GET", "http://athenz.io/healthz", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -319,7 +327,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/no-auth", nil)
+					r := wrapRequest("GET", "http://athenz.io/no-auth", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -348,7 +356,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/no-auth/", nil)
+					r := wrapRequest("GET", "http://athenz.io/no-auth/", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -371,7 +379,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 			},
 			args: args{
 				r: func() *http.Request {
-					r, _ := http.NewRequest("GET", "http://athenz.io/no-auth", nil)
+					r := wrapRequest("GET", "http://athenz.io/no-auth", nil)
 					return r
 				}(),
 				body: &readCloseCounter{
@@ -394,6 +402,9 @@ func Test_transport_RoundTrip(t *testing.T) {
 				tt.args.r.Body = tt.args.body
 			}
 			got, err := tr.RoundTrip(tt.args.r)
+			if got != nil && got.Body != nil {
+				defer got.Body.Close()
+			}
 			if (err != nil) != tt.wantErr {
 				t.Errorf("transport.RoundTrip() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -419,7 +430,7 @@ func Test_transport_RoundTrip_WildcardBypass(t *testing.T) {
 		return a
 	}
 	wrapRequest := func(method, url string, body io.Reader) *http.Request {
-		r, err := http.NewRequest(method, url, body)
+		r, err := http.NewRequestWithContext(context.Background(), method, url, body)
 		if err != nil {
 			panic(err)
 		}
@@ -681,6 +692,9 @@ func Test_transport_RoundTrip_WildcardBypass(t *testing.T) {
 					args.r.Body = args.body
 				}
 				got, err := tr.RoundTrip(args.r)
+				if got != nil && got.Body != nil {
+					defer got.Body.Close()
+				}
 				if (err != nil) != tt.wantErr {
 					t.Errorf("transport.RoundTrip() error = %v, wantErr %v", err, tt.wantErr)
 					return

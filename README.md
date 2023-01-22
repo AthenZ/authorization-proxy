@@ -9,28 +9,30 @@
 
 ![logo](./images/logo.png)
 
-<!-- TOC depthFrom:1 insertAnchor:false -->
+<!-- TOC -->
 
 - [What is Authorization Proxy](#what-is-authorization-proxy)
 - [Use case](#use-case)
-    - [Authorization and Authorization request](#authorization-and-authorization-request)
-        - [Athenz authorizer](#athenz-authorizer)
-        - [Authorization success](#authorization-success)
-        - [Authorization failed](#authorization-failed)
-    - [Mapping rules](#mapping-rules)
-    - [HTTP request headers](#http-request-headers)
+  - [Authorization and Authorization request](#authorization-and-authorization-request)
+    - [Athenz authorizer](#athenz-authorizer)
+    - [Authorization success](#authorization-success)
+    - [Authorization failed](#authorization-failed)
+  - [Mapping rules](#mapping-rules)
+  - [HTTP request headers](#http-request-headers)
 - [Features to Debug](#features-to-debug)
 - [Configuration](#configuration)
 - [Contributor License Agreement](#contributor-license-agreement)
 - [About releases](#about-releases)
 
 <!-- /TOC -->
+<!--markdownlint-disable MD013-->
 
 ## What is Authorization Proxy
 
 Authorization Proxy is an implementation of [Kubernetes sidecar container](https://kubernetes.io/blog/2015/06/the-distributed-system-toolkit-patterns/) to provide a common interface for API endpoint authentication and authorization. It caches the policies from [Athenz](https://github.com/yahoo/athenz), and provides a reverse proxy interface to control access on specific URL endpoints.
 
 Client request can be authenticated and authorized by:
+
 1. OAuth2 access token
 1. Role token in the HTTP/HTTPS request header
 1. Role certificate on mTLS
@@ -112,5 +114,5 @@ Note that only for contributions to the `authorization-proxy` repository on the 
 ## About releases
 
 - Releases
-    - [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
-    - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)
+  - [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
+  - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)

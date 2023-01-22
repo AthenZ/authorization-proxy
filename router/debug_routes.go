@@ -27,7 +27,7 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/service"
 )
 
-// Route contains information and handler of an API endpoint
+// Route contains information and handler of an API endpoint.
 type Route struct {
 	Name        string
 	Methods     []string

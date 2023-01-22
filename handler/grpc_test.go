@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"crypto/tls"
 	"io"
 	"net"
 	"reflect"
@@ -449,7 +448,6 @@ func TestGRPCHandler_Close(t *testing.T) {
 		proxyCfg       config.Proxy
 		roleCfg        config.RoleToken
 		authorizationd service.Authorizationd
-		tlsCfg         *tls.Config
 		connMap        sync.Map
 		group          singleflight.Group
 	}
@@ -508,7 +506,6 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 		proxyCfg       config.Proxy
 		roleCfg        config.RoleToken
 		authorizationd service.Authorizationd
-		tlsCfg         *tls.Config
 		connMap        sync.Map
 		group          singleflight.Group
 	}
@@ -675,9 +672,6 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 }
 
 func Test_isHealthy(t *testing.T) {
-	type args struct {
-		conn *grpc.ClientConn
-	}
 	type test struct {
 		name       string
 		want       bool

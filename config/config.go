@@ -296,12 +296,12 @@ type Transport struct {
 	ForceAttemptHTTP2      bool          `yaml:"forceAttemptHTTP2,omitempty"`
 }
 
-// OriginLog represents log configuration from origin
+// OriginLog represents log configuration from origin.
 type OriginLog struct {
 	StatusCode StatusCode `yaml:"statusCode"`
 }
 
-// StatusCode represents statuscode log configuration
+// StatusCode represents statuscode log configuration.
 type StatusCode struct {
 	Enable  bool  `yaml:"enable"`
 	Exclude []int `yaml:"exclude"`

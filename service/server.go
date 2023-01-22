@@ -35,7 +35,7 @@ import (
 	"github.com/kpango/glg"
 )
 
-// Server represents a authorization proxy server behavior
+// Server represents an authorization proxy server behavior.
 type Server interface {
 	ListenAndServe(context.Context) <-chan []error
 }
@@ -73,17 +73,17 @@ type server struct {
 }
 
 const (
-	// ContentType represents a HTTP header name "Content-Type"
+	// ContentType represents a HTTP header name "Content-Type".
 	ContentType = "Content-Type"
 
-	// TextPlain represents a HTTP content type "text/plain"
+	// TextPlain represents a HTTP content type "text/plain".
 	TextPlain = "text/plain"
 
-	// CharsetUTF8 represents a UTF-8 charset for HTTP response "charset=UTF-8"
+	// CharsetUTF8 represents a UTF-8 charset for HTTP response "charset=UTF-8".
 	CharsetUTF8 = "charset=UTF-8"
 )
 
-// ErrContextClosed represents a error that the context is closed
+// ErrContextClosed represents a error that the context is closed.
 var ErrContextClosed = errors.New("context Closed")
 
 // NewServer returns a Server interface, which includes authorization proxy server and health check server structs.
@@ -155,7 +155,7 @@ func NewServer(opts ...Option) (Server, error) {
 
 // ListenAndServe returns a error channel, which includes error returned from authorization proxy server.
 // This function start both health check and authorization proxy server, and the server will close whenever the context receive a Done signal.
-// Whenever the server closed, the authorization proxy server will shutdown after a defined duration (cfg.ShutdownDelay), while the health check server will shutdown immediately
+// Whenever the server closed, the authorization proxy server will shutdown after a defined duration (cfg.ShutdownDelay), while the health check server will shutdown immediately.
 func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 	var (
 		echan = make(chan []error, 1)
@@ -350,7 +350,7 @@ func (s *server) dShutdown(ctx context.Context) error {
 }
 
 // apiShutdown returns any error when shutdown the authorization proxy API server.
-// Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s
+// Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s.
 func (s *server) apiShutdown(ctx context.Context) error {
 	time.Sleep(s.sdd)
 	sctx, scancel := context.WithTimeout(ctx, s.sdt)
@@ -359,7 +359,7 @@ func (s *server) apiShutdown(ctx context.Context) error {
 }
 
 // grpcShutdown returns any error when shutdown the authorization proxy gPRC server.
-// Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s
+// Before shutdown the authorization proxy server, it will sleep config.ShutdownDelay to prevent any issue from K8s.
 func (s *server) grpcShutdown() {
 	time.Sleep(s.sdd)
 	s.grpcSrv.GracefulStop()
@@ -369,14 +369,14 @@ func (s *server) grpcShutdown() {
 }
 
 // createHealthCheckServiceMux return a *http.ServeMux object
-// The function will register the health check server handler for given pattern, and return
+// The function will register the health check server handler for given pattern, and return.
 func createHealthCheckServiceMux(pattern string) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc(pattern, handleHealthCheckRequest)
 	return mux
 }
 
-// handleHealthCheckRequest is a handler function for and health check request, which always a HTTP Status OK (200) result
+// handleHealthCheckRequest is a handler function for and health check request, which always a HTTP Status OK (200) result.
 func handleHealthCheckRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.WriteHeader(http.StatusOK)
@@ -388,7 +388,7 @@ func handleHealthCheckRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// listenAndServeAPI return any error occurred when start a HTTPS server, including any error when loading TLS certificate
+// listenAndServeAPI return any error occurred when start a HTTPS server, including any error when loading TLS certificate.
 func (s *server) listenAndServeAPI() error {
 	if !s.cfg.TLS.Enable {
 		return s.srv.ListenAndServe()
@@ -404,7 +404,7 @@ func (s *server) listenAndServeAPI() error {
 	return s.srv.ListenAndServeTLS("", "")
 }
 
-// listenAndGRPCServeAPI return any error occurred when start a HTTPS server, including any error when loading TLS certificate
+// listenAndGRPCServeAPI return any error occurred when start a HTTPS server, including any error when loading TLS certificate.
 func (s *server) listenAndServeGRPCAPI() error {
 	port := strconv.Itoa(s.cfg.Port)
 	l, err := net.Listen("tcp", ":"+port)
