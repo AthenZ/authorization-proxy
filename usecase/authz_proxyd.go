@@ -136,6 +136,13 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 		return baseErr
 	})
 
+	// handle cert refresh goroutine erorr
+	if _, err := time.ParseDuration(g.cfg.Server.TLS.CertRefreshPeriod); g.cfg.Server.TLS.Enable && g.cfg.Server.TLS.CertRefreshPeriod != "" && err == nil {
+		eg.Go(func() error {
+			return g.server.RefreshCertificate(ctx)
+		})
+	}
+
 	// wait for shutdown, and summarize errors
 	go func() {
 		defer close(ech)
