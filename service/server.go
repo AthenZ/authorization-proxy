@@ -17,11 +17,15 @@ limitations under the License.
 package service
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -38,6 +42,7 @@ import (
 // Server represents a authorization proxy server behavior
 type Server interface {
 	ListenAndServe(context.Context) <-chan []error
+	RefreshCertificate(context.Context) error
 }
 
 type server struct {
@@ -50,6 +55,13 @@ type server struct {
 	grpcHandler    grpc.StreamHandler
 	grpcSrvRunning bool
 	grpcCloser     io.Closer
+
+	// server tls
+	srvCrt           *tls.Certificate
+	srvCrtHash       []byte
+	srvCrtKeyHash    []byte
+	srvCrtMu         sync.RWMutex
+	crtRefreshPeriod time.Duration
 
 	// Health Check server
 	hcsrv     *http.Server
@@ -107,7 +119,7 @@ func NewServer(opts ...Option) (Server, error) {
 		}
 
 		if s.cfg.TLS.Enable {
-			cfg, err := NewTLSConfig(s.cfg.TLS)
+			cfg, err := NewTLSConfig(s.cfg.TLS, s)
 			if err != nil {
 				return nil, err
 			}
@@ -138,6 +150,13 @@ func NewServer(opts ...Option) (Server, error) {
 			Handler: s.dsHandler,
 		}
 		s.dsrv.SetKeepAlivesEnabled(true)
+	}
+
+	if s.cfg.TLS.CertRefreshPeriod != "" {
+		s.crtRefreshPeriod, err = time.ParseDuration(s.cfg.TLS.CertRefreshPeriod)
+		if err != nil {
+			glg.Warn(err)
+		}
 	}
 
 	s.sdt, err = time.ParseDuration(s.cfg.ShutdownTimeout)
@@ -393,8 +412,7 @@ func (s *server) listenAndServeAPI() error {
 	if !s.cfg.TLS.Enable {
 		return s.srv.ListenAndServe()
 	}
-
-	cfg, err := NewTLSConfig(s.cfg.TLS)
+	cfg, err := NewTLSConfig(s.cfg.TLS, s)
 	if err == nil && cfg != nil {
 		s.srv.TLSConfig = cfg
 	}
@@ -425,4 +443,69 @@ func (s *server) grpcSrvEnable() bool {
 
 func (s *server) debugSrvEnable() bool {
 	return s.cfg.Debug.Enable
+}
+
+func hash(file string) ([]byte, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return nil, err
+	}
+
+	return h.Sum(nil), nil
+}
+
+// getCertificate return server TLS certificate.
+func (s *server) getCertificate(h *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	s.srvCrtMu.RLock()
+	defer s.srvCrtMu.RUnlock()
+	return s.srvCrt, nil
+}
+
+// RefreshCertificate is refresh certificate function.
+func (s *server) RefreshCertificate(ctx context.Context) error {
+	ticker := time.NewTicker(s.crtRefreshPeriod)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-ticker.C:
+			serverCertHash, err := hash(s.cfg.TLS.CertPath)
+			if err != nil {
+				glg.Error("Failed to refresh server certificate: %s.", err.Error())
+				continue
+			}
+			serverCertKeyHash, err := hash(s.cfg.TLS.KeyPath)
+			if err != nil {
+				glg.Error("Failed to refresh server certificate: %s.", err.Error())
+				continue
+			}
+
+			s.srvCrtMu.Lock()
+
+			different := !bytes.Equal(s.srvCrtHash, serverCertHash) ||
+				!bytes.Equal(s.srvCrtKeyHash, serverCertKeyHash)
+
+			if different { // load and store
+				newCert, err := tls.LoadX509KeyPair(s.cfg.TLS.CertPath, s.cfg.TLS.KeyPath)
+				if err != nil {
+					glg.Error("Failed to refresh server certificate: %s.", err.Error())
+					s.srvCrtMu.Unlock()
+					continue
+				}
+				s.srvCrt = &newCert
+				s.srvCrtHash = serverCertHash
+				s.srvCrtKeyHash = serverCertKeyHash
+				glg.Info("Refreshed server certificate.")
+			}
+
+			s.srvCrtMu.Unlock()
+		}
+	}
 }
