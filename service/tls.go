@@ -29,7 +29,7 @@ import (
 // It reads TLS configuration and initializes *tls.Config struct.
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
-func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
+func NewTLSConfig(cfg config.TLS, s *server) (*tls.Config, error) {
 	t := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CurvePreferences: []tls.CurveID{
@@ -65,7 +65,8 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 		// tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305, // Go 1.8 only
 		// tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305, // Go 1.8 only
 		// },
-		ClientAuth: tls.NoClientCert,
+		ClientAuth:     tls.NoClientCert,
+		GetCertificate: s.getCertificate,
 	}
 
 	cert := config.GetActualValue(cfg.CertPath)
@@ -73,12 +74,26 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 	ca := config.GetActualValue(cfg.CAPath)
 
 	if cert != "" && key != "" {
+		s.srvCrtMu.Lock()
+		defer s.srvCrtMu.Unlock()
+
 		crt, err := tls.LoadX509KeyPair(cert, key)
 		if err != nil {
 			return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
 		}
-		t.Certificates = make([]tls.Certificate, 1)
-		t.Certificates[0] = crt
+
+		crtHash, err := hash(cert)
+		if err != nil {
+			return nil, errors.Wrap(err, "hash(cert)")
+		}
+
+		crtKeyHash, err := hash(key)
+		if err != nil {
+			return nil, errors.Wrap(err, "hash(key)")
+		}
+		s.srvCrt = &crt
+		s.srvCrtHash = crtHash
+		s.srvCrtKeyHash = crtKeyHash
 	}
 
 	if ca != "" {
@@ -89,7 +104,6 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 		t.ClientCAs = pool
 		t.ClientAuth = tls.RequireAndVerifyClientCert
 	}
-
 	return t, nil
 }
 
