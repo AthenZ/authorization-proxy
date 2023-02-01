@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/tls"
 	"io"
 	"net/http"
 
@@ -36,6 +37,13 @@ func WithGRPCHandler(h grpc.StreamHandler) Option {
 func WithGRPCCloser(c io.Closer) Option {
 	return func(s *server) {
 		s.grpcCloser = c
+	}
+}
+
+// WithTLSConfig returns a TLS Config functional option
+func WithTLSConfig(t *tls.Config) Option {
+	return func(s *server) {
+		s.tlsConifg = t
 	}
 }
 
