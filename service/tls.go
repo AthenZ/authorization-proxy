@@ -30,8 +30,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// TLSCertificateCache represents refresh certificate
 type TLSCertificateCache struct {
-	// server tls
 	serverCert        *tls.Certificate
 	serverCertHash    []byte
 	serverCertKeyHash []byte
@@ -114,6 +114,11 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 	return t, nil
 }
 
+// NewTLSConfigWithTLSCertificateCache returns a *TLSConfigWithTLSCertificateCache struct or error.
+// It use to enable the certificate auto-reload feature.
+// It reads TLS configuration and initializes *tls.Config / TLSCertificateCache struct.
+// It initializes TLS configuration, for example the CA certificate and key to start TLS server.
+// Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCertificateCache, error) {
 	tcc := &TLSCertificateCache{}
 	t := &tls.Config{
@@ -229,7 +234,7 @@ func (tcc *TLSCertificateCache) getCertificate(h *tls.ClientHelloInfo) (*tls.Cer
 	return tcc.serverCert, nil
 }
 
-// RefreshCertificate is refresh certificate function.
+// RefreshCertificate is refresh certificate for TLS.
 func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 	ticker := time.NewTicker(tcc.certRefreshPeriod)
 	defer ticker.Stop()
