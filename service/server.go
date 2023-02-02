@@ -18,13 +18,11 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -421,19 +419,4 @@ func (s *server) grpcSrvEnable() bool {
 
 func (s *server) debugSrvEnable() bool {
 	return s.cfg.Debug.Enable
-}
-
-func hash(file string) ([]byte, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return nil, err
-	}
-
-	return h.Sum(nil), nil
 }

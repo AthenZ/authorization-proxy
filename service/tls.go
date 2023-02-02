@@ -19,9 +19,12 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"io"
 	"io/ioutil"
+	"os"
 	"sync"
 	"time"
 
@@ -275,4 +278,19 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 			tcc.serverCertMutex.Unlock()
 		}
 	}
+}
+
+func hash(file string) ([]byte, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return nil, err
+	}
+
+	return h.Sum(nil), nil
 }
