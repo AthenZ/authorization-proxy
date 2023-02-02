@@ -21,10 +21,11 @@ func TestNew(t *testing.T) {
 		cfg config.Config
 	}
 	type test struct {
-		name      string
-		args      args
-		checkFunc func(AuthzProxyDaemon) error
-		wantErr   bool
+		name       string
+		args       args
+		checkFunc  func(AuthzProxyDaemon) error
+		wantErr    bool
+		wantErrStr string
 	}
 	tests := []test{
 		func() test {
@@ -91,7 +92,28 @@ func TestNew(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			wantErr:    true,
+			wantErrStr: "cannot newAuthzD(cfg): error create pubkeyd: invalid refresh period: time: invalid duration \"dummy\"",
+		}, {
+			name: "return error when grpc TLS cert invalid",
+			args: args{
+				cfg: config.Config{
+					Authorization: config.Authorization{
+						RoleToken: config.RoleToken{
+							Enable: true,
+						},
+					},
+					Server: config.Server{
+						TLS: config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/invalid_dummyServer.crt",
+							KeyPath:  "../test/data/invalid_dummyServer.key",
+						},
+					},
+				},
+			},
+			wantErr:    true,
+			wantErrStr: "cannot NewTLSConfig(cfg.Server.TLS): tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input",
 		},
 	}
 	for _, tt := range tests {
@@ -100,6 +122,16 @@ func TestNew(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if err.Error() != tt.wantErrStr {
+					t.Errorf("New() error = %v, wantErrStr = %v", err, tt.wantErrStr)
+					return
+				}
 			}
 			if tt.checkFunc != nil {
 				if err = tt.checkFunc(got); err != nil {

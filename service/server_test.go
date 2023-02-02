@@ -202,34 +202,6 @@ func TestNewServer(t *testing.T) {
 				return nil
 			},
 		},
-		{
-			name: "return error when grpc TLS cert invalid",
-			args: args{
-				opts: []Option{
-					WithGRPCHandler(func(srv interface{}, stream grpc.ServerStream) error {
-						return nil
-					}),
-					WithServerConfig(config.Server{
-						Port: 9999,
-						TLS: config.TLS{
-							Enable:   true,
-							CertPath: "../test/data/invalid_dummyServer.crt",
-							KeyPath:  "../test/data/invalid_dummyServer.key",
-						},
-					}),
-				},
-			},
-			wantErr: errors.New("tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input"),
-			checkFunc: func(got, want Server, gotErr, wantErr error) error {
-				if gotErr.Error() != wantErr.Error() {
-					return errors.Errorf("got error is not matched with want error, got: %v, want: %v", gotErr, wantErr)
-				}
-				if !reflect.DeepEqual(got, want) {
-					return fmt.Errorf("not matched")
-				}
-				return nil
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
