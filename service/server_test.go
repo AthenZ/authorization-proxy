@@ -171,6 +171,7 @@ func TestNewServer(t *testing.T) {
 							KeyPath:  "../test/data/dummyServer.key",
 						},
 					}),
+					WithTLSConfig(&tls.Config{}),
 				},
 			},
 			want: &server{

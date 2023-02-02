@@ -103,6 +103,10 @@ func NewServer(opts ...Option) (Server, error) {
 		o(s)
 	}
 
+	if s.cfg.TLS.Enable && s.tlsConifg == nil {
+		return nil, errors.New("s.cfg.TLS.Enable is true, but s.tlsConifg is nil.")
+	}
+
 	if s.grpcSrvEnable() {
 		gopts := []grpc.ServerOption{
 			grpc.CustomCodec(proxy.Codec()),
