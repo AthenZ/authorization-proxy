@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -130,6 +131,67 @@ func TestNewServer(t *testing.T) {
 			},
 		},
 		{
+			name: "Check HTTPS server address and certificate",
+			args: args{
+				opts: []Option{
+					WithServerConfig(config.Server{
+						Port: 9999,
+						TLS: config.TLS{
+							Enable: true,
+						},
+						HealthCheck: config.HealthCheck{
+							Port:     8080,
+							Endpoint: "/healthz",
+						},
+					}),
+					WithRestHandler(func() http.Handler {
+						return nil
+					}()),
+					WithTLSConfig(func() *tls.Config {
+						cfg, err := NewTLSConfig(config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/dummyServer.crt",
+							KeyPath:  "../test/data/dummyServer.key",
+						})
+						if err != nil {
+							return nil
+						}
+						return cfg
+					}()),
+				},
+			},
+			want: &server{
+				srv: &http.Server{
+					Addr: fmt.Sprintf(":%d", 9999),
+					TLSConfig: func() *tls.Config {
+						cfg, err := NewTLSConfig(config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/dummyServer.crt",
+							KeyPath:  "../test/data/dummyServer.key",
+						})
+						if err != nil {
+							return nil
+						}
+						return cfg
+					}(),
+				},
+			},
+			checkFunc: func(got, want Server, gotErr, wantErr error) error {
+				if !errors.Is(gotErr, wantErr) {
+					return errors.Errorf("got error is not matched with want error, got: %s, want: %s", gotErr, wantErr)
+				}
+				if got.(*server).srv.Addr != want.(*server).srv.Addr {
+					return fmt.Errorf("Server Addr not equals\tgot: %s\twant: %s", got.(*server).srv.Addr, want.(*server).srv.Addr)
+				}
+				gotCert, _ := x509.ParseCertificate(got.(*server).srv.TLSConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.(*server).srv.TLSConfig.Certificates[0].Certificate[0])
+				if gotCert.SerialNumber == nil || gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
+					return fmt.Errorf("Certificate SerialNumber not equals\tgot: %s\twant: %s", got.(*server).srv.TLSConfig.Certificates[0].Leaf.Subject.CommonName, want.(*server).srv.TLSConfig.Certificates[0].Leaf.Subject.CommonName)
+				}
+				return nil
+			},
+		},
+		{
 			name: "Check GRPC server not nil",
 			args: args{
 				opts: []Option{
@@ -171,7 +233,17 @@ func TestNewServer(t *testing.T) {
 							KeyPath:  "../test/data/dummyServer.key",
 						},
 					}),
-					WithTLSConfig(&tls.Config{}),
+					WithTLSConfig(func() *tls.Config {
+						cfg, err := NewTLSConfig(config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/dummyServer.crt",
+							KeyPath:  "../test/data/dummyServer.key",
+						})
+						if err != nil {
+							return nil
+						}
+						return cfg
+					}()),
 				},
 			},
 			want: &server{
