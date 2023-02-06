@@ -275,6 +275,30 @@ func TestNewServer(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			name: "Check TLS.Enable is true and tlsConfig is nil, return error",
+			args: args{
+				opts: []Option{
+					WithServerConfig(config.Server{
+						Port: 9999,
+						TLS: config.TLS{
+							Enable: true,
+						},
+					}),
+				},
+			},
+			want:    nil,
+			wantErr: errors.New("s.cfg.TLS.Enable is true, but s.tlsConifg is nil."),
+			checkFunc: func(got, want Server, gotErr, wantErr error) error {
+				if gotErr.Error() != wantErr.Error() {
+					return errors.Errorf("got error is not matched with want error, got: %s, want: %s", gotErr, wantErr)
+				}
+				if got != nil {
+					return fmt.Errorf("want: nil, got: %s", got)
+				}
+				return nil
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
