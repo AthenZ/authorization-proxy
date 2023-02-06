@@ -25,7 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/AthenZ/authorization-proxy/v4/config"
@@ -35,12 +35,11 @@ import (
 
 // TLSCertificateCache represents refresh certificate
 type TLSCertificateCache struct {
-	serverCert        *tls.Certificate
+	serverCert        atomic.Value
 	serverCertHash    []byte
 	serverCertKeyHash []byte
 	serverCertPath    string
 	serverCertKeyPath string
-	serverCertMutex   sync.RWMutex
 	certRefreshPeriod time.Duration
 }
 
@@ -184,7 +183,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 		if err != nil {
 			return nil, errors.Wrap(err, "hash(key)")
 		}
-		tcc.serverCert = &crt
+		tcc.serverCert.Store(&crt)
 		tcc.serverCertHash = crtHash
 		tcc.serverCertKeyHash = crtKeyHash
 		tcc.serverCertPath = cert
@@ -232,9 +231,7 @@ func NewX509CertPool(path string) (*x509.CertPool, error) {
 
 // getCertificate return server TLS certificate.
 func (tcc *TLSCertificateCache) getCertificate(h *tls.ClientHelloInfo) (*tls.Certificate, error) {
-	tcc.serverCertMutex.RLock()
-	defer tcc.serverCertMutex.RUnlock()
-	return tcc.serverCert, nil
+	return tcc.serverCert.Load().(*tls.Certificate), nil
 }
 
 // RefreshCertificate is refresh certificate for TLS.
@@ -246,6 +243,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
+			glg.Info("Checking to refresh server certificate.")
 			serverCertHash, err := hash(tcc.serverCertPath)
 			if err != nil {
 				glg.Error("Failed to refresh server certificate: %s.", err.Error())
@@ -257,25 +255,20 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				continue
 			}
 
-			tcc.serverCertMutex.Lock()
-
 			different := !bytes.Equal(tcc.serverCertHash, serverCertHash) ||
 				!bytes.Equal(tcc.serverCertKeyHash, serverCertKeyHash)
 
-			if different { // load and store
+			if different {
 				newCert, err := tls.LoadX509KeyPair(tcc.serverCertPath, tcc.serverCertKeyPath)
 				if err != nil {
 					glg.Error("Failed to refresh server certificate: %s.", err.Error())
-					tcc.serverCertMutex.Unlock()
 					continue
 				}
-				tcc.serverCert = &newCert
+				tcc.serverCert.Store(&newCert)
 				tcc.serverCertHash = serverCertHash
 				tcc.serverCertKeyHash = serverCertKeyHash
 				glg.Info("Refreshed server certificate.")
 			}
-
-			tcc.serverCertMutex.Unlock()
 		}
 	}
 }
