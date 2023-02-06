@@ -585,6 +585,80 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				},
 			}
 		}(),
+		func() test {
+			ctx, cancel := context.WithCancel(context.Background())
+			dummyErr := errors.New("dummy")
+			return test{
+				name: "Daemon stops when TLS.Enable = false and CertRefreshPeriod is set",
+				fields: fields{
+					cfg: config.Config{
+						Server: config.Server{
+							TLS: config.TLS{
+								Enable:   false,
+								CertRefreshPeriod: "3d",
+							},
+						},
+					},
+					athenz: &service.AuthorizerdMock{
+						StartFunc: func(ctx context.Context) <-chan error {
+							ech := make(chan error)
+							go func() {
+								defer close(ech)
+								<-ctx.Done()
+								ech <- ctx.Err()
+							}()
+							return ech
+						},
+					},
+					server: &service.ServerMock{
+						ListenAndServeFunc: func(ctx context.Context) <-chan []error {
+							ech := make(chan []error)
+							go func() {
+								defer close(ech)
+								ech <- []error{errors.WithMessage(dummyErr, "server fails")}
+							}()
+							return ech
+						},
+					},
+				},
+				args: args{
+					ctx: ctx,
+				},
+				wantErrs: []error{
+					errors.WithMessage(dummyErr, "server fails"),
+				},
+				checkFunc: func(got <-chan []error, wantErrs []error) error {
+					mux := &sync.Mutex{}
+
+					gotErrs := make([][]error, 0)
+					mux.Lock()
+					go func() {
+						defer mux.Unlock()
+						err, ok := <-got
+						if !ok {
+							return
+						}
+						gotErrs = append(gotErrs, err)
+					}()
+					time.Sleep(time.Second)
+
+					mux.Lock()
+					defer mux.Unlock()
+
+					// check only send errors once and the errors are expected ignoring order
+					sort.Slice(gotErrs[0], getLessErrorFunc(gotErrs[0]))
+					sort.Slice(wantErrs, getLessErrorFunc(wantErrs))
+					gotErrsStr := fmt.Sprintf("%v", gotErrs[0])
+					wantErrsStr := fmt.Sprintf("%v", wantErrs)
+					if len(gotErrs) != 1 || !reflect.DeepEqual(gotErrsStr, wantErrsStr) {
+						return errors.Errorf("Invalid err, got: %v, want: %v", gotErrsStr, wantErrsStr)
+					}
+
+					cancel()
+					return nil
+				},
+			}
+		}(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
