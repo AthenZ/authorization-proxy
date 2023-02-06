@@ -25,6 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -40,6 +41,7 @@ type TLSCertificateCache struct {
 	serverCertKeyHash []byte
 	serverCertPath    string
 	serverCertKeyPath string
+	serverCertMutex   sync.Mutex
 	certRefreshPeriod time.Duration
 }
 
@@ -231,6 +233,7 @@ func NewX509CertPool(path string) (*x509.CertPool, error) {
 
 // getCertificate return server TLS certificate.
 func (tcc *TLSCertificateCache) getCertificate(h *tls.ClientHelloInfo) (*tls.Certificate, error) {
+	// serverCert is atomic.Value, so this can read it without lock.
 	return tcc.serverCert.Load().(*tls.Certificate), nil
 }
 
@@ -254,7 +257,9 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				glg.Error("Failed to refresh server certificate: %s.", err.Error())
 				continue
 			}
-
+			// A lock for when there are other features to update.
+			// serverCert is atomic.Value, so this can read it without lock.
+			tcc.serverCertMutex.Lock()
 			different := !bytes.Equal(tcc.serverCertHash, serverCertHash) ||
 				!bytes.Equal(tcc.serverCertKeyHash, serverCertKeyHash)
 
@@ -262,6 +267,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				newCert, err := tls.LoadX509KeyPair(tcc.serverCertPath, tcc.serverCertKeyPath)
 				if err != nil {
 					glg.Error("Failed to refresh server certificate: %s.", err.Error())
+					tcc.serverCertMutex.Unlock()
 					continue
 				}
 				tcc.serverCert.Store(&newCert)
@@ -269,6 +275,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				tcc.serverCertKeyHash = serverCertKeyHash
 				glg.Info("Refreshed server certificate.")
 			}
+			tcc.serverCertMutex.Unlock()
 		}
 	}
 }
