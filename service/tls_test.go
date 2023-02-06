@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -838,6 +840,67 @@ func TestNewX509CertPool(t *testing.T) {
 				if err != nil {
 					t.Errorf("TestNewX509CertPool error = %s", err)
 				}
+			}
+		})
+	}
+}
+
+func TestTLSCertificateCache_getCertificate(t *testing.T) {
+	type fields struct {
+		serverCert        atomic.Value
+		serverCertHash    []byte
+		serverCertKeyHash []byte
+		serverCertPath    string
+		serverCertKeyPath string
+		serverCertMutex   sync.Mutex
+		certRefreshPeriod time.Duration
+	}
+	type args struct {
+		h *tls.ClientHelloInfo
+	}
+	var defaultServerCert atomic.Value
+	defaultServerCertData, err := tls.LoadX509KeyPair("../test/data/dummyServer.crt", "../test/data/dummyServer.key")
+	if err != nil {
+		t.Errorf("LoadX509KeyPair failed: %s", err)
+		return
+	}
+	defaultServerCert.Store(&defaultServerCertData)
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *tls.Certificate
+		wantErr bool
+	}{
+		{
+			name: "Check return serverCert",
+			fields: fields{
+				serverCert: defaultServerCert,
+			},
+			args: args{
+				h: &tls.ClientHelloInfo{},
+			},
+			want: defaultServerCert.Load().(*tls.Certificate),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tcc := &TLSCertificateCache{
+				serverCert:        tt.fields.serverCert,
+				serverCertHash:    tt.fields.serverCertHash,
+				serverCertKeyHash: tt.fields.serverCertKeyHash,
+				serverCertPath:    tt.fields.serverCertPath,
+				serverCertKeyPath: tt.fields.serverCertKeyPath,
+				serverCertMutex:   tt.fields.serverCertMutex,
+				certRefreshPeriod: tt.fields.certRefreshPeriod,
+			}
+			got, err := tcc.getCertificate(tt.args.h)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TLSCertificateCache.getCertificate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("TLSCertificateCache.getCertificate() = %v, want %v", got, tt.want)
 			}
 		})
 	}
