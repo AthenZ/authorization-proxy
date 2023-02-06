@@ -114,6 +114,25 @@ func TestNew(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrStr: "cannot NewTLSConfig(cfg.Server.TLS): tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input",
+		}, {
+			name: "return error when CertRefreshPeriod invalid (failed to parse)",
+			args: args{
+				cfg: config.Config{
+					Authorization: config.Authorization{
+						RoleToken: config.RoleToken{
+							Enable: true,
+						},
+					},
+					Server: config.Server{
+						TLS: config.TLS{
+							Enable:   true,
+							CertRefreshPeriod: "abcdefg",
+						},
+					},
+				},
+			},
+			wantErr:    true,
+			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): ParseDuration(cfg.CertRefreshPeriod): time: invalid duration \"abcdefg\"",
 		},
 	}
 	for _, tt := range tests {
