@@ -589,8 +589,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 			}
 		}(),
 		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -609,8 +615,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -637,9 +644,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -683,7 +688,6 @@ func Test_server_ListenAndServe(t *testing.T) {
 				},
 			}
 		}(),
-
 		func() test {
 			ctx, cancel := context.WithCancel(context.Background())
 
@@ -789,8 +793,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 		}(),
 
 		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -809,8 +819,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -837,9 +848,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -884,8 +893,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 			}
 		}(),
 		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -904,8 +919,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -932,9 +948,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -980,8 +994,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 		}(),
 		func() test {
 			ctx, cancelFunc := context.WithCancel(context.Background())
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -1000,8 +1020,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -1028,9 +1049,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -1073,8 +1092,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 		}(),
 		func() test {
 			ctx, cancelFunc := context.WithCancel(context.Background())
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -1093,8 +1118,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -1121,9 +1147,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							// Port:     hcSrvPort,
@@ -1633,25 +1657,63 @@ func Test_server_listenAndServeAPI(t *testing.T) {
 		want       error
 	}
 	tests := []test{
-		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+		{
+			name: "Test HTTP server startup",
+			fields: fields{
+				srv: &http.Server{
+					Handler: func() http.Handler {
+						return nil
+					}(),
+					Addr: fmt.Sprintf(":%d", 9999),
+				},
+				cfg: config.Server{
+					Port: 9999,
+					TLS: config.TLS{
+						Enable: false,
+					},
+				},
+			},
+			checkFunc: func(s *server, want error) error {
+				// listenAndServeAPI function is blocking, so we need to set timer to shutdown the process
+				go func() {
+					time.Sleep(time.Second * 1)
+					if err := s.srv.Shutdown(context.Background()); err != nil {
+						panic(err)
+					}
+				}()
 
+				got := s.listenAndServeAPI()
+
+				if got != want {
+					return fmt.Errorf("got:\t%v\nwant:\t%v", got, want)
+				}
+				return nil
+			},
+			want: http.ErrServerClosed,
+		},
+		func() test {
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 			return test{
-				name: "Test server startup",
+				name: "Test HTTPS server startup",
 				fields: fields{
 					srv: &http.Server{
 						Handler: func() http.Handler {
 							return nil
 						}(),
-						Addr: fmt.Sprintf(":%d", 9999),
+						Addr:      fmt.Sprintf(":%d", 9999),
+						TLSConfig: tc,
 					},
 					cfg: config.Server{
 						Port: 9999,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 					},
 				},
