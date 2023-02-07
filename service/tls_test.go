@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -901,6 +902,79 @@ func TestTLSCertificateCache_getCertificate(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("TLSCertificateCache.getCertificate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTLSCertificateCache_RefreshCertificate(t *testing.T) {
+	type fields struct {
+		serverCert        atomic.Value
+		serverCertHash    []byte
+		serverCertKeyHash []byte
+		serverCertPath    string
+		serverCertKeyPath string
+		serverCertMutex   sync.Mutex
+		certRefreshPeriod time.Duration
+	}
+	type args struct {
+		ctx context.Context
+	}
+	type test struct {
+		name      string
+		fields    fields
+		args      args
+		want      error
+		checkFunc func(*TLSCertificateCache, error, error) error
+		afterFunc func() error
+	}
+	tests := []test{
+		func() test {
+			ctx, cancelFunc := context.WithCancel(context.Background())
+			//key := "../test/data/dummyServer.key"
+			//cert := "../test/data/dummyServer.crt"
+
+			return test{
+				name:   "Test refresh function can start and stop",
+				fields: fields{},
+				args: args{
+					ctx: ctx,
+				},
+				checkFunc: func(tcc *TLSCertificateCache, got error, want error) error {
+					time.Sleep(time.Millisecond * 150)
+					return nil
+				},
+				afterFunc: func() error {
+					cancelFunc()
+					return nil
+				},
+			}
+		}(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.afterFunc != nil {
+				defer func() {
+					if err := tt.afterFunc(); err != nil {
+						t.Errorf("afterFunc error, error: %v", err)
+						return
+					}
+				}()
+			}
+
+			tcc := &TLSCertificateCache{
+				serverCert:        tt.fields.serverCert,
+				serverCertHash:    tt.fields.serverCertHash,
+				serverCertKeyHash: tt.fields.serverCertKeyHash,
+				serverCertPath:    tt.fields.serverCertPath,
+				serverCertKeyPath: tt.fields.serverCertKeyPath,
+				serverCertMutex:   tt.fields.serverCertMutex,
+				certRefreshPeriod: tt.fields.certRefreshPeriod,
+			}
+
+			got := tcc.RefreshCertificate(tt.args.ctx)
+			if err := tt.checkFunc(tcc, got, tt.want); err != nil {
+				t.Errorf("TLSCertificateCache.RefreshCertificate() error = %v, want %v", err, tt.want)
 			}
 		})
 	}
