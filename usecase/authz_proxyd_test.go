@@ -54,6 +54,10 @@ func TestNew(t *testing.T) {
 					HealthCheck: config.HealthCheck{
 						Endpoint: "/dummy",
 					},
+					TLS: config.TLS{
+						Enable:   true,
+						CertRefreshPeriod: "24h",
+					},
 				},
 				Proxy: config.Proxy{
 					BufferSize: 512,
