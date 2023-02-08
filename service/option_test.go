@@ -226,7 +226,7 @@ func TestWithTLSConfig(t *testing.T) {
 			checkFunc: func(o Option) error {
 				srv := &server{}
 				o(srv)
-				if srv.tlsConifg.MinVersion != tls.VersionTLS12 {
+				if srv.tlsConfig.MinVersion != tls.VersionTLS12 {
 					return errors.New("value cannot set")
 				}
 				return nil

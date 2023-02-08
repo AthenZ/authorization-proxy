@@ -288,7 +288,7 @@ func TestNewServer(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: errors.New("s.cfg.TLS.Enable is true, but s.tlsConifg is nil."),
+			wantErr: errors.New("s.cfg.TLS.Enable is true, but s.tlsConfig is nil."),
 			checkFunc: func(got, want Server, gotErr, wantErr error) error {
 				if gotErr.Error() != wantErr.Error() {
 					return errors.Errorf("got error is not matched with want error, got: %s, want: %s", gotErr, wantErr)

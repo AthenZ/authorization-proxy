@@ -43,7 +43,7 @@ func WithGRPCCloser(c io.Closer) Option {
 // WithTLSConfig returns a TLS Config functional option
 func WithTLSConfig(t *tls.Config) Option {
 	return func(s *server) {
-		s.tlsConifg = t
+		s.tlsConfig = t
 	}
 }
 

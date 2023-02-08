@@ -52,7 +52,7 @@ type server struct {
 	grpcSrvRunning bool
 	grpcCloser     io.Closer
 
-	tlsConifg *tls.Config
+	tlsConfig *tls.Config
 
 	// Health Check server
 	hcsrv     *http.Server
@@ -103,8 +103,8 @@ func NewServer(opts ...Option) (Server, error) {
 		o(s)
 	}
 
-	if s.cfg.TLS.Enable && s.tlsConifg == nil {
-		return nil, errors.New("s.cfg.TLS.Enable is true, but s.tlsConifg is nil.")
+	if s.cfg.TLS.Enable && s.tlsConfig == nil {
+		return nil, errors.New("s.cfg.TLS.Enable is true, but s.tlsConfig is nil.")
 	}
 
 	if s.grpcSrvEnable() {
@@ -114,7 +114,7 @@ func NewServer(opts ...Option) (Server, error) {
 		}
 
 		if s.cfg.TLS.Enable {
-			gopts = append(gopts, grpc.Creds(credentials.NewTLS(s.tlsConifg)))
+			gopts = append(gopts, grpc.Creds(credentials.NewTLS(s.tlsConfig)))
 		}
 
 		s.grpcSrv = grpc.NewServer(gopts...)
@@ -125,7 +125,7 @@ func NewServer(opts ...Option) (Server, error) {
 		}
 		s.srv.SetKeepAlivesEnabled(true)
 		if s.cfg.TLS.Enable {
-			s.srv.TLSConfig = s.tlsConifg
+			s.srv.TLSConfig = s.tlsConfig
 		}
 	}
 
