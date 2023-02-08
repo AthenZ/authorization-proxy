@@ -1,11 +1,14 @@
 package service
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -906,183 +909,274 @@ func TestTLSCertificateCache_getCertificate(t *testing.T) {
 	}
 }
 
-// func TestTLSCertificateCache_RefreshCertificate(t *testing.T) {
-// 	type fields struct {
-// 		serverCert        atomic.Value
-// 		serverCertHash    []byte
-// 		serverCertKeyHash []byte
-// 		serverCertPath    string
-// 		serverCertKeyPath string
-// 		serverCertMutex   sync.Mutex
-// 		certRefreshPeriod time.Duration
-// 	}
-// 	type args struct {
-// 		ctx context.Context
-// 	}
-// 	type test struct {
-// 		name       string
-// 		fields     fields
-// 		args       args
-// 		want       error
-// 		beforeFunc func() error
-// 		checkFunc  func(*TLSCertificateCache, error, error) error
-// 		afterFunc  func() error
-// 	}
-// 	copyCert := func(srcPath, dstPath string) error {
-// 		src, err := os.Open(srcPath)
-// 		if err != nil {
-// 			t.Errorf("test cert copy failed: %s", err)
-// 			return err
-// 		}
-// 		defer src.Close()
+func TestTLSCertificateCache_RefreshCertificate(t *testing.T) {
+	type fields struct {
+		serverCert        atomic.Value
+		serverCertHash    []byte
+		serverCertKeyHash []byte
+		serverCertPath    string
+		serverCertKeyPath string
+		serverCertMutex   sync.Mutex
+		certRefreshPeriod time.Duration
+	}
+	type args struct {
+		ctx context.Context
+	}
+	type test struct {
+		name       string
+		fields     fields
+		args       args
+		want       error
+		beforeFunc func() error
+		checkFunc  func(*TLSCertificateCache, error) error
+		afterFunc  func() error
+	}
+	copyCert := func(srcPath, dstPath string) error {
+		src, err := os.Open(srcPath)
+		if err != nil {
+			t.Errorf("test cert copy failed: %s", err)
+			return err
+		}
+		defer src.Close()
 
-// 		dst, err := os.Create(dstPath)
-// 		if err != nil {
-// 			t.Errorf("test cert copy failed: %s", err)
-// 			return err
-// 		}
-// 		defer dst.Close()
+		dst, err := os.Create(dstPath)
+		if err != nil {
+			t.Errorf("test cert copy failed: %s", err)
+			return err
+		}
+		defer dst.Close()
 
-// 		_, err = io.Copy(dst, src)
-// 		if err != nil {
-// 			t.Errorf("test cert copy failed: %s", err)
-// 			return err
-// 		}
-// 		return nil
-// 	}
-// 	testCertPath := "../test/data/test.crt"
-// 	testCertKeyPath := "../test/data/test.key"
-// 	oldCertPath := "../test/data/dummyServer.crt"
-// 	oldCertKeyPath := "../test/data/dummyServer.key"
-// 	newCertPath := "../test/data/newDummyServer.crt"
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			t.Errorf("test cert copy failed: %s", err)
+			return err
+		}
+		return nil
+	}
+	testCertPath := "../test/data/test.crt"
+	testCertKeyPath := "../test/data/test.key"
+	oldCertPath := "../test/data/dummyServer.crt"
+	oldCertKeyPath := "../test/data/dummyServer.key"
+	newCertPath := "../test/data/newDummyServer.crt"
+	invalidNewCertPath := "../test/data/invalid_newDummyServer.crt"
 
-// 	var defaultServerCert atomic.Value
-// 	defaultServerCertData, err := tls.LoadX509KeyPair("../test/data/dummyServer.crt", "../test/data/dummyServer.key")
-// 	if err != nil {
-// 		t.Errorf("LoadX509KeyPair failed: %s", err)
-// 		return
-// 	}
-// 	defaultServerCert.Store(&defaultServerCertData)
-// 	defaultServerCerttHash, err := hash(oldCertPath)
-// 	if err != nil {
-// 		t.Errorf("hash failed: %s", err)
-// 		return
-// 	}
-// 	defaultServerCerttKeyHash, _ := hash(oldCertKeyPath)
-// 	if err != nil {
-// 		t.Errorf("hash failed: %s", err)
-// 		return
-// 	}
-// 	// newCert key == oldCert key
-// 	newCert, err := tls.LoadX509KeyPair(newCertPath, oldCertKeyPath)
-// 	if err != nil {
-// 		t.Errorf("LoadX509KeyPair failed: %s", err)
-// 		return
-// 	}
+	var oldCert atomic.Value
+	oldCertData, err := tls.LoadX509KeyPair("../test/data/dummyServer.crt", "../test/data/dummyServer.key")
+	if err != nil {
+		t.Errorf("LoadX509KeyPair failed: %s", err)
+		return
+	}
+	oldCert.Store(&oldCertData)
+	oldCertHash, err := hash(oldCertPath)
+	if err != nil {
+		t.Errorf("hash failed: %s", err)
+		return
+	}
+	oldCertKeyHash, _ := hash(oldCertKeyPath)
+	if err != nil {
+		t.Errorf("hash failed: %s", err)
+		return
+	}
+	// newCert key == oldCert key
+	newCert, err := tls.LoadX509KeyPair(newCertPath, oldCertKeyPath)
+	if err != nil {
+		t.Errorf("LoadX509KeyPair failed: %s", err)
+		return
+	}
 
-// 	tests := []test{
-// 		func() test {
-// 			ctx, cancelFunc := context.WithCancel(context.Background())
+	tests := []test{
+		func() test {
+			ctx, cancelFunc := context.WithCancel(context.Background())
 
-// 			return test{
-// 				name: "Test refresh server cert",
-// 				fields: fields{
-// 					serverCert:        defaultServerCert,
-// 					serverCertHash:    defaultServerCerttHash,
-// 					serverCertKeyHash: defaultServerCerttKeyHash,
-// 					serverCertPath:    testCertPath,
-// 					serverCertKeyPath: testCertKeyPath,
-// 					certRefreshPeriod: 1 * time.Second,
-// 					serverCertMutex:   sync.Mutex{},
-// 				},
-// 				args: args{
-// 					ctx: ctx,
-// 				},
-// 				beforeFunc: func() error {
-// 					err := copyCert(oldCertPath, testCertPath)
-// 					if err != nil {
-// 						return err
-// 					}
-// 					err = copyCert(oldCertKeyPath, testCertKeyPath)
-// 					if err != nil {
-// 						return err
-// 					}
-// 					return nil
-// 				},
-// 				checkFunc: func(tcc *TLSCertificateCache, got error, want error) error {
-// 					if got != nil {
-// 						return got
-// 					}
-// 					cachedCert := tcc.serverCert.Load()
-// 					cc, _ := x509.ParseCertificate(cachedCert.(tls.Certificate).Certificate[0])
-// 					dc, _ := x509.ParseCertificate(defaultServerCertData.Certificate[0])
-// 					if cc.SerialNumber != dc.SerialNumber {
-// 						return errors.New("Serial Number not Matched")
-// 					}
-// 					// refresh certificate
-// 					err = copyCert(newCertPath, testCertPath)
-// 					if err != nil {
-// 						return err
-// 					}
-// 					time.Sleep(1 * time.Second)
-// 					cachedCert = tcc.serverCert.Load()
-// 					cc, _ = x509.ParseCertificate(cachedCert.(tls.Certificate).Certificate[0])
-// 					nc, _ := x509.ParseCertificate(newCert.Certificate[0])
-// 					if cc.SerialNumber != nc.SerialNumber {
-// 						return errors.New("Serial Number not Matched")
-// 					}
-// 					return nil
-// 				},
-// 				afterFunc: func() error {
-// 					cancelFunc()
-// 					err := os.Remove(testCertPath)
-// 					if err != nil {
-// 						t.Errorf("test cert remove failed: %s", err)
-// 						return err
-// 					}
-// 					err = os.Remove(testCertKeyPath)
-// 					if err != nil {
-// 						t.Errorf("test cert remove failed: %s", err)
-// 						return err
-// 					}
-// 					return nil
-// 				},
-// 			}
-// 		}(),
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if tt.afterFunc != nil {
-// 				defer func() {
-// 					if err := tt.afterFunc(); err != nil {
-// 						t.Errorf("afterFunc error, error: %v", err)
-// 						return
-// 					}
-// 				}()
-// 			}
-// 			if tt.beforeFunc != nil {
-// 				if err := tt.beforeFunc(); err != nil {
-// 					t.Errorf("beforeFunc error, error: %v", err)
-// 					return
-// 				}
-// 			}
+			return test{
+				name: "Test refresh server cert and stop",
+				fields: fields{
+					serverCert:        oldCert,
+					serverCertHash:    oldCertHash,
+					serverCertKeyHash: oldCertKeyHash,
+					serverCertPath:    testCertPath,
+					serverCertKeyPath: testCertKeyPath,
+					certRefreshPeriod: 500 * time.Millisecond,
+					serverCertMutex:   sync.Mutex{},
+				},
+				args: args{
+					ctx: ctx,
+				},
+				beforeFunc: func() error {
+					err := copyCert(oldCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					err = copyCert(oldCertKeyPath, testCertKeyPath)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+				checkFunc: func(tcc *TLSCertificateCache, want error) error {
+					cachedCert := tcc.serverCert.Load()
+					cc, _ := x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					oc, _ := x509.ParseCertificate(oldCertData.Certificate[0])
+					if cc.SerialNumber.String() != oc.SerialNumber.String() {
+						return errors.New("cached cert / old cert Serial Number not Matched")
+					}
+					// refresh certificate
+					err = copyCert(newCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					// wait refresh period
+					time.Sleep(1 * time.Second)
+					cachedCert = tcc.serverCert.Load()
+					cc, _ = x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					nc, _ := x509.ParseCertificate(newCert.Certificate[0])
+					// check cert refreshed
+					if cc.SerialNumber.String() != nc.SerialNumber.String() {
+						return errors.New("cert not refreshed")
+					}
+					// refresh stop
+					cancelFunc()
+					err = copyCert(oldCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					time.Sleep(1 * time.Second)
+					if cc.SerialNumber.String() == oc.SerialNumber.String() {
+						return errors.New("refresh not stopped")
+					}
+					return nil
+				},
+				afterFunc: func() error {
+					cancelFunc()
+					err := os.Remove(testCertPath)
+					if err != nil {
+						t.Errorf("test cert remove failed: %s", err)
+						return err
+					}
+					err = os.Remove(testCertKeyPath)
+					if err != nil {
+						t.Errorf("test cert remove failed: %s", err)
+						return err
+					}
+					return nil
+				},
+			}
+		}(),
+		func() test {
+			ctx, cancelFunc := context.WithCancel(context.Background())
 
-// 			tcc := &TLSCertificateCache{
-// 				serverCert:        tt.fields.serverCert,
-// 				serverCertHash:    tt.fields.serverCertHash,
-// 				serverCertKeyHash: tt.fields.serverCertKeyHash,
-// 				serverCertPath:    tt.fields.serverCertPath,
-// 				serverCertKeyPath: tt.fields.serverCertKeyPath,
-// 				serverCertMutex:   tt.fields.serverCertMutex,
-// 				certRefreshPeriod: tt.fields.certRefreshPeriod,
-// 			}
-// 			//errCh := make(chan error)
-// 			go func() error {
-// 				return tcc.RefreshCertificate(tt.args.ctx)
-// 			}()
-// 			if err := tt.checkFunc(tcc, got, tt.want); err != nil {
-// 				t.Errorf("TLSCertificateCache.RefreshCertificate() error = %v, want %v", err, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+			return test{
+				name: "Test invalid cert not refresh, next period refresh success",
+				fields: fields{
+					serverCert:        oldCert,
+					serverCertHash:    oldCertHash,
+					serverCertKeyHash: oldCertKeyHash,
+					serverCertPath:    testCertPath,
+					serverCertKeyPath: testCertKeyPath,
+					certRefreshPeriod: 500 * time.Millisecond,
+					serverCertMutex:   sync.Mutex{},
+				},
+				args: args{
+					ctx: ctx,
+				},
+				beforeFunc: func() error {
+					err := copyCert(oldCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					err = copyCert(oldCertKeyPath, testCertKeyPath)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+				checkFunc: func(tcc *TLSCertificateCache, want error) error {
+					cachedCert := tcc.serverCert.Load()
+					cc, _ := x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					oc, _ := x509.ParseCertificate(oldCertData.Certificate[0])
+					if cc.SerialNumber.String() != oc.SerialNumber.String() {
+						return errors.New("cached cert / old cert Serial Number not Matched")
+					}
+					// refresh certificate but invalid
+					err = copyCert(invalidNewCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					// wait refresh period
+					time.Sleep(1 * time.Second)
+					cachedCert = tcc.serverCert.Load()
+					cc, _ = x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					// check cert not refreshed
+					if cc.SerialNumber.String() != oc.SerialNumber.String() {
+						return errors.New("cert refreshed")
+					}
+					// refresh certificate
+					err = copyCert(newCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					// wait refresh period
+					time.Sleep(1 * time.Second)
+					cachedCert = tcc.serverCert.Load()
+					cc, _ = x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					nc, _ := x509.ParseCertificate(newCert.Certificate[0])
+					// check cert refreshed
+					if cc.SerialNumber.String() != nc.SerialNumber.String() {
+						return errors.New("cert not refreshed")
+					}
+					cancelFunc()
+					return nil
+				},
+				afterFunc: func() error {
+					cancelFunc()
+					err := os.Remove(testCertPath)
+					if err != nil {
+						t.Errorf("test cert remove failed: %s", err)
+						return err
+					}
+					err = os.Remove(testCertKeyPath)
+					if err != nil {
+						t.Errorf("test cert remove failed: %s", err)
+						return err
+					}
+					return nil
+				},
+			}
+		}(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.afterFunc != nil {
+				defer func() {
+					if err := tt.afterFunc(); err != nil {
+						t.Errorf("afterFunc error, error: %v", err)
+						return
+					}
+				}()
+			}
+			if tt.beforeFunc != nil {
+				if err := tt.beforeFunc(); err != nil {
+					t.Errorf("beforeFunc error, error: %v", err)
+					return
+				}
+			}
+
+			tcc := &TLSCertificateCache{
+				serverCert:        tt.fields.serverCert,
+				serverCertHash:    tt.fields.serverCertHash,
+				serverCertKeyHash: tt.fields.serverCertKeyHash,
+				serverCertPath:    tt.fields.serverCertPath,
+				serverCertKeyPath: tt.fields.serverCertKeyPath,
+				serverCertMutex:   tt.fields.serverCertMutex,
+				certRefreshPeriod: tt.fields.certRefreshPeriod,
+			}
+			//errCh := make(chan error)
+			go func() error {
+				return tcc.RefreshCertificate(tt.args.ctx)
+			}()
+			if err := tt.checkFunc(tcc, tt.want); err != nil {
+				t.Errorf("TLSCertificateCache.RefreshCertificate() error = %v, want %v", err, tt.want)
+			}
+		})
+	}
+}
