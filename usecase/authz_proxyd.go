@@ -77,7 +77,7 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 	var tlsCertificateCache *service.TLSCertificateCache
 	if cfg.Server.TLS.Enable {
 		// Enable auto-reload if CertRefreshPeriod is set.
-		if cfg.Server.TLS.CertRefreshPeriod != "" {
+		if cfg.Server.TLS.CertRefreshPeriod != "" && cfg.Server.TLS.CertRefreshPeriod != "0" {
 			configWithCache, err := service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
 			if err != nil {
 				return nil, errors.Wrap(err, "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)")
@@ -162,7 +162,7 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 
 	// handle cert refresh goroutine error
 	// prevent run RefreshCertificate if Enable is false and CertRefreshPeriod is set
-	if g.cfg.Server.TLS.Enable && g.cfg.Server.TLS.CertRefreshPeriod != "" {
+	if g.cfg.Server.TLS.Enable && g.cfg.Server.TLS.CertRefreshPeriod != "" && g.cfg.Server.TLS.CertRefreshPeriod != "0" {
 		eg.Go(func() error {
 			return g.tlsCertificateCache.RefreshCertificate(ctx)
 		})
