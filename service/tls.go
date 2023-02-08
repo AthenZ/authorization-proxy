@@ -194,7 +194,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			glg.Info("Checking to refresh server certificate.")
+			glg.Info("Checking to refresh server certificate")
 			serverCertHash, err := hash(tcc.serverCertPath)
 			if err != nil {
 				glg.Error("Failed to refresh server certificate: %s.", err.Error())
@@ -221,7 +221,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				tcc.serverCert.Store(&newCert)
 				tcc.serverCertHash = serverCertHash
 				tcc.serverCertKeyHash = serverCertKeyHash
-				glg.Info("Refreshed server certificate.")
+				glg.Info("Refreshed server certificate")
 			}
 			tcc.serverCertMutex.Unlock()
 		}
