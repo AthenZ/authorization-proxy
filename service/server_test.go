@@ -186,7 +186,7 @@ func TestNewServer(t *testing.T) {
 				gotCert, _ := x509.ParseCertificate(got.(*server).srv.TLSConfig.Certificates[0].Certificate[0])
 				wantCert, _ := x509.ParseCertificate(want.(*server).srv.TLSConfig.Certificates[0].Certificate[0])
 				if gotCert.SerialNumber == nil || gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
-					return fmt.Errorf("Certificate SerialNumber not equals\tgot: %s\twant: %s", got.(*server).srv.TLSConfig.Certificates[0].Leaf.Subject.CommonName, want.(*server).srv.TLSConfig.Certificates[0].Leaf.Subject.CommonName)
+					return fmt.Errorf("Certificate SerialNumber not equals\tgot: %s\twant: %s", gotCert.SerialNumber.String(), wantCert.SerialNumber.String())
 				}
 				return nil
 			},
