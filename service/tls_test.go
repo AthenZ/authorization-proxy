@@ -379,6 +379,7 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
+				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache.certRefreshPeriod is 0
 				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
 					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
 				}
