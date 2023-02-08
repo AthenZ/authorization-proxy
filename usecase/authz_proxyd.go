@@ -76,8 +76,11 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 	var tlsConfig *tls.Config
 	var tlsCertificateCache *service.TLSCertificateCache
 	if cfg.Server.TLS.Enable {
-		// Enable auto-reload if CertRefreshPeriod is set.
-		if cfg.Server.TLS.CertRefreshPeriod != "" && cfg.Server.TLS.CertRefreshPeriod != "0" {
+		ivd, err := isValidDuration(cfg.Server.TLS.CertRefreshPeriod)
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot isValidDuration(cfg.Server.TLS.CertRefreshPeriod)")
+		}
+		if ivd {
 			configWithCache, err := service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
 			if err != nil {
 				return nil, errors.Wrap(err, "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)")
@@ -162,7 +165,8 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 
 	// handle cert refresh goroutine error
 	// prevent run RefreshCertificate if Enable is false and CertRefreshPeriod is set
-	if g.cfg.Server.TLS.Enable && g.cfg.Server.TLS.CertRefreshPeriod != "" && g.cfg.Server.TLS.CertRefreshPeriod != "0" {
+	ivd, _ := isValidDuration(g.cfg.Server.TLS.CertRefreshPeriod)
+	if g.cfg.Server.TLS.Enable && ivd {
 		eg.Go(func() error {
 			return g.tlsCertificateCache.RefreshCertificate(ctx)
 		})
@@ -329,4 +333,20 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 		authzOpts = append(authzOpts, opts...)
 	}
 	return authorizerd.New(authzOpts...)
+}
+
+// isValidDuration returns whether duration is valid.
+// "" -> false, "abcdefg" -> false, "0s" -> false, "123s" -> true
+func isValidDuration(durationString string) (bool, error) {
+	if durationString != "" {
+		crp, err := time.ParseDuration(durationString)
+		if err != nil {
+			return false, err
+		}
+		if crp == 0 {
+			return false, nil
+		}
+		return true, nil
+	}
+	return false, nil
 }

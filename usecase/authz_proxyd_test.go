@@ -12,7 +12,6 @@ import (
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
-
 	"github.com/pkg/errors"
 )
 
@@ -116,7 +115,7 @@ func TestNew(t *testing.T) {
 					},
 					TLS: config.TLS{
 						Enable:            true,
-						CertRefreshPeriod: "0",
+						CertRefreshPeriod: "0s",
 					},
 				},
 				Proxy: config.Proxy{
@@ -124,7 +123,7 @@ func TestNew(t *testing.T) {
 				},
 			}
 			return test{
-				name: "new CertRefreshPeriod is 0, tlsCertificateCache is nil.",
+				name: "CertRefreshPeriod is 0, tlsCertificateCache is nil.",
 				args: args{
 					cfg: cfg,
 				},
@@ -258,7 +257,7 @@ func TestNew(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): ParseDuration(cfg.CertRefreshPeriod): time: invalid duration \"abcdefg\"",
+			wantErrStr: "cannot isValidDuration(cfg.Server.TLS.CertRefreshPeriod): time: invalid duration \"abcdefg\"",
 		},
 	}
 	for _, tt := range tests {
@@ -741,13 +740,13 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			dummyErr := errors.New("dummy")
 			return test{
-				name: "Cert refrsh daemon stops when TLS.Enable = false and CertRefreshPeriod is set",
+				name: "Cert refrsh daemon stops when TLS.Enable = false and TLS.CertRefreshPeriod is set",
 				fields: fields{
 					cfg: config.Config{
 						Server: config.Server{
 							TLS: config.TLS{
 								Enable:            false,
-								CertRefreshPeriod: "3d",
+								CertRefreshPeriod: "3h",
 								CertPath:          "../test/data/dummyServer.crt",
 								KeyPath:           "../test/data/dummyServer.key",
 							},
@@ -818,13 +817,13 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			dummyErr := errors.New("dummy")
 			return test{
-				name: "Cert refrsh daemon stops when TLS.Enable = true and CertRefreshPeriod is 0",
+				name: "Cert refrsh daemon stops when TLS.Enable = true and TLS.CertRefreshPeriod is 0",
 				fields: fields{
 					cfg: config.Config{
 						Server: config.Server{
 							TLS: config.TLS{
 								Enable:            true,
-								CertRefreshPeriod: "0",
+								CertRefreshPeriod: "0s",
 							},
 						},
 					},
@@ -1152,6 +1151,61 @@ func Test_newAuthzD(t *testing.T) {
 			if (got != nil) != tt.want {
 				t.Errorf("newAuthzD()= %v, want= %v", got, tt.want)
 				return
+			}
+		})
+	}
+}
+
+func Test_isValidDuration(t *testing.T) {
+	type args struct {
+		durationString string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    bool
+		wantErr error
+	}{
+		{
+			name: "test true, valid duration",
+			args: args{
+				durationString: "123s",
+			},
+			want: true,
+		},
+		{
+			name: "test false, empty string",
+			args: args{
+				durationString: "",
+			},
+			want: false,
+		},
+		{
+			name: "test false, zero",
+			args: args{
+				durationString: "0h",
+			},
+			want: false,
+		},
+		{
+			name: "test false and error, abcdefg",
+			args: args{
+				durationString: "abcdefg",
+			},
+			want:    false,
+			wantErr: errors.New("time: invalid duration \"abcdefg\""),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := isValidDuration(tt.args.durationString)
+			if tt.wantErr != nil {
+				if err.Error() != tt.wantErr.Error() {
+					t.Errorf("isValidDuration() error = %s, wantErr %s", err.Error(), tt.wantErr.Error())
+				}
+			}
+			if got != tt.want {
+				t.Errorf("isValidDuration() = %v, want %v", got, tt.want)
 			}
 		})
 	}
