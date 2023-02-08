@@ -84,10 +84,11 @@ func TestNew(t *testing.T) {
 					ShutdownTimeout: "10s",
 					ShutdownDelay:   "9s",
 					TLS: TLS{
-						Enable:   true,
-						CertPath: "test/data/dummyServer.crt",
-						KeyPath:  "test/data/dummyServer.key",
-						CAPath:   "test/data/dummyCa.pem",
+						Enable:            true,
+						CertPath:          "test/data/dummyServer.crt",
+						KeyPath:           "test/data/dummyServer.key",
+						CAPath:            "test/data/dummyCa.pem",
+						CertRefreshPeriod: "24h",
 					},
 					HealthCheck: HealthCheck{
 						Port:     6082,
