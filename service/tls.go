@@ -93,8 +93,8 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 }
 
 // NewTLSConfigWithTLSCertificateCache returns a *TLSConfigWithTLSCertificateCache struct or error.
-// It use to enable the certificate auto-reload feature.
-// It reads TLS configuration and initializes *tls.Config / TLSCertificateCache struct.
+// It uses to enable the certificate auto-reload feature.
+// It reads TLS configuration and initializes *tls.Config / *TLSCertificateCache struct.
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCertificateCache, error) {
