@@ -46,8 +46,8 @@ type TLSCertificateCache struct {
 }
 
 type TLSConfigWithTLSCertificateCache struct {
-	TLSConfig          *tls.Config
-	TLSCertficateCache *TLSCertificateCache
+	TLSConfig           *tls.Config
+	TLSCertificateCache *TLSCertificateCache
 }
 
 // NewTLSConfig returns a *tls.Config struct or error.
@@ -157,8 +157,8 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 	}
 
 	return &TLSConfigWithTLSCertificateCache{
-		TLSConfig:          t,
-		TLSCertficateCache: tcc,
+		TLSConfig:           t,
+		TLSCertificateCache: tcc,
 	}, nil
 }
 

@@ -405,7 +405,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
-					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertficateCache,
+					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertificateCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -622,7 +622,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
-					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertficateCache,
+					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertificateCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -697,7 +697,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
-					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertficateCache,
+					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertificateCache,
 				},
 				args: args{
 					ctx: ctx,

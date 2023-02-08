@@ -374,14 +374,14 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				if got.TLSConfig.MinVersion != want.TLSConfig.MinVersion {
 					return fmt.Errorf("MinVersion not Matched :\tgot %d\twant %d", got.TLSConfig.MinVersion, want.TLSConfig.MinVersion)
 				}
-				gotCert, _ := x509.ParseCertificate(got.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache.certRefreshPeriod is 0
-				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
+				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
 				}
 				return nil
 			},
@@ -430,13 +430,13 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 						return fmt.Errorf("CurvePreferences not Find :\twant %d", want.TLSConfig.MinVersion)
 					}
 				}
-				gotCert, _ := x509.ParseCertificate(got.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
-				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
+				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
 				}
 				return nil
 			},
@@ -473,13 +473,13 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				if got.TLSConfig.SessionTicketsDisabled != want.TLSConfig.SessionTicketsDisabled {
 					return fmt.Errorf("SessionTicketsDisabled not matched :\tgot %v\twant %v", got.TLSConfig.SessionTicketsDisabled, want.TLSConfig.SessionTicketsDisabled)
 				}
-				gotCert, _ := x509.ParseCertificate(got.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
-				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
+				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
 				}
 				return nil
 			},
@@ -525,13 +525,13 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 						return fmt.Errorf("Certificates PrivateKey not Matched :\twant %s", wantVal.PrivateKey)
 					}
 				}
-				gotCert, _ := x509.ParseCertificate(got.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
-				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
+				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
 				}
 				return nil
 			},
@@ -568,13 +568,13 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				if got.TLSConfig.ClientAuth != want.TLSConfig.ClientAuth {
 					return fmt.Errorf("ClientAuth not Matched :\tgot %d \twant %d", got.TLSConfig.ClientAuth, want.TLSConfig.ClientAuth)
 				}
-				gotCert, _ := x509.ParseCertificate(got.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
-				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
+				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
 				}
 				return nil
 			},
@@ -618,13 +618,13 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				if got.TLSConfig.ClientAuth != want.TLSConfig.ClientAuth {
 					return fmt.Errorf("ClientAuth not Matched :\tgot %d \twant %d", got.TLSConfig.ClientAuth, want.TLSConfig.ClientAuth)
 				}
-				gotCert, _ := x509.ParseCertificate(got.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertficateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
-				if got.TLSCertficateCache.certRefreshPeriod != want.TLSCertficateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertficateCache.certRefreshPeriod, want.TLSCertficateCache.certRefreshPeriod)
+				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
 				}
 				return nil
 			},
