@@ -10,6 +10,7 @@ server:
     certPath: "test/data/dummyServer.crt"
     keyPath: "test/data/dummyServer.key"
     caPath: "test/data/dummyCa.pem"
+    certRefreshPeriod: "24h"
   healthCheck:
     port: 6082
     endpoint: /healthz
