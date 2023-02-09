@@ -55,41 +55,25 @@ type TLSConfigWithTLSCertificateCache struct {
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
-	t := &tls.Config{
-		MinVersion: tls.VersionTLS12,
-		CurvePreferences: []tls.CurveID{
-			tls.CurveP521,
-			tls.CurveP384,
-			tls.CurveP256,
-			tls.X25519,
-		},
-		SessionTicketsDisabled: true,
-		ClientAuth:             tls.NoClientCert,
+	t, err := NewTLSConfigWithTLSCertificateCache(cfg)
+	if err != nil {
+		return nil, err
 	}
+	// GetCertificate can only be used with TLSCertificateCache.
+	t.TLSConfig.GetCertificate = nil
 
 	cert := config.GetActualValue(cfg.CertPath)
 	key := config.GetActualValue(cfg.KeyPath)
-	ca := config.GetActualValue(cfg.CAPath)
-
 	if cert != "" && key != "" {
 		crt, err := tls.LoadX509KeyPair(cert, key)
 		if err != nil {
 			return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
 		}
-		t.Certificates = make([]tls.Certificate, 1)
-		t.Certificates[0] = crt
+		t.TLSConfig.Certificates = make([]tls.Certificate, 1)
+		t.TLSConfig.Certificates[0] = crt
 	}
 
-	if ca != "" {
-		pool, err := NewX509CertPool(ca)
-		if err != nil {
-			return nil, errors.Wrap(err, "NewX509CertPool(ca)")
-		}
-		t.ClientCAs = pool
-		t.ClientAuth = tls.RequireAndVerifyClientCert
-	}
-
-	return t, nil
+	return t.TLSConfig, nil
 }
 
 // NewTLSConfigWithTLSCertificateCache returns a *TLSConfigWithTLSCertificateCache struct or error.
