@@ -107,8 +107,9 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 	}
 	if isEnableCertRefresh {
 		// GetCertificate can only be used with TLSCertificateCache.
-		t.GetCertificate = tcc.getCertificate
 		tcc = &TLSCertificateCache{}
+		t.GetCertificate = tcc.getCertificate
+
 		tcc.certRefreshPeriod, err = time.ParseDuration(cfg.CertRefreshPeriod)
 		if err != nil {
 			return nil, errors.Wrap(err, "ParseDuration(cfg.CertRefreshPeriod)")
