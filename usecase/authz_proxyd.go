@@ -154,7 +154,7 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 
 	// handle cert refresh goroutine error
 	// prevent run RefreshCertificate if Enable is false and CertRefreshPeriod is set
-	if g.cfg.Server.TLS.Enable && g.tlsCertificateCache != nil {
+	if g.tlsCertificateCache != nil {
 		eg.Go(func() error {
 			return g.tlsCertificateCache.RefreshCertificate(ctx)
 		})
