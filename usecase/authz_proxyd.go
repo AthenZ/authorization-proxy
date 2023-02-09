@@ -76,23 +76,12 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 	var tlsConfig *tls.Config
 	var tlsCertificateCache *service.TLSCertificateCache
 	if cfg.Server.TLS.Enable {
-		ivd, err := isValidDuration(cfg.Server.TLS.CertRefreshPeriod)
+		configWithCache, err := service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
 		if err != nil {
-			return nil, errors.Wrap(err, "cannot isValidDuration(cfg.Server.TLS.CertRefreshPeriod)")
+			return nil, errors.Wrap(err, "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)")
 		}
-		if ivd {
-			configWithCache, err := service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
-			if err != nil {
-				return nil, errors.Wrap(err, "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)")
-			}
-			tlsConfig = configWithCache.TLSConfig
-			tlsCertificateCache = configWithCache.TLSCertificateCache
-		} else {
-			tlsConfig, err = service.NewTLSConfig(cfg.Server.TLS)
-			if err != nil {
-				return nil, errors.Wrap(err, "cannot NewTLSConfig(cfg.Server.TLS)")
-			}
-		}
+		tlsConfig = configWithCache.TLSConfig
+		tlsCertificateCache = configWithCache.TLSCertificateCache
 		serverOption = append(serverOption, service.WithTLSConfig(tlsConfig))
 	}
 
@@ -165,8 +154,7 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 
 	// handle cert refresh goroutine error
 	// prevent run RefreshCertificate if Enable is false and CertRefreshPeriod is set
-	ivd, _ := isValidDuration(g.cfg.Server.TLS.CertRefreshPeriod)
-	if g.cfg.Server.TLS.Enable && ivd {
+	if g.cfg.Server.TLS.Enable && g.tlsCertificateCache != nil {
 		eg.Go(func() error {
 			return g.tlsCertificateCache.RefreshCertificate(ctx)
 		})
@@ -333,20 +321,4 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 		authzOpts = append(authzOpts, opts...)
 	}
 	return authorizerd.New(authzOpts...)
-}
-
-// isValidDuration returns whether duration is valid.
-// "" -> false, "abcdefg" -> false, "0s" -> false, "123s" -> true
-func isValidDuration(durationString string) (bool, error) {
-	if durationString != "" {
-		crp, err := time.ParseDuration(durationString)
-		if err != nil {
-			return false, err
-		}
-		if crp == 0 {
-			return false, nil
-		}
-		return true, nil
-	}
-	return false, nil
 }

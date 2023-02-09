@@ -59,20 +59,6 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	// GetCertificate can only be used with TLSCertificateCache.
-	t.TLSConfig.GetCertificate = nil
-
-	cert := config.GetActualValue(cfg.CertPath)
-	key := config.GetActualValue(cfg.KeyPath)
-	if cert != "" && key != "" {
-		crt, err := tls.LoadX509KeyPair(cert, key)
-		if err != nil {
-			return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
-		}
-		t.TLSConfig.Certificates = make([]tls.Certificate, 1)
-		t.TLSConfig.Certificates[0] = crt
-	}
-
 	return t.TLSConfig, nil
 }
 
@@ -82,7 +68,7 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCertificateCache, error) {
-	tcc := &TLSCertificateCache{}
+	var tcc *TLSCertificateCache
 	t := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CurvePreferences: []tls.CurveID{
@@ -93,7 +79,6 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 		},
 		SessionTicketsDisabled: true,
 		ClientAuth:             tls.NoClientCert,
-		GetCertificate:         tcc.getCertificate,
 	}
 
 	var err error
@@ -102,32 +87,46 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 	key := config.GetActualValue(cfg.KeyPath)
 	ca := config.GetActualValue(cfg.CAPath)
 
-	if cert != "" && key != "" {
-		crt, err := tls.LoadX509KeyPair(cert, key)
-		if err != nil {
-			return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
-		}
-
-		crtHash, err := hash(cert)
-		if err != nil {
-			return nil, errors.Wrap(err, "hash(cert)")
-		}
-
-		crtKeyHash, err := hash(key)
-		if err != nil {
-			return nil, errors.Wrap(err, "hash(key)")
-		}
-		tcc.serverCert.Store(&crt)
-		tcc.serverCertHash = crtHash
-		tcc.serverCertKeyHash = crtKeyHash
-		tcc.serverCertPath = cert
-		tcc.serverCertKeyPath = key
+	isEnableCertRefresh, err := isValidDuration(cfg.CertRefreshPeriod)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot isValidDuration(cfg.CertRefreshPeriod)")
 	}
-
-	if cfg.CertRefreshPeriod != "" {
+	if isEnableCertRefresh {
+		t.GetCertificate = tcc.getCertificate
+		tcc = &TLSCertificateCache{}
 		tcc.certRefreshPeriod, err = time.ParseDuration(cfg.CertRefreshPeriod)
 		if err != nil {
 			return nil, errors.Wrap(err, "ParseDuration(cfg.CertRefreshPeriod)")
+		}
+		if cert != "" && key != "" {
+			crt, err := tls.LoadX509KeyPair(cert, key)
+			if err != nil {
+				return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
+			}
+
+			crtHash, err := hash(cert)
+			if err != nil {
+				return nil, errors.Wrap(err, "hash(cert)")
+			}
+
+			crtKeyHash, err := hash(key)
+			if err != nil {
+				return nil, errors.Wrap(err, "hash(key)")
+			}
+			tcc.serverCert.Store(&crt)
+			tcc.serverCertHash = crtHash
+			tcc.serverCertKeyHash = crtKeyHash
+			tcc.serverCertPath = cert
+			tcc.serverCertKeyPath = key
+		}
+	} else {
+		if cert != "" && key != "" {
+			crt, err := tls.LoadX509KeyPair(cert, key)
+			if err != nil {
+				return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
+			}
+			t.Certificates = make([]tls.Certificate, 1)
+			t.Certificates[0] = crt
 		}
 	}
 
@@ -225,4 +224,20 @@ func hash(file string) ([]byte, error) {
 	}
 
 	return h.Sum(nil), nil
+}
+
+// isValidDuration returns whether duration is valid.
+// "" -> false, "abcdefg" -> false, "0s" -> false, "123s" -> true
+func isValidDuration(durationString string) (bool, error) {
+	if durationString != "" {
+		crp, err := time.ParseDuration(durationString)
+		if err != nil {
+			return false, err
+		}
+		if crp == 0 {
+			return false, nil
+		}
+		return true, nil
+	}
+	return false, nil
 }
