@@ -59,10 +59,24 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+	// GetCertificate can only be used with TLSCertificateCache.
+	t.TLSConfig.GetCertificate = nil
+	cert := config.GetActualValue(cfg.CertPath)
+	key := config.GetActualValue(cfg.KeyPath)
+	if cert != "" && key != "" {
+		crt, err := tls.LoadX509KeyPair(cert, key)
+		if err != nil {
+			return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
+		}
+		t.TLSConfig.Certificates = make([]tls.Certificate, 1)
+		t.TLSConfig.Certificates[0] = crt
+	}
 	return t.TLSConfig, nil
 }
 
 // NewTLSConfigWithTLSCertificateCache returns a *TLSConfigWithTLSCertificateCache struct or error.
+// cfg.CertRefreshPeriod is set(cert refresh enable), returns TLSCertificateCache: not nil / TLSConfig.GetCertificate: not nil / TLSConfig.Certificates: nil
+// cfg.CertRefreshPeriod is not set(cert refresh disable), returns TLSCertificateCache: nil / TLSConfig.GetCertificate: nil / TLSConfig.Certificates: not nil
 // It uses to enable the certificate auto-reload feature.
 // It reads TLS configuration and initializes *tls.Config / *TLSCertificateCache struct.
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
@@ -92,6 +106,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 		return nil, errors.Wrap(err, "cannot isValidDuration(cfg.CertRefreshPeriod)")
 	}
 	if isEnableCertRefresh {
+		// GetCertificate can only be used with TLSCertificateCache.
 		t.GetCertificate = tcc.getCertificate
 		tcc = &TLSCertificateCache{}
 		tcc.certRefreshPeriod, err = time.ParseDuration(cfg.CertRefreshPeriod)
