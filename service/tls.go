@@ -34,7 +34,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TLSCertificateCache represents refresh certificate
+// TLSCertificateCache caches a certificate
 type TLSCertificateCache struct {
 	serverCert        atomic.Value
 	serverCertHash    []byte
@@ -162,13 +162,13 @@ func NewX509CertPool(path string) (*x509.CertPool, error) {
 	return pool, errors.Wrap(err, "x509.SystemCertPool()")
 }
 
-// getCertificate return server TLS certificate.
+// getCertificate returns the cached certificate.
 func (tcc *TLSCertificateCache) getCertificate(h *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	// serverCert is atomic.Value, so this can read it without lock.
 	return tcc.serverCert.Load().(*tls.Certificate), nil
 }
 
-// RefreshCertificate is refresh certificate for TLS.
+// RefreshCertificate refreshes the cached certificate asynchronously.
 func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 	ticker := time.NewTicker(tcc.certRefreshPeriod)
 	defer ticker.Stop()
@@ -177,7 +177,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			glg.Info("Checking to refresh server certificate")
+			glg.Info("Start refreshing server certificate")
 			serverCertHash, err := hash(tcc.serverCertPath)
 			if err != nil {
 				glg.Error("Failed to refresh server certificate: %s.", err.Error())
@@ -188,7 +188,7 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				glg.Error("Failed to refresh server certificate: %s.", err.Error())
 				continue
 			}
-			// A lock for when there are other features to update.
+			// lock the whole struct before write (prevent race from multiple calls).
 			// serverCert is atomic.Value, so this can read it without lock.
 			tcc.serverCertMutex.Lock()
 			different := !bytes.Equal(tcc.serverCertHash, serverCertHash) ||

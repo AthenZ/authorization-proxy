@@ -90,7 +90,7 @@ type TLS struct {
 	// CAPath represents the CA certificate chain file path for verifying client certificates.
 	CAPath string `yaml:"caPath"`
 
-	// CertRefreshPeriod represents the time to read the certificate again.
+	// CertRefreshPeriod represents the duration to read the server certificate again.
 	CertRefreshPeriod string `yaml:"certRefreshPeriod"`
 }
 
