@@ -45,11 +45,6 @@ type TLSCertificateCache struct {
 	certRefreshPeriod time.Duration
 }
 
-type TLSConfigWithTLSCertificateCache struct {
-	TLSConfig           *tls.Config
-	TLSCertificateCache *TLSCertificateCache
-}
-
 // NewTLSConfig returns a *tls.Config struct or error.
 // It reads TLS configuration and initializes *tls.Config struct.
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
@@ -58,21 +53,21 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 	// This is config for not using TLSCertificateCache.
 	modifiedCfg := cfg
 	modifiedCfg.CertRefreshPeriod = ""
-	t, err := NewTLSConfigWithTLSCertificateCache(modifiedCfg)
+	t, _, err := NewTLSConfigWithTLSCertificateCache(modifiedCfg)
 	if err != nil {
 		return nil, err
 	}
-	return t.TLSConfig, nil
+	return t, nil
 }
 
-// NewTLSConfigWithTLSCertificateCache returns a *TLSConfigWithTLSCertificateCache struct or error.
+// NewTLSConfigWithTLSCertificateCache returns a *tls.Config/*TLSCertificateCache struct or error.
 // cfg.CertRefreshPeriod is set(cert refresh enable), returns TLSCertificateCache: not nil / TLSConfig.GetCertificate: not nil / TLSConfig.Certificates: nil
 // cfg.CertRefreshPeriod is not set(cert refresh disable), returns TLSCertificateCache: nil / TLSConfig.GetCertificate: nil / TLSConfig.Certificates: not nil
 // It uses to enable the certificate auto-reload feature.
 // It reads TLS configuration and initializes *tls.Config / *TLSCertificateCache struct.
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
-func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCertificateCache, error) {
+func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCertificateCache, error) {
 	var tcc *TLSCertificateCache
 	t := &tls.Config{
 		MinVersion: tls.VersionTLS12,
@@ -94,7 +89,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 
 	isEnableCertRefresh, err := isValidDuration(cfg.CertRefreshPeriod)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot isValidDuration(cfg.CertRefreshPeriod)")
+		return nil, nil, errors.Wrap(err, "cannot isValidDuration(cfg.CertRefreshPeriod)")
 	}
 	if isEnableCertRefresh {
 		// GetCertificate can only be used with TLSCertificateCache.
@@ -103,22 +98,22 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 
 		tcc.certRefreshPeriod, err = time.ParseDuration(cfg.CertRefreshPeriod)
 		if err != nil {
-			return nil, errors.Wrap(err, "ParseDuration(cfg.CertRefreshPeriod)")
+			return nil, nil, errors.Wrap(err, "ParseDuration(cfg.CertRefreshPeriod)")
 		}
 		if cert != "" && key != "" {
 			crt, err := tls.LoadX509KeyPair(cert, key)
 			if err != nil {
-				return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
+				return nil, nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
 			}
 
 			crtHash, err := hash(cert)
 			if err != nil {
-				return nil, errors.Wrap(err, "hash(cert)")
+				return nil, nil, errors.Wrap(err, "hash(cert)")
 			}
 
 			crtKeyHash, err := hash(key)
 			if err != nil {
-				return nil, errors.Wrap(err, "hash(key)")
+				return nil, nil, errors.Wrap(err, "hash(key)")
 			}
 			tcc.serverCert.Store(&crt)
 			tcc.serverCertHash = crtHash
@@ -130,7 +125,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 		if cert != "" && key != "" {
 			crt, err := tls.LoadX509KeyPair(cert, key)
 			if err != nil {
-				return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
+				return nil, nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
 			}
 			t.Certificates = make([]tls.Certificate, 1)
 			t.Certificates[0] = crt
@@ -140,16 +135,13 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*TLSConfigWithTLSCerti
 	if ca != "" {
 		pool, err := NewX509CertPool(ca)
 		if err != nil {
-			return nil, errors.Wrap(err, "NewX509CertPool(ca)")
+			return nil, nil, errors.Wrap(err, "NewX509CertPool(ca)")
 		}
 		t.ClientCAs = pool
 		t.ClientAuth = tls.RequireAndVerifyClientCert
 	}
 
-	return &TLSConfigWithTLSCertificateCache{
-		TLSConfig:           t,
-		TLSCertificateCache: tcc,
-	}, nil
+	return t, tcc, nil
 }
 
 // NewX509CertPool returns *x509.CertPool struct or error.

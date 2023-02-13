@@ -361,13 +361,13 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 			return errs[i].Error() < errs[j].Error()
 		}
 	}
-	defaultTLSConfig := config.TLS{
+	defaultConfig := config.TLS{
 		Enable:            true,
 		CertPath:          "../test/data/dummyServer.crt",
 		KeyPath:           "../test/data/dummyServer.key",
 		CertRefreshPeriod: "5s",
 	}
-	defaultTLSConfigWithTLSCertificateCache, _ := service.NewTLSConfigWithTLSCertificateCache(defaultTLSConfig)
+	_, defaultTLSCache, _ := service.NewTLSConfigWithTLSCertificateCache(defaultConfig)
 	tests := []test{
 		func() test {
 			ctx, cancel := context.WithCancel(context.Background())
@@ -376,7 +376,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				fields: fields{
 					cfg: config.Config{
 						Server: config.Server{
-							TLS: defaultTLSConfig,
+							TLS: defaultConfig,
 						},
 					},
 					athenz: &service.AuthorizerdMock{
@@ -404,7 +404,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
-					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertificateCache,
+					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -592,7 +592,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				fields: fields{
 					cfg: config.Config{
 						Server: config.Server{
-							TLS: defaultTLSConfig,
+							TLS: defaultConfig,
 						},
 					},
 					athenz: &service.AuthorizerdMock{
@@ -621,7 +621,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
-					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertificateCache,
+					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -667,7 +667,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				fields: fields{
 					cfg: config.Config{
 						Server: config.Server{
-							TLS: defaultTLSConfig,
+							TLS: defaultConfig,
 						},
 					},
 					athenz: &service.AuthorizerdMock{
@@ -696,7 +696,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
-					tlsCertificateCache: defaultTLSConfigWithTLSCertificateCache.TLSCertificateCache,
+					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
 					ctx: ctx,

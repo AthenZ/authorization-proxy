@@ -76,12 +76,10 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 	var tlsConfig *tls.Config
 	var tlsCertificateCache *service.TLSCertificateCache
 	if cfg.Server.TLS.Enable {
-		configWithCache, err := service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
+		tlsConfig, tlsCertificateCache, err = service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
 		if err != nil {
 			return nil, errors.Wrap(err, "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)")
 		}
-		tlsConfig = configWithCache.TLSConfig
-		tlsCertificateCache = configWithCache.TLSCertificateCache
 		serverOption = append(serverOption, service.WithTLSConfig(tlsConfig))
 	}
 

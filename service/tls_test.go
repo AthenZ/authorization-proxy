@@ -375,49 +375,48 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		want       *TLSConfigWithTLSCertificateCache
+		wantConfig *tls.Config
+		wantCache  *TLSCertificateCache
 		beforeFunc func(args args)
-		checkFunc  func(*TLSConfigWithTLSCertificateCache, *TLSConfigWithTLSCertificateCache) error
+		checkFunc  func(*tls.Config, *TLSCertificateCache, *tls.Config, *TLSCertificateCache) error
 		afterFunc  func(args args)
 		wantErr    error
 	}{
 		{
 			name: "return value MinVersion test.",
 			args: defaultArgs,
-			want: &TLSConfigWithTLSCertificateCache{
-				TLSConfig: &tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth:     tls.RequireAndVerifyClientCert,
-					GetCertificate: nil,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				TLSCertificateCache: nil,
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth:     tls.RequireAndVerifyClientCert,
+				GetCertificate: nil,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.MinVersion != want.TLSConfig.MinVersion {
-					return fmt.Errorf("MinVersion not Matched :\tgot %d\twant %d", got.TLSConfig.MinVersion, want.TLSConfig.MinVersion)
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.MinVersion != wantConfig.MinVersion {
+					return fmt.Errorf("MinVersion not Matched :\tgot %d\twant %d", gotConfig.MinVersion, wantConfig.MinVersion)
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache is nil
-				if got.TLSCertificateCache != want.TLSCertificateCache {
-					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", got.TLSCertificateCache)
+				if gotCache != wantCache {
+					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", gotCache)
 				}
-				// config.TLS.certRefreshPeriod is not set, TLSConfig.GetCertificate is nil
-				if got.TLSConfig.GetCertificate != nil {
-					return fmt.Errorf("TLSConfig.GetCertificate is not nil")
+				// config.TLS.certRefreshPeriod is not set, GetCertificate is nil
+				if gotConfig.GetCertificate != nil {
+					return fmt.Errorf("GetCertificate is not nil")
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSConfig.Certificates is set
-				gotCert, _ := x509.ParseCertificate(got.TLSConfig.Certificates[0].Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSConfig.Certificates[0].Certificate[0])
+				gotCert, _ := x509.ParseCertificate(gotConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(wantConfig.Certificates[0].Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
@@ -427,31 +426,29 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 		{
 			name: "return value CurvePreferences test.",
 			args: defaultArgs,
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth: tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth: tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if len(got.TLSConfig.CurvePreferences) != len(want.TLSConfig.CurvePreferences) {
-					return fmt.Errorf("CurvePreferences not Matched length:\tgot %d\twant %d", len(got.TLSConfig.CurvePreferences), len(want.TLSConfig.CurvePreferences))
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if len(gotConfig.CurvePreferences) != len(wantConfig.CurvePreferences) {
+					return fmt.Errorf("CurvePreferences not Matched length:\tgot %d\twant %d", len(gotConfig.CurvePreferences), len(wantConfig.CurvePreferences))
 				}
-				for _, actualValue := range got.TLSConfig.CurvePreferences {
+				for _, actualValue := range gotConfig.CurvePreferences {
 					var match bool
-					for _, expectedValue := range want.TLSConfig.CurvePreferences {
+					for _, expectedValue := range wantConfig.CurvePreferences {
 						if actualValue == expectedValue {
 							match = true
 							break
@@ -459,20 +456,20 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 					}
 
 					if !match {
-						return fmt.Errorf("CurvePreferences not Find :\twant %d", want.TLSConfig.MinVersion)
+						return fmt.Errorf("CurvePreferences not Find :\twant %d", wantConfig.MinVersion)
 					}
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache is nil
-				if got.TLSCertificateCache != want.TLSCertificateCache {
-					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", got.TLSCertificateCache)
+				if gotCache != wantCache {
+					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", gotCache)
 				}
-				// config.TLS.certRefreshPeriod is not set, TLSConfig.GetCertificate is nil
-				if got.TLSConfig.GetCertificate != nil {
-					return fmt.Errorf("TLSConfig.GetCertificate is not nil")
+				// config.TLS.certRefreshPeriod is not set, GetCertificate is nil
+				if gotConfig.GetCertificate != nil {
+					return fmt.Errorf("GetCertificate is not nil")
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSConfig.Certificates is set
-				gotCert, _ := x509.ParseCertificate(got.TLSConfig.Certificates[0].Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSConfig.Certificates[0].Certificate[0])
+				gotCert, _ := x509.ParseCertificate(gotConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(wantConfig.Certificates[0].Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
@@ -482,39 +479,37 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 		{
 			name: "return value SessionTicketsDisabled test.",
 			args: defaultArgs,
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth: tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth: tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.SessionTicketsDisabled != want.TLSConfig.SessionTicketsDisabled {
-					return fmt.Errorf("SessionTicketsDisabled not matched :\tgot %v\twant %v", got.TLSConfig.SessionTicketsDisabled, want.TLSConfig.SessionTicketsDisabled)
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.SessionTicketsDisabled != wantConfig.SessionTicketsDisabled {
+					return fmt.Errorf("SessionTicketsDisabled not matched :\tgot %v\twant %v", gotConfig.SessionTicketsDisabled, wantConfig.SessionTicketsDisabled)
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache is nil
-				if got.TLSCertificateCache != want.TLSCertificateCache {
-					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", got.TLSCertificateCache)
+				if gotCache != wantCache {
+					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", gotCache)
 				}
-				// config.TLS.certRefreshPeriod is not set, TLSConfig.GetCertificate is nil
-				if got.TLSConfig.GetCertificate != nil {
-					return fmt.Errorf("TLSConfig.GetCertificate is not nil")
+				// config.TLS.certRefreshPeriod is not set, GetCertificate is nil
+				if gotConfig.GetCertificate != nil {
+					return fmt.Errorf("GetCertificate is not nil")
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSConfig.Certificates is set
-				gotCert, _ := x509.ParseCertificate(got.TLSConfig.Certificates[0].Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSConfig.Certificates[0].Certificate[0])
+				gotCert, _ := x509.ParseCertificate(gotConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(wantConfig.Certificates[0].Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
@@ -524,28 +519,26 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 		{
 			name: "return value Certificates test.",
 			args: defaultArgs,
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth: tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth: tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				for _, wantVal := range want.TLSConfig.Certificates {
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				for _, wantVal := range wantConfig.Certificates {
 					notExist := false
-					for _, gotVal := range got.TLSConfig.Certificates {
+					for _, gotVal := range gotConfig.Certificates {
 						if gotVal.PrivateKey == wantVal.PrivateKey {
 							notExist = true
 							break
@@ -556,16 +549,16 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 					}
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache is nil
-				if got.TLSCertificateCache != want.TLSCertificateCache {
-					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", got.TLSCertificateCache)
+				if gotCache != wantCache {
+					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", gotCache)
 				}
-				// config.TLS.certRefreshPeriod is not set, TLSConfig.GetCertificate is nil
-				if got.TLSConfig.GetCertificate != nil {
-					return fmt.Errorf("TLSConfig.GetCertificate is not nil")
+				// config.TLS.certRefreshPeriod is not set, GetCertificate is nil
+				if gotConfig.GetCertificate != nil {
+					return fmt.Errorf("GetCertificate is not nil")
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSConfig.Certificates is set
-				gotCert, _ := x509.ParseCertificate(got.TLSConfig.Certificates[0].Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSConfig.Certificates[0].Certificate[0])
+				gotCert, _ := x509.ParseCertificate(gotConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(wantConfig.Certificates[0].Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
@@ -575,39 +568,37 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 		{
 			name: "return value ClientAuth test.",
 			args: defaultArgs,
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth: tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth: tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.ClientAuth != want.TLSConfig.ClientAuth {
-					return fmt.Errorf("ClientAuth not Matched :\tgot %d \twant %d", got.TLSConfig.ClientAuth, want.TLSConfig.ClientAuth)
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.ClientAuth != wantConfig.ClientAuth {
+					return fmt.Errorf("ClientAuth not Matched :\tgot %d \twant %d", gotConfig.ClientAuth, wantConfig.ClientAuth)
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSCertificateCache is nil
-				if got.TLSCertificateCache != want.TLSCertificateCache {
-					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", got.TLSCertificateCache)
+				if gotCache != wantCache {
+					return fmt.Errorf("TLSCertificateCache is not nil\tgot: %v", gotCache)
 				}
-				// config.TLS.certRefreshPeriod is not set, TLSConfig.GetCertificate is nil
-				if got.TLSConfig.GetCertificate != nil {
-					return fmt.Errorf("TLSConfig.GetCertificate is not nil")
+				// config.TLS.certRefreshPeriod is not set, GetCertificate is nil
+				if gotConfig.GetCertificate != nil {
+					return fmt.Errorf("GetCertificate is not nil")
 				}
 				// config.TLS.certRefreshPeriod is not set, TLSConfig.Certificates is set
-				gotCert, _ := x509.ParseCertificate(got.TLSConfig.Certificates[0].Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSConfig.Certificates[0].Certificate[0])
+				gotCert, _ := x509.ParseCertificate(gotConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(wantConfig.Certificates[0].Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
@@ -624,51 +615,49 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 					CertRefreshPeriod: "12345s",
 				},
 			},
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth: tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				&TLSCertificateCache{
-					serverCert:        defaultServerCert,
-					serverCertHash:    defaultServerCerttHash,
-					serverCertKeyHash: defaultServerCerttKeyHash,
-					serverCertPath:    defaultArgs.cfg.CertPath,
-					serverCertKeyPath: defaultArgs.cfg.KeyPath,
-					certRefreshPeriod: 12345 * time.Second,
-				},
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth: tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.ClientAuth != want.TLSConfig.ClientAuth {
-					return fmt.Errorf("ClientAuth not Matched :\tgot %d \twant %d", got.TLSConfig.ClientAuth, want.TLSConfig.ClientAuth)
+			wantCache: &TLSCertificateCache{
+				serverCert:        defaultServerCert,
+				serverCertHash:    defaultServerCerttHash,
+				serverCertKeyHash: defaultServerCerttKeyHash,
+				serverCertPath:    defaultArgs.cfg.CertPath,
+				serverCertKeyPath: defaultArgs.cfg.KeyPath,
+				certRefreshPeriod: 12345 * time.Second,
+			},
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.ClientAuth != wantConfig.ClientAuth {
+					return fmt.Errorf("ClientAuth not Matched :\tgot %d \twant %d", gotConfig.ClientAuth, wantConfig.ClientAuth)
 				}
 				// config.TLS.certRefreshPeriod is set, TLSCertificateCache is set
-				gotCert, _ := x509.ParseCertificate(got.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
-				wantCert, _ := x509.ParseCertificate(want.TLSCertificateCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				gotCert, _ := x509.ParseCertificate(gotCache.serverCert.Load().(*tls.Certificate).Certificate[0])
+				wantCert, _ := x509.ParseCertificate(wantCache.serverCert.Load().(*tls.Certificate).Certificate[0])
 				if gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
 					return fmt.Errorf("Certificate SerialNumber not Matched\tgot: %s\twant: %s", gotCert.SerialNumber, wantCert.SerialNumber)
 				}
-				// config.TLS.certRefreshPeriod is set, TLSConfig.GetCertificate is set
-				if got.TLSConfig.GetCertificate == nil {
+				// config.TLS.certRefreshPeriod is set, GetCertificate is set
+				if gotConfig.GetCertificate == nil {
 					return fmt.Errorf("GetCertificate nil")
 				}
 				// config.TLS.certRefreshPeriod is set, TLSConfig.Certificates is nil
-				if got.TLSConfig.Certificates != nil {
-					return fmt.Errorf("Certificates not nil\tgot: %v", got.TLSConfig.Certificates)
+				if gotConfig.Certificates != nil {
+					return fmt.Errorf("Certificates not nil\tgot: %v", gotConfig.Certificates)
 				}
-				if got.TLSCertificateCache.certRefreshPeriod != want.TLSCertificateCache.certRefreshPeriod {
-					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", got.TLSCertificateCache.certRefreshPeriod, want.TLSCertificateCache.certRefreshPeriod)
+				if gotCache.certRefreshPeriod != wantCache.certRefreshPeriod {
+					return fmt.Errorf("certRefreshPeriod not Matched\tgot: %s\twant: %s", gotCache.certRefreshPeriod, wantCache.certRefreshPeriod)
 				}
 				return nil
 			},
@@ -680,23 +669,21 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 					CertPath: "",
 				},
 			},
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates:           nil,
-					ClientAuth:             tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates:           nil,
+				ClientAuth:             tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.Certificates != nil {
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.Certificates != nil {
 					return fmt.Errorf("Certificates not nil")
 				}
 				return nil
@@ -709,23 +696,21 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 					CertPath: "",
 				},
 			},
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates:           nil,
-					ClientAuth:             tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates:           nil,
+				ClientAuth:             tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.Certificates != nil {
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.Certificates != nil {
 					return fmt.Errorf("Certificates not nil")
 				}
 				return nil
@@ -740,27 +725,25 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				},
 			},
 
-			want: &TLSConfigWithTLSCertificateCache{
-				&tls.Config{
-					MinVersion: tls.VersionTLS12,
-					CurvePreferences: []tls.CurveID{
-						tls.CurveP521,
-						tls.CurveP384,
-						tls.CurveP256,
-						tls.X25519,
-					},
-					SessionTicketsDisabled: true,
-					Certificates: func() []tls.Certificate {
-						cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
-						return []tls.Certificate{cert}
-					}(),
-					ClientAuth: tls.RequireAndVerifyClientCert,
+			wantConfig: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+				CurvePreferences: []tls.CurveID{
+					tls.CurveP521,
+					tls.CurveP384,
+					tls.CurveP256,
+					tls.X25519,
 				},
-				nil,
+				SessionTicketsDisabled: true,
+				Certificates: func() []tls.Certificate {
+					cert, _ := tls.LoadX509KeyPair(defaultArgs.cfg.CertPath, defaultArgs.cfg.KeyPath)
+					return []tls.Certificate{cert}
+				}(),
+				ClientAuth: tls.RequireAndVerifyClientCert,
 			},
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got.TLSConfig.ClientAuth != 0 {
-					return fmt.Errorf("ClientAuth is :\t%d", got.TLSConfig.ClientAuth)
+			wantCache: nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig.ClientAuth != 0 {
+					return fmt.Errorf("ClientAuth is :\t%d", gotConfig.ClientAuth)
 				}
 				return nil
 			},
@@ -774,11 +757,15 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				},
 			},
 
-			want:    nil,
-			wantErr: errors.New("tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input"),
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got != nil {
-					return fmt.Errorf("got not nil :\tgot %d \twant %d", &got, &want)
+			wantConfig: nil,
+			wantCache:  nil,
+			wantErr:    errors.New("tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input"),
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig != nil {
+					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotConfig, &wantConfig)
+				}
+				if gotCache != nil {
+					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotCache, &wantCache)
 				}
 				return nil
 			},
@@ -793,11 +780,15 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 					CertRefreshPeriod: "invalid duration",
 				},
 			},
-			want:    nil,
-			wantErr: errors.New("cannot isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
-			checkFunc: func(got, want *TLSConfigWithTLSCertificateCache) error {
-				if got != nil {
-					return fmt.Errorf("got not nil :\tgot %d \twant %d", &got, &want)
+			wantConfig: nil,
+			wantCache:  nil,
+			wantErr:    errors.New("cannot isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				if gotConfig != nil {
+					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotConfig, &wantConfig)
+				}
+				if gotCache != nil {
+					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotCache, &wantCache)
 				}
 				return nil
 			},
@@ -809,7 +800,7 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 				tt.beforeFunc(tt.args)
 			}
 
-			got, err := NewTLSConfigWithTLSCertificateCache(tt.args.cfg)
+			gotConfig, gotCache, err := NewTLSConfigWithTLSCertificateCache(tt.args.cfg)
 			if tt.wantErr == nil && err != nil {
 				t.Errorf("NewTLSConfigWithTLSCertificateCache() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -823,7 +814,7 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 			}
 
 			if tt.checkFunc != nil {
-				err = tt.checkFunc(got, tt.want)
+				err = tt.checkFunc(gotConfig, gotCache, tt.wantConfig, tt.wantCache)
 				if err != nil {
 					t.Errorf("NewTLSConfigWithTLSCertificateCache() error = %v", err)
 					return
