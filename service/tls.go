@@ -55,21 +55,12 @@ type TLSConfigWithTLSCertificateCache struct {
 // It initializes TLS configuration, for example the CA certificate and key to start TLS server.
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
-	t, err := NewTLSConfigWithTLSCertificateCache(cfg)
+	// This is config for not using TLSCertificateCache.
+	modifiedCfg := cfg
+	modifiedCfg.CertRefreshPeriod = ""
+	t, err := NewTLSConfigWithTLSCertificateCache(modifiedCfg)
 	if err != nil {
 		return nil, err
-	}
-	// GetCertificate can only be used with TLSCertificateCache.
-	t.TLSConfig.GetCertificate = nil
-	cert := config.GetActualValue(cfg.CertPath)
-	key := config.GetActualValue(cfg.KeyPath)
-	if cert != "" && key != "" {
-		crt, err := tls.LoadX509KeyPair(cert, key)
-		if err != nil {
-			return nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
-		}
-		t.TLSConfig.Certificates = make([]tls.Certificate, 1)
-		t.TLSConfig.Certificates[0] = crt
 	}
 	return t.TLSConfig, nil
 }
