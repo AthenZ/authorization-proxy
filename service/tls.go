@@ -204,6 +204,8 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 				tcc.serverCertHash = serverCertHash
 				tcc.serverCertKeyHash = serverCertKeyHash
 				glg.Info("Refreshed server certificate")
+			} else {
+				glg.Info("Server certificate is same as the file")
 			}
 			tcc.serverCertMutex.Unlock()
 		}

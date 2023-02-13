@@ -1120,6 +1120,79 @@ func TestTLSCertificateCache_RefreshCertificate(t *testing.T) {
 			ctx, cancelFunc := context.WithCancel(context.Background())
 
 			return test{
+				name: "Test not refresh and stop",
+				fields: fields{
+					serverCert:        oldCert,
+					serverCertHash:    oldCertHash,
+					serverCertKeyHash: oldCertKeyHash,
+					serverCertPath:    testCertPath,
+					serverCertKeyPath: testCertKeyPath,
+					certRefreshPeriod: 500 * time.Millisecond,
+					serverCertMutex:   sync.Mutex{},
+				},
+				args: args{
+					ctx: ctx,
+				},
+				beforeFunc: func() error {
+					err := copyCert(oldCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					err = copyCert(oldCertKeyPath, testCertKeyPath)
+					if err != nil {
+						return err
+					}
+					return nil
+				},
+				checkFunc: func(tcc *TLSCertificateCache, want error) error {
+					cachedCert := tcc.serverCert.Load()
+					cc, _ := x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					oc, _ := x509.ParseCertificate(oldCertData.Certificate[0])
+					if cc.SerialNumber.String() != oc.SerialNumber.String() {
+						return errors.New("cached cert / old cert Serial Number not Matched")
+					}
+
+					// wait refresh period
+					time.Sleep(1 * time.Second)
+					cachedCert = tcc.serverCert.Load()
+					cc, _ = x509.ParseCertificate(cachedCert.(*tls.Certificate).Certificate[0])
+					// check cert not refreshed
+					if cc.SerialNumber.String() != oc.SerialNumber.String() {
+						return errors.New("cached cert / old cert Serial Number not Matched")
+					}
+					// refresh stop
+					cancelFunc()
+					err = copyCert(newCertPath, testCertPath)
+					if err != nil {
+						return err
+					}
+					time.Sleep(1 * time.Second)
+					nc, _ := x509.ParseCertificate(newCert.Certificate[0])
+					if cc.SerialNumber.String() == nc.SerialNumber.String() {
+						return errors.New("refresh not stopped")
+					}
+					return nil
+				},
+				afterFunc: func() error {
+					cancelFunc()
+					err := os.Remove(testCertPath)
+					if err != nil {
+						t.Errorf("test cert remove failed: %s", err)
+						return err
+					}
+					err = os.Remove(testCertKeyPath)
+					if err != nil {
+						t.Errorf("test cert remove failed: %s", err)
+						return err
+					}
+					return nil
+				},
+			}
+		}(),
+		func() test {
+			ctx, cancelFunc := context.WithCancel(context.Background())
+
+			return test{
 				name: "Test invalid cert not refresh, next period refresh success",
 				fields: fields{
 					serverCert:        oldCert,
