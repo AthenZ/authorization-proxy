@@ -1,6 +1,7 @@
 package service
 
 import (
+	"crypto/tls"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -201,6 +202,42 @@ func TestWithGRPCServer(t *testing.T) {
 			got := WithGRPCServer(tt.args.srv)
 			if err := tt.checkFunc(got); err != nil {
 				t.Errorf("WithGRPCServer() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestWithTLSConfig(t *testing.T) {
+	type args struct {
+		t *tls.Config
+	}
+	tests := []struct {
+		name      string
+		args      args
+		checkFunc func(Option) error
+	}{
+		{
+			name: "set success",
+			args: args{
+				t: &tls.Config{
+					MinVersion: tls.VersionTLS12,
+				},
+			},
+			checkFunc: func(o Option) error {
+				srv := &server{}
+				o(srv)
+				if srv.tlsConfig.MinVersion != tls.VersionTLS12 {
+					return errors.New("value cannot set")
+				}
+				return nil
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := WithTLSConfig(tt.args.t)
+			if err := tt.checkFunc(got); err != nil {
+				t.Errorf("WithTLSConfig() error = %v", err)
 			}
 		})
 	}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -130,6 +131,67 @@ func TestNewServer(t *testing.T) {
 			},
 		},
 		{
+			name: "Check HTTPS server address and certificate",
+			args: args{
+				opts: []Option{
+					WithServerConfig(config.Server{
+						Port: 9999,
+						TLS: config.TLS{
+							Enable: true,
+						},
+						HealthCheck: config.HealthCheck{
+							Port:     8080,
+							Endpoint: "/healthz",
+						},
+					}),
+					WithRestHandler(func() http.Handler {
+						return nil
+					}()),
+					WithTLSConfig(func() *tls.Config {
+						cfg, err := NewTLSConfig(config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/dummyServer.crt",
+							KeyPath:  "../test/data/dummyServer.key",
+						})
+						if err != nil {
+							return nil
+						}
+						return cfg
+					}()),
+				},
+			},
+			want: &server{
+				srv: &http.Server{
+					Addr: fmt.Sprintf(":%d", 9999),
+					TLSConfig: func() *tls.Config {
+						cfg, err := NewTLSConfig(config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/dummyServer.crt",
+							KeyPath:  "../test/data/dummyServer.key",
+						})
+						if err != nil {
+							return nil
+						}
+						return cfg
+					}(),
+				},
+			},
+			checkFunc: func(got, want Server, gotErr, wantErr error) error {
+				if !errors.Is(gotErr, wantErr) {
+					return errors.Errorf("got error is not matched with want error, got: %s, want: %s", gotErr, wantErr)
+				}
+				if got.(*server).srv.Addr != want.(*server).srv.Addr {
+					return fmt.Errorf("Server Addr not equals\tgot: %s\twant: %s", got.(*server).srv.Addr, want.(*server).srv.Addr)
+				}
+				gotCert, _ := x509.ParseCertificate(got.(*server).srv.TLSConfig.Certificates[0].Certificate[0])
+				wantCert, _ := x509.ParseCertificate(want.(*server).srv.TLSConfig.Certificates[0].Certificate[0])
+				if gotCert.SerialNumber == nil || gotCert.SerialNumber.String() != wantCert.SerialNumber.String() {
+					return fmt.Errorf("Certificate SerialNumber not equals\tgot: %s\twant: %s", gotCert.SerialNumber.String(), wantCert.SerialNumber.String())
+				}
+				return nil
+			},
+		},
+		{
 			name: "Check GRPC server not nil",
 			args: args{
 				opts: []Option{
@@ -171,6 +233,17 @@ func TestNewServer(t *testing.T) {
 							KeyPath:  "../test/data/dummyServer.key",
 						},
 					}),
+					WithTLSConfig(func() *tls.Config {
+						cfg, err := NewTLSConfig(config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/dummyServer.crt",
+							KeyPath:  "../test/data/dummyServer.key",
+						})
+						if err != nil {
+							return nil
+						}
+						return cfg
+					}()),
 				},
 			},
 			want: &server{
@@ -203,29 +276,25 @@ func TestNewServer(t *testing.T) {
 			},
 		},
 		{
-			name: "return error when grpc TLS cert invalid",
+			name: "Check TLS.Enable is true and tlsConfig is nil, return error",
 			args: args{
 				opts: []Option{
-					WithGRPCHandler(func(srv interface{}, stream grpc.ServerStream) error {
-						return nil
-					}),
 					WithServerConfig(config.Server{
 						Port: 9999,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: "../test/data/invalid_dummyServer.crt",
-							KeyPath:  "../test/data/invalid_dummyServer.key",
+							Enable: true,
 						},
 					}),
 				},
 			},
-			wantErr: errors.New("tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input"),
+			want:    nil,
+			wantErr: errors.New("s.cfg.TLS.Enable is true, but s.tlsConfig is nil."),
 			checkFunc: func(got, want Server, gotErr, wantErr error) error {
 				if gotErr.Error() != wantErr.Error() {
-					return errors.Errorf("got error is not matched with want error, got: %v, want: %v", gotErr, wantErr)
+					return errors.Errorf("got error is not matched with want error, got: %s, want: %s", gotErr, wantErr)
 				}
-				if !reflect.DeepEqual(got, want) {
-					return fmt.Errorf("not matched")
+				if got != nil {
+					return fmt.Errorf("want: nil, got: %s", got)
 				}
 				return nil
 			},
@@ -520,8 +589,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 			}
 		}(),
 		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -540,8 +615,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -568,9 +644,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -614,7 +688,6 @@ func Test_server_ListenAndServe(t *testing.T) {
 				},
 			}
 		}(),
-
 		func() test {
 			ctx, cancel := context.WithCancel(context.Background())
 
@@ -720,8 +793,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 		}(),
 
 		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -740,8 +819,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -768,9 +848,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -815,8 +893,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 			}
 		}(),
 		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -835,8 +919,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -863,9 +948,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -911,8 +994,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 		}(),
 		func() test {
 			ctx, cancelFunc := context.WithCancel(context.Background())
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -931,8 +1020,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -959,9 +1049,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							Port: hcSrvPort,
@@ -1004,8 +1092,14 @@ func Test_server_ListenAndServe(t *testing.T) {
 		}(),
 		func() test {
 			ctx, cancelFunc := context.WithCancel(context.Background())
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 
 			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
@@ -1024,8 +1118,9 @@ func Test_server_ListenAndServe(t *testing.T) {
 				fields: fields{
 					srv: func() *http.Server {
 						srv := &http.Server{
-							Addr:    fmt.Sprintf(":%d", apiSrvPort),
-							Handler: handler,
+							Addr:      fmt.Sprintf(":%d", apiSrvPort),
+							Handler:   handler,
+							TLSConfig: tc,
 						}
 
 						srv.SetKeepAlivesEnabled(true)
@@ -1052,9 +1147,7 @@ func Test_server_ListenAndServe(t *testing.T) {
 					cfg: config.Server{
 						Port: apiSrvPort,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 						HealthCheck: config.HealthCheck{
 							// Port:     hcSrvPort,
@@ -1564,25 +1657,63 @@ func Test_server_listenAndServeAPI(t *testing.T) {
 		want       error
 	}
 	tests := []test{
-		func() test {
-			key := "../test/data/dummyServer.key"
-			cert := "../test/data/dummyServer.crt"
+		{
+			name: "Test HTTP server startup",
+			fields: fields{
+				srv: &http.Server{
+					Handler: func() http.Handler {
+						return nil
+					}(),
+					Addr: fmt.Sprintf(":%d", 9999),
+				},
+				cfg: config.Server{
+					Port: 9999,
+					TLS: config.TLS{
+						Enable: false,
+					},
+				},
+			},
+			checkFunc: func(s *server, want error) error {
+				// listenAndServeAPI function is blocking, so we need to set timer to shutdown the process
+				go func() {
+					time.Sleep(time.Second * 1)
+					if err := s.srv.Shutdown(context.Background()); err != nil {
+						panic(err)
+					}
+				}()
 
+				got := s.listenAndServeAPI()
+
+				if got != want {
+					return fmt.Errorf("got:\t%v\nwant:\t%v", got, want)
+				}
+				return nil
+			},
+			want: http.ErrServerClosed,
+		},
+		func() test {
+			tc, err := NewTLSConfig(config.TLS{
+				Enable:   true,
+				CertPath: "../test/data/dummyServer.crt",
+				KeyPath:  "../test/data/dummyServer.key",
+			})
+			if err != nil {
+				panic(err)
+			}
 			return test{
-				name: "Test server startup",
+				name: "Test HTTPS server startup",
 				fields: fields{
 					srv: &http.Server{
 						Handler: func() http.Handler {
 							return nil
 						}(),
-						Addr: fmt.Sprintf(":%d", 9999),
+						Addr:      fmt.Sprintf(":%d", 9999),
+						TLSConfig: tc,
 					},
 					cfg: config.Server{
 						Port: 9999,
 						TLS: config.TLS{
-							Enable:   true,
-							CertPath: cert,
-							KeyPath:  key,
+							Enable: true,
 						},
 					},
 				},

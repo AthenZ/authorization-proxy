@@ -18,6 +18,7 @@ package service
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
@@ -50,6 +51,8 @@ type server struct {
 	grpcHandler    grpc.StreamHandler
 	grpcSrvRunning bool
 	grpcCloser     io.Closer
+
+	tlsConfig *tls.Config
 
 	// Health Check server
 	hcsrv     *http.Server
@@ -100,6 +103,10 @@ func NewServer(opts ...Option) (Server, error) {
 		o(s)
 	}
 
+	if s.cfg.TLS.Enable && s.tlsConfig == nil {
+		return nil, errors.New("s.cfg.TLS.Enable is true, but s.tlsConfig is nil.")
+	}
+
 	if s.grpcSrvEnable() {
 		gopts := []grpc.ServerOption{
 			grpc.CustomCodec(proxy.Codec()),
@@ -107,12 +114,7 @@ func NewServer(opts ...Option) (Server, error) {
 		}
 
 		if s.cfg.TLS.Enable {
-			cfg, err := NewTLSConfig(s.cfg.TLS)
-			if err != nil {
-				return nil, err
-			}
-
-			gopts = append(gopts, grpc.Creds(credentials.NewTLS(cfg)))
+			gopts = append(gopts, grpc.Creds(credentials.NewTLS(s.tlsConfig)))
 		}
 
 		s.grpcSrv = grpc.NewServer(gopts...)
@@ -122,6 +124,9 @@ func NewServer(opts ...Option) (Server, error) {
 			Handler: s.srvHandler,
 		}
 		s.srv.SetKeepAlivesEnabled(true)
+		if s.cfg.TLS.Enable {
+			s.srv.TLSConfig = s.tlsConfig
+		}
 	}
 
 	if s.hcSrvEnable() {
@@ -394,13 +399,6 @@ func (s *server) listenAndServeAPI() error {
 		return s.srv.ListenAndServe()
 	}
 
-	cfg, err := NewTLSConfig(s.cfg.TLS)
-	if err == nil && cfg != nil {
-		s.srv.TLSConfig = cfg
-	}
-	if err != nil {
-		glg.Error(errors.Wrap(err, "cannot NewTLSConfig(s.cfg.TLS)"))
-	}
 	return s.srv.ListenAndServeTLS("", "")
 }
 

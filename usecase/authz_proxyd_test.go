@@ -12,7 +12,6 @@ import (
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
-
 	"github.com/pkg/errors"
 )
 
@@ -21,10 +20,11 @@ func TestNew(t *testing.T) {
 		cfg config.Config
 	}
 	type test struct {
-		name      string
-		args      args
-		checkFunc func(AuthzProxyDaemon) error
-		wantErr   bool
+		name       string
+		args       args
+		checkFunc  func(AuthzProxyDaemon) error
+		wantErr    bool
+		wantErrStr string
 	}
 	tests := []test{
 		func() test {
@@ -53,6 +53,10 @@ func TestNew(t *testing.T) {
 					HealthCheck: config.HealthCheck{
 						Endpoint: "/dummy",
 					},
+					TLS: config.TLS{
+						Enable:            true,
+						CertRefreshPeriod: "24h",
+					},
 				},
 				Proxy: config.Proxy{
 					BufferSize: 512,
@@ -76,6 +80,128 @@ func TestNew(t *testing.T) {
 					if got.(*authzProxyDaemon).server == nil {
 						return errors.New("got.server is nil")
 					}
+					if got.(*authzProxyDaemon).tlsCertificateCache == nil {
+						return errors.New("got.tlsCertificateCache is nil")
+					}
+					return nil
+				},
+			}
+		}(),
+		func() test {
+			cfg := config.Config{
+				Athenz: config.Athenz{
+					URL: "athenz.io",
+				},
+				Authorization: config.Authorization{
+					AthenzDomains: []string{"dummyDom1", "dummyDom2"},
+					PublicKey: config.PublicKey{
+						SysAuthDomain:   "dummy.sys.auth",
+						RefreshPeriod:   "10s",
+						ETagExpiry:      "10s",
+						ETagPurgePeriod: "10s",
+					},
+					Policy: config.Policy{
+						ExpiryMargin:  "10s",
+						RefreshPeriod: "10s",
+						PurgePeriod:   "10s",
+					},
+					AccessToken: config.AccessToken{
+						Enable: true,
+					},
+				},
+				Server: config.Server{
+					HealthCheck: config.HealthCheck{
+						Endpoint: "/dummy",
+					},
+					TLS: config.TLS{
+						Enable:            true,
+						CertRefreshPeriod: "0s",
+					},
+				},
+				Proxy: config.Proxy{
+					BufferSize: 512,
+				},
+			}
+			return test{
+				name: "CertRefreshPeriod is 0, tlsCertificateCache is nil.",
+				args: args{
+					cfg: cfg,
+				},
+				checkFunc: func(got AuthzProxyDaemon) error {
+					if got == nil {
+						return errors.New("got is nil")
+					}
+					if !reflect.DeepEqual(got.(*authzProxyDaemon).cfg, cfg) {
+						return errors.New("got.cfg does not equal")
+					}
+					if got.(*authzProxyDaemon).athenz == nil {
+						return errors.New("got.athenz is nil")
+					}
+					if got.(*authzProxyDaemon).server == nil {
+						return errors.New("got.server is nil")
+					}
+					if got.(*authzProxyDaemon).tlsCertificateCache != nil {
+						return errors.New("got.tlsCertificateCache is not nil")
+					}
+					return nil
+				},
+			}
+		}(),
+		func() test {
+			cfg := config.Config{
+				Athenz: config.Athenz{
+					URL: "athenz.io",
+				},
+				Authorization: config.Authorization{
+					AthenzDomains: []string{"dummyDom1", "dummyDom2"},
+					PublicKey: config.PublicKey{
+						SysAuthDomain:   "dummy.sys.auth",
+						RefreshPeriod:   "10s",
+						ETagExpiry:      "10s",
+						ETagPurgePeriod: "10s",
+					},
+					Policy: config.Policy{
+						ExpiryMargin:  "10s",
+						RefreshPeriod: "10s",
+						PurgePeriod:   "10s",
+					},
+					AccessToken: config.AccessToken{
+						Enable: true,
+					},
+				},
+				Server: config.Server{
+					HealthCheck: config.HealthCheck{
+						Endpoint: "/dummy",
+					},
+					TLS: config.TLS{
+						Enable: true,
+					},
+				},
+				Proxy: config.Proxy{
+					BufferSize: 512,
+				},
+			}
+			return test{
+				name: "CertRefreshPeriod not set, tlsCertificateCache is nil.",
+				args: args{
+					cfg: cfg,
+				},
+				checkFunc: func(got AuthzProxyDaemon) error {
+					if got == nil {
+						return errors.New("got is nil")
+					}
+					if !reflect.DeepEqual(got.(*authzProxyDaemon).cfg, cfg) {
+						return errors.New("got.cfg does not equal")
+					}
+					if got.(*authzProxyDaemon).athenz == nil {
+						return errors.New("got.athenz is nil")
+					}
+					if got.(*authzProxyDaemon).server == nil {
+						return errors.New("got.server is nil")
+					}
+					if got.(*authzProxyDaemon).tlsCertificateCache != nil {
+						return errors.New("got.tlsCertificateCache is not nil")
+					}
 					return nil
 				},
 			}
@@ -91,7 +217,47 @@ func TestNew(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			wantErr:    true,
+			wantErrStr: "cannot newAuthzD(cfg): error create pubkeyd: invalid refresh period: time: invalid duration \"dummy\"",
+		}, {
+			name: "return error when grpc TLS cert invalid",
+			args: args{
+				cfg: config.Config{
+					Authorization: config.Authorization{
+						RoleToken: config.RoleToken{
+							Enable: true,
+						},
+					},
+					Server: config.Server{
+						TLS: config.TLS{
+							Enable:   true,
+							CertPath: "../test/data/invalid_dummyServer.crt",
+							KeyPath:  "../test/data/invalid_dummyServer.key",
+						},
+					},
+				},
+			},
+			wantErr:    true,
+			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input",
+		}, {
+			name: "return error when CertRefreshPeriod invalid (failed to parse)",
+			args: args{
+				cfg: config.Config{
+					Authorization: config.Authorization{
+						RoleToken: config.RoleToken{
+							Enable: true,
+						},
+					},
+					Server: config.Server{
+						TLS: config.TLS{
+							Enable:            true,
+							CertRefreshPeriod: "abcdefg",
+						},
+					},
+				},
+			},
+			wantErr:    true,
+			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): cannot isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"abcdefg\"",
 		},
 	}
 	for _, tt := range tests {
@@ -100,6 +266,16 @@ func TestNew(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
+			}
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if err.Error() != tt.wantErrStr {
+					t.Errorf("New() error = %v, wantErrStr = %v", err, tt.wantErrStr)
+					return
+				}
 			}
 			if tt.checkFunc != nil {
 				if err = tt.checkFunc(got); err != nil {
@@ -165,9 +341,10 @@ func Test_authzProxyDaemon_Init(t *testing.T) {
 
 func Test_authzProxyDaemon_Start(t *testing.T) {
 	type fields struct {
-		cfg    config.Config
-		athenz service.Authorizationd
-		server service.Server
+		cfg                 config.Config
+		athenz              service.Authorizationd
+		server              service.Server
+		tlsCertificateCache *service.TLSCertificateCache
 	}
 	type args struct {
 		ctx context.Context
@@ -184,12 +361,24 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 			return errs[i].Error() < errs[j].Error()
 		}
 	}
+	defaultConfig := config.TLS{
+		Enable:            true,
+		CertPath:          "../test/data/dummyServer.crt",
+		KeyPath:           "../test/data/dummyServer.key",
+		CertRefreshPeriod: "5s",
+	}
+	_, defaultTLSCache, _ := service.NewTLSConfigWithTLSCertificateCache(defaultConfig)
 	tests := []test{
 		func() test {
 			ctx, cancel := context.WithCancel(context.Background())
 			return test{
 				name: "Daemon start success",
 				fields: fields{
+					cfg: config.Config{
+						Server: config.Server{
+							TLS: defaultConfig,
+						},
+					},
 					athenz: &service.AuthorizerdMock{
 						StartFunc: func(ctx context.Context) <-chan error {
 							ech := make(chan error)
@@ -215,6 +404,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
+					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -400,6 +590,11 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 			return test{
 				name: "Daemon start end successfully, server shutdown without error",
 				fields: fields{
+					cfg: config.Config{
+						Server: config.Server{
+							TLS: defaultConfig,
+						},
+					},
 					athenz: &service.AuthorizerdMock{
 						StartFunc: func(ctx context.Context) <-chan error {
 							ech := make(chan error)
@@ -426,6 +621,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
+					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -469,6 +665,11 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 			return test{
 				name: "Daemon start end successfully, server shutdown >1 errors",
 				fields: fields{
+					cfg: config.Config{
+						Server: config.Server{
+							TLS: defaultConfig,
+						},
+					},
 					athenz: &service.AuthorizerdMock{
 						StartFunc: func(ctx context.Context) <-chan error {
 							ech := make(chan error)
@@ -495,6 +696,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
+					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
 					ctx: ctx,
@@ -534,13 +736,92 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				},
 			}
 		}(),
+		func() test {
+			ctx, cancel := context.WithCancel(context.Background())
+			dummyErr := errors.New("dummy")
+			return test{
+				name: "Cert refrsh daemon stops when tlsCertificateCache is nil",
+				fields: fields{
+					cfg: config.Config{
+						Server: config.Server{
+							TLS: config.TLS{
+								Enable:            false,
+								CertRefreshPeriod: "3h",
+								CertPath:          "../test/data/dummyServer.crt",
+								KeyPath:           "../test/data/dummyServer.key",
+							},
+						},
+					},
+					athenz: &service.AuthorizerdMock{
+						StartFunc: func(ctx context.Context) <-chan error {
+							ech := make(chan error)
+							go func() {
+								defer close(ech)
+								<-ctx.Done()
+								ech <- ctx.Err()
+							}()
+							return ech
+						},
+					},
+					server: &service.ServerMock{
+						ListenAndServeFunc: func(ctx context.Context) <-chan []error {
+							ech := make(chan []error)
+							go func() {
+								defer close(ech)
+								ech <- []error{errors.WithMessage(dummyErr, "server fails")}
+							}()
+							return ech
+						},
+					},
+					tlsCertificateCache: nil,
+				},
+				args: args{
+					ctx: ctx,
+				},
+				wantErrs: []error{
+					errors.WithMessage(dummyErr, "server fails"),
+				},
+				checkFunc: func(got <-chan []error, wantErrs []error) error {
+					mux := &sync.Mutex{}
+
+					gotErrs := make([][]error, 0)
+					mux.Lock()
+					go func() {
+						defer mux.Unlock()
+						// this can be execute == through eg.Wait() == refresh daemon is not running
+						err, ok := <-got
+						if !ok {
+							return
+						}
+						gotErrs = append(gotErrs, err)
+					}()
+					time.Sleep(time.Second)
+
+					mux.Lock()
+					defer mux.Unlock()
+
+					// check only send errors once and the errors are expected ignoring order
+					sort.Slice(gotErrs[0], getLessErrorFunc(gotErrs[0]))
+					sort.Slice(wantErrs, getLessErrorFunc(wantErrs))
+					gotErrsStr := fmt.Sprintf("%v", gotErrs[0])
+					wantErrsStr := fmt.Sprintf("%v", wantErrs)
+					if len(gotErrs) != 1 || !reflect.DeepEqual(gotErrsStr, wantErrsStr) {
+						return errors.Errorf("Invalid err, got: %v, want: %v", gotErrsStr, wantErrsStr)
+					}
+
+					cancel()
+					return nil
+				},
+			}
+		}(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			g := &authzProxyDaemon{
-				cfg:    tt.fields.cfg,
-				athenz: tt.fields.athenz,
-				server: tt.fields.server,
+				cfg:                 tt.fields.cfg,
+				athenz:              tt.fields.athenz,
+				server:              tt.fields.server,
+				tlsCertificateCache: tt.fields.tlsCertificateCache,
 			}
 			got := g.Start(tt.args.ctx)
 			if err := tt.checkFunc(got, tt.wantErrs); err != nil {

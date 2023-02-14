@@ -42,10 +42,11 @@ type AuthzProxyDaemon interface {
 }
 
 type authzProxyDaemon struct {
-	cfg        config.Config
-	athenz     service.Authorizationd
-	server     service.Server
-	grpcServer service.Server
+	cfg                 config.Config
+	athenz              service.Authorizationd
+	server              service.Server
+	grpcServer          service.Server
+	tlsCertificateCache *service.TLSCertificateCache
 }
 
 // New returns a Authorization Proxy daemon, or error occurred.
@@ -64,21 +65,34 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		handler.WithAuthorizationd(athenz),
 	)
 
-	srv, err := service.NewServer(
+	serverOption := []service.Option{
 		service.WithServerConfig(cfg.Server),
 		service.WithRestHandler(handler.New(cfg.Proxy, infra.NewBuffer(cfg.Proxy.BufferSize), athenz)),
 		service.WithDebugHandler(debugMux),
 		service.WithGRPCHandler(gh),
 		service.WithGRPCCloser(closer),
-	)
+	}
+
+	var tlsConfig *tls.Config
+	var tlsCertificateCache *service.TLSCertificateCache
+	if cfg.Server.TLS.Enable {
+		tlsConfig, tlsCertificateCache, err = service.NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS)")
+		}
+		serverOption = append(serverOption, service.WithTLSConfig(tlsConfig))
+	}
+
+	srv, err := service.NewServer(serverOption...)
 	if err != nil {
 		return nil, err
 	}
 
 	return &authzProxyDaemon{
-		cfg:    cfg,
-		athenz: athenz,
-		server: srv,
+		cfg:                 cfg,
+		athenz:              athenz,
+		server:              srv,
+		tlsCertificateCache: tlsCertificateCache,
 	}, nil
 }
 
@@ -135,6 +149,14 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 		}
 		return baseErr
 	})
+
+	// handle cert refresh goroutine error
+	// prevent run RefreshCertificate if Enable is false and CertRefreshPeriod is set
+	if g.tlsCertificateCache != nil {
+		eg.Go(func() error {
+			return g.tlsCertificateCache.RefreshCertificate(ctx)
+		})
+	}
 
 	// wait for shutdown, and summarize errors
 	go func() {
