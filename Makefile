@@ -23,7 +23,8 @@ init:
 	GO111MODULE=on go mod vendor
 	sleep 3
 
-deps: clean
+deps:
+	rm -rf ./go.sum
 	cp ./go.mod.default ./go.mod
 	GO111MODULE=on go mod tidy
 
