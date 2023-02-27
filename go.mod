@@ -7,10 +7,10 @@ replace (
 	github.com/golang/mock => github.com/golang/mock v1.6.0
 	github.com/golang/protobuf => github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp => github.com/google/go-cmp v0.5.9
-	github.com/google/pprof => github.com/google/pprof v0.0.0-20230207041349-798e818bf904
+	github.com/google/pprof => github.com/google/pprof v0.0.0-20230222194610-99052d3372e7
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	golang.org/x/crypto => golang.org/x/crypto v0.6.0
-	golang.org/x/exp => golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb
+	golang.org/x/exp => golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	golang.org/x/image => golang.org/x/image v0.5.0
 	golang.org/x/lint => golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/mobile => golang.org/x/mobile v0.0.0-20221110043201-43a038452099
@@ -26,7 +26,7 @@ replace (
 	golang.org/x/xerrors => golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/api => google.golang.org/api v0.110.0
 	google.golang.org/appengine => google.golang.org/appengine v1.6.7
-	google.golang.org/genproto => google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44
+	google.golang.org/genproto => google.golang.org/genproto v0.0.0-20230223222841-637eb2293923
 	google.golang.org/grpc => google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf => google.golang.org/protobuf v1.28.1
 )
@@ -60,7 +60,7 @@ require (
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
