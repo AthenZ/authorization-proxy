@@ -25,6 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -69,6 +70,7 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCertificateCache, error) {
 	var tcc *TLSCertificateCache
+
 	t := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CurvePreferences: []tls.CurveID{
@@ -79,6 +81,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 		},
 		SessionTicketsDisabled: true,
 		ClientAuth:             tls.NoClientCert,
+		CipherSuites:           cipherSuites(cfg.DisableCipherSuites),
 	}
 
 	var err error
@@ -241,4 +244,23 @@ func isValidDuration(durationString string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// cipherSuites returns list of available cipher suites
+func cipherSuites(dcs []string) []uint16 {
+	defaultCipherSuites, availableCipherSuites, availableCipherSuitesName := getCipherSuites(), []uint16{}, []string{}
+	if dcs != nil {
+		for _, cipher := range dcs {
+			defaultCipherSuites[cipher] = false
+		}
+	}
+	for cipher, ok := range defaultCipherSuites {
+		if ok {
+			availableCipherSuites = append(availableCipherSuites, CipherSuites[cipher])
+			availableCipherSuitesName = append(availableCipherSuitesName, cipher)
+		}
+	}
+	glg.Debugf("available ciphersuites: %v", strings.Join(availableCipherSuitesName, ":"))
+
+	return availableCipherSuites
 }

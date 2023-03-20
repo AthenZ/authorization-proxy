@@ -24,7 +24,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -106,22 +105,6 @@ func NewServer(opts ...Option) (Server, error) {
 
 	if s.cfg.TLS.Enable && s.tlsConfig == nil {
 		return nil, errors.New("s.cfg.TLS.Enable is true, but s.tlsConfig is nil.")
-	}
-
-	if s.cfg.TLS.Enable {
-		defaultCipherSuites, availableCipherSuitesName := getCipherSuites(), []string{}
-		if s.cfg.TLS.DisableCipherSuites != nil {
-			for _, cipher := range s.cfg.TLS.DisableCipherSuites {
-				defaultCipherSuites[cipher] = false
-			}
-		}
-		for cipher, ok := range defaultCipherSuites {
-			if ok {
-				s.tlsConfig.CipherSuites = append(s.tlsConfig.CipherSuites, CipherSuites[cipher])
-				availableCipherSuitesName = append(availableCipherSuitesName, cipher)
-			}
-		}
-		glg.Debugf("available ciphersuites: %v", strings.Join(availableCipherSuitesName, ":"))
 	}
 
 	if s.grpcSrvEnable() {

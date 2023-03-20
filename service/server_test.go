@@ -380,7 +380,7 @@ func TestNewServer(t *testing.T) {
 			},
 		},
 		{
-			name: "Check TLS.DisableCipherSuites == nil, CipherSuites is available",
+			name: "Check TLS.DisableCipherSuites == nil, cipher_suites.sCipherSuites is supported",
 			args: args{
 				opts: []Option{
 					WithServerConfig(config.Server{

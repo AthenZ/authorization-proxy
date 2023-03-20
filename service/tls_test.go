@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -1358,6 +1359,70 @@ func Test_isValidDuration(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("isValidDuration() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_cipherSuites(t *testing.T) {
+	type args struct {
+		dcs []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []uint16
+		wantErr error
+	}{
+		{
+			name: "Check TLS.DisableCipherSuites == nil, CipherSuites is available",
+			args: args{
+				dcs: nil,
+			},
+			want: func() (cipherSuites []uint16) {
+				for _, id := range CipherSuites {
+					cipherSuites = append(cipherSuites, id)
+				}
+				return
+			}(),
+		},
+		{
+			name: "Check disable cipher suites containing SHA-1",
+			args: args{
+				dcs: []string{
+					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_RSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+				},
+			},
+			want: []uint16{
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := cipherSuites(tt.args.dcs)
+			sort.Slice(got, func(i, j int) bool {
+				return got[i] < got[j]
+			})
+			sort.Slice(tt.want, func(i, j int) bool {
+				return tt.want[i] < tt.want[j]
+			})
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("cipherSuites() = %v, want %v", got, tt.want)
 			}
 		})
 	}
