@@ -248,16 +248,17 @@ func isValidDuration(durationString string) (bool, error) {
 
 // cipherSuites returns list of available cipher suites
 func cipherSuites(dcs []string) []uint16 {
-	defaultCipherSuites, availableCipherSuites, availableCipherSuitesName := getCipherSuites(), []uint16{}, []string{}
+	defaultCipherSuites, availableCipherSuites, availableCipherSuitesName := getCipherSuitesAvailability(), []uint16{}, []string{}
+	ciphers := getCipherSuites()
 	if dcs != nil {
 		for _, cipher := range dcs {
 			defaultCipherSuites[cipher] = false
 		}
 	}
-	for cipher, ok := range defaultCipherSuites {
+	for c, ok := range defaultCipherSuites {
 		if ok {
-			availableCipherSuites = append(availableCipherSuites, CipherSuites[cipher])
-			availableCipherSuitesName = append(availableCipherSuitesName, cipher)
+			availableCipherSuites = append(availableCipherSuites, ciphers[c])
+			availableCipherSuitesName = append(availableCipherSuitesName, c)
 		}
 	}
 	glg.Debugf("available ciphersuites: %v", strings.Join(availableCipherSuitesName, ":"))
