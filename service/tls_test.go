@@ -1376,9 +1376,24 @@ func Test_cipherSuites(t *testing.T) {
 		wantErr error
 	}{
 		{
-			name: "Check TLS.DisableCipherSuites == nil, CipherSuites is available",
+			name: "Check TLS.DisableCipherSuites == nil, default cipher suites is available",
 			args: args{
 				dcs: nil,
+			},
+			want: func() (cipherSuites []uint16) {
+				ciphers := defaultCipherSuitesMap()
+				for _, id := range ciphers {
+					cipherSuites = append(cipherSuites, id)
+				}
+				return
+			}(),
+		},
+		{
+			name: "Check empty character is specified in TLS.DisableCipherSuites, default cipher suites is available",
+			args: args{
+				dcs: []string{
+					"",
+				},
 			},
 			want: func() (cipherSuites []uint16) {
 				ciphers := defaultCipherSuitesMap()
