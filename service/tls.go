@@ -265,38 +265,21 @@ func cipherSuites(dcs []string) []uint16 {
 		availableCipherSuites     []uint16
 		availableCipherSuitesName []string
 	)
-	defaultAvailableCipherSuites := defaultCipherSuitesAvailabilityMap()
+
 	ciphers := defaultCipherSuitesMap()
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
-			defaultAvailableCipherSuites[cipher] = false
+			delete(ciphers, cipher)
+
 		}
 	}
-	for c, ok := range defaultAvailableCipherSuites {
-		if ok {
-			availableCipherSuites = append(availableCipherSuites, ciphers[c])
-			availableCipherSuitesName = append(availableCipherSuitesName, c)
-		}
+	for cipherName, cipherId := range ciphers {
+		availableCipherSuites = append(availableCipherSuites, cipherId)
+		availableCipherSuitesName = append(availableCipherSuitesName, cipherName)
 	}
 	glg.Debugf("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
 
 	return availableCipherSuites
-}
-
-// defaultCipherSuitesAvailabilityMap returns a map of default cipherSuites and availability
-func defaultCipherSuitesAvailabilityMap() map[string]bool {
-	ciphers := make(map[string]bool)
-	for _, c := range tls.CipherSuites() {
-		if _, ok := denyCipherSuites[c.Name]; !ok {
-			ciphers[c.Name] = true
-		}
-	}
-	for _, c := range tls.InsecureCipherSuites() {
-		if _, ok := denyCipherSuites[c.Name]; !ok {
-			ciphers[c.Name] = true
-		}
-	}
-	return ciphers
 }
 
 // defaultCipherSuitesMap returns a map of name and id in default cipher suites
