@@ -37,6 +37,7 @@ import (
 
 var (
 	// denyCipherSuites is a list of cipher suites not supported in default
+	// Default cipher suites is a list of tls.CipherSuites() and tls.InsecureCipherSuites() excluding denyCipherSuites
 	denyCipherSuites = map[string]uint16{
 		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
@@ -264,26 +265,26 @@ func cipherSuites(dcs []string) []uint16 {
 		availableCipherSuites     []uint16
 		availableCipherSuitesName []string
 	)
-	defaultCipherSuites := getCipherSuitesAvailability()
-	ciphers := getCipherSuites()
+	defaultAvailableCipherSuites := defaultCipherSuitesAvailabilityMap()
+	ciphers := defaultCipherSuitesMap()
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
-			defaultCipherSuites[cipher] = false
+			defaultAvailableCipherSuites[cipher] = false
 		}
 	}
-	for c, ok := range defaultCipherSuites {
+	for c, ok := range defaultAvailableCipherSuites {
 		if ok {
 			availableCipherSuites = append(availableCipherSuites, ciphers[c])
 			availableCipherSuitesName = append(availableCipherSuitesName, c)
 		}
 	}
-	glg.Debugf("available ciphersuites: %v", strings.Join(availableCipherSuitesName, ":"))
+	glg.Debugf("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
 
 	return availableCipherSuites
 }
 
-// getCipherSuitesAvailability returns a map of CipherSuites and availability
-func getCipherSuitesAvailability() map[string]bool {
+// defaultCipherSuitesAvailabilityMap returns a map of default cipherSuites and availability
+func defaultCipherSuitesAvailabilityMap() map[string]bool {
 	ciphers := make(map[string]bool)
 	for _, c := range tls.CipherSuites() {
 		if _, ok := denyCipherSuites[c.Name]; !ok {
@@ -298,8 +299,8 @@ func getCipherSuitesAvailability() map[string]bool {
 	return ciphers
 }
 
-// getCipherSuites returns a map of CipherSuites.Name and CipherSuites.ID
-func getCipherSuites() map[string]uint16 {
+// defaultCipherSuitesMap returns a map of name and id in default cipher suites
+func defaultCipherSuitesMap() map[string]uint16 {
 	ciphers := make(map[string]uint16)
 	for _, c := range tls.CipherSuites() {
 		if _, ok := denyCipherSuites[c.Name]; !ok {

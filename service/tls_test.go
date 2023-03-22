@@ -1381,7 +1381,7 @@ func Test_cipherSuites(t *testing.T) {
 				dcs: nil,
 			},
 			want: func() (cipherSuites []uint16) {
-				ciphers := getCipherSuites()
+				ciphers := defaultCipherSuitesMap()
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
