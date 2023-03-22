@@ -35,6 +35,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	// denyCipherSuites is a list of cipher suites to be deny
+	// Available CipherSuites defined at https://pkg.go.dev/crypto/tls/#pkg-constants
+	denyCipherSuites = map[string]uint16{
+		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
+		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+		"TLS_RSA_WITH_AES_128_CBC_SHA256":         tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
+		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
+	}
+)
+
 // TLSCertificateCache caches a certificate
 type TLSCertificateCache struct {
 	serverCert        atomic.Value
@@ -246,11 +259,15 @@ func isValidDuration(durationString string) (bool, error) {
 	return false, nil
 }
 
-// cipherSuites returns list of available cipher suites
+// cipherSuites returns slice of available cipher suites
 func cipherSuites(dcs []string) []uint16 {
-	defaultCipherSuites, availableCipherSuites, availableCipherSuitesName := getCipherSuitesAvailability(), []uint16{}, []string{}
+	var (
+		availableCipherSuites     []uint16
+		availableCipherSuitesName []string
+	)
+	defaultCipherSuites := getCipherSuitesAvailability()
 	ciphers := getCipherSuites()
-	if dcs != nil {
+	if len(dcs) != 0 {
 		for _, cipher := range dcs {
 			defaultCipherSuites[cipher] = false
 		}
@@ -264,4 +281,32 @@ func cipherSuites(dcs []string) []uint16 {
 	glg.Debugf("available ciphersuites: %v", strings.Join(availableCipherSuitesName, ":"))
 
 	return availableCipherSuites
+}
+
+// getCipherSuites returns a map of CipherSuites and availability
+func getCipherSuitesAvailability() map[string]bool {
+	ciphers := make(map[string]bool)
+	for _, c := range tls.CipherSuites() {
+		ciphers[c.Name] = true
+	}
+	for _, c := range tls.InsecureCipherSuites() {
+		if _, ok := denyCipherSuites[c.Name]; !ok {
+			ciphers[c.Name] = true
+		}
+	}
+	return ciphers
+}
+
+// getCipherSuites returns a map of CipherSuites.Name and CipherSuites.ID
+func getCipherSuites() map[string]uint16 {
+	ciphers := make(map[string]uint16)
+	for _, c := range tls.CipherSuites() {
+		ciphers[c.Name] = c.ID
+	}
+	for _, c := range tls.InsecureCipherSuites() {
+		if _, ok := denyCipherSuites[c.Name]; !ok {
+			ciphers[c.Name] = c.ID
+		}
+	}
+	return ciphers
 }

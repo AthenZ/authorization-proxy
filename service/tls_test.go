@@ -29,9 +29,10 @@ func TestNewTLSConfig(t *testing.T) {
 	}
 	defaultArgs := args{
 		cfg: config.TLS{
-			CertPath: "../test/data/dummyServer.crt",
-			KeyPath:  "../test/data/dummyServer.key",
-			CAPath:   "../test/data/dummyCa.pem",
+			CertPath:            "../test/data/dummyServer.crt",
+			KeyPath:             "../test/data/dummyServer.key",
+			CAPath:              "../test/data/dummyCa.pem",
+			DisableCipherSuites: nil,
 		},
 	}
 
