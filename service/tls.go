@@ -36,8 +36,7 @@ import (
 )
 
 var (
-	// denyCipherSuites is a list of cipher suites to be deny
-	// Available CipherSuites defined at https://pkg.go.dev/crypto/tls/#pkg-constants
+	// denyCipherSuites is a list of cipher suites not supported in default
 	denyCipherSuites = map[string]uint16{
 		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
@@ -259,7 +258,7 @@ func isValidDuration(durationString string) (bool, error) {
 	return false, nil
 }
 
-// cipherSuites returns slice of available cipher suites
+// cipherSuites returns list of available cipher suites
 func cipherSuites(dcs []string) []uint16 {
 	var (
 		availableCipherSuites     []uint16
@@ -283,11 +282,13 @@ func cipherSuites(dcs []string) []uint16 {
 	return availableCipherSuites
 }
 
-// getCipherSuites returns a map of CipherSuites and availability
+// getCipherSuitesAvailability returns a map of CipherSuites and availability
 func getCipherSuitesAvailability() map[string]bool {
 	ciphers := make(map[string]bool)
 	for _, c := range tls.CipherSuites() {
-		ciphers[c.Name] = true
+		if _, ok := denyCipherSuites[c.Name]; !ok {
+			ciphers[c.Name] = true
+		}
 	}
 	for _, c := range tls.InsecureCipherSuites() {
 		if _, ok := denyCipherSuites[c.Name]; !ok {
@@ -301,7 +302,9 @@ func getCipherSuitesAvailability() map[string]bool {
 func getCipherSuites() map[string]uint16 {
 	ciphers := make(map[string]uint16)
 	for _, c := range tls.CipherSuites() {
-		ciphers[c.Name] = c.ID
+		if _, ok := denyCipherSuites[c.Name]; !ok {
+			ciphers[c.Name] = c.ID
+		}
 	}
 	for _, c := range tls.InsecureCipherSuites() {
 		if _, ok := denyCipherSuites[c.Name]; !ok {
