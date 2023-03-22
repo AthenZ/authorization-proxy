@@ -36,19 +36,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	// denyCipherSuites is a list of cipher suites not supported in default
-	// Default cipher suites is a list of tls.CipherSuites() and tls.InsecureCipherSuites() excluding denyCipherSuites
-	denyCipherSuites = map[string]uint16{
-		"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256": tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
-		"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256":   tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
-		"TLS_RSA_WITH_AES_128_CBC_SHA256":         tls.TLS_RSA_WITH_AES_128_CBC_SHA256,
-		"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA":        tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
-		"TLS_ECDHE_RSA_WITH_RC4_128_SHA":          tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-		"TLS_RSA_WITH_RC4_128_SHA":                tls.TLS_RSA_WITH_RC4_128_SHA,
-	}
-)
-
 // TLSCertificateCache caches a certificate
 type TLSCertificateCache struct {
 	serverCert        atomic.Value
@@ -285,21 +272,28 @@ func cipherSuites(dcs []string) ([]uint16, error) {
 		availableCipherSuites = append(availableCipherSuites, cipherId)
 		availableCipherSuitesName = append(availableCipherSuitesName, cipherName)
 	}
-	glg.Debugf("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
+	glg.Infof("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
 
 	return availableCipherSuites, nil
 }
 
 // defaultCipherSuitesMap returns a map of name and id in default cipher suites
 func defaultCipherSuitesMap() map[string]uint16 {
+	var (
+		// allowInsecureCipherSuites is a list of cipher suites supported in tls.InsecureCipherSuites()
+		// Default cipher suites is a list of tls.CipherSuites() and allowInsecureCipherSuites
+		allowInsecureCipherSuites = map[string]uint16{
+			"TLS_RSA_WITH_3DES_EDE_CBC_SHA":       tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA": tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		}
+	)
+
 	ciphers := make(map[string]uint16)
 	for _, c := range tls.CipherSuites() {
-		if _, ok := denyCipherSuites[c.Name]; !ok {
-			ciphers[c.Name] = c.ID
-		}
+		ciphers[c.Name] = c.ID
 	}
 	for _, c := range tls.InsecureCipherSuites() {
-		if _, ok := denyCipherSuites[c.Name]; !ok {
+		if _, ok := allowInsecureCipherSuites[c.Name]; ok {
 			ciphers[c.Name] = c.ID
 		}
 	}
