@@ -22,6 +22,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -84,6 +85,11 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCertificateCache, error) {
 	var tcc *TLSCertificateCache
 
+	cs, err := cipherSuites(cfg.DisableCipherSuites)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot cipherSuite(cfg.DisableCipherSuites)")
+	}
+
 	t := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CurvePreferences: []tls.CurveID{
@@ -94,10 +100,8 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 		},
 		SessionTicketsDisabled: true,
 		ClientAuth:             tls.NoClientCert,
-		CipherSuites:           cipherSuites(cfg.DisableCipherSuites),
+		CipherSuites:           cs,
 	}
-
-	var err error
 
 	cert := config.GetActualValue(cfg.CertPath)
 	key := config.GetActualValue(cfg.KeyPath)
@@ -260,7 +264,7 @@ func isValidDuration(durationString string) (bool, error) {
 }
 
 // cipherSuites returns list of available cipher suites
-func cipherSuites(dcs []string) []uint16 {
+func cipherSuites(dcs []string) ([]uint16, error) {
 	var (
 		availableCipherSuites     []uint16
 		availableCipherSuitesName []string
@@ -269,8 +273,12 @@ func cipherSuites(dcs []string) []uint16 {
 	ciphers := defaultCipherSuitesMap()
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
-			delete(ciphers, cipher)
-
+			if _, ok := ciphers[cipher]; ok {
+				delete(ciphers, cipher)
+			} else {
+				err := fmt.Errorf("Invalid cipher suite: %s", cipher)
+				return nil, err
+			}
 		}
 	}
 	for cipherName, cipherId := range ciphers {
@@ -279,7 +287,7 @@ func cipherSuites(dcs []string) []uint16 {
 	}
 	glg.Debugf("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
 
-	return availableCipherSuites
+	return availableCipherSuites, nil
 }
 
 // defaultCipherSuitesMap returns a map of name and id in default cipher suites

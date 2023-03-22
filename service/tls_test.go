@@ -1387,21 +1387,17 @@ func Test_cipherSuites(t *testing.T) {
 				}
 				return
 			}(),
+			wantErr: nil,
 		},
 		{
-			name: "Check empty character is specified in TLS.DisableCipherSuites, default cipher suites is available",
+			name: "Check cipher suite does not exist, invalid cipher suites",
 			args: args{
 				dcs: []string{
-					"",
+					"dummy",
 				},
 			},
-			want: func() (cipherSuites []uint16) {
-				ciphers := defaultCipherSuitesMap()
-				for _, id := range ciphers {
-					cipherSuites = append(cipherSuites, id)
-				}
-				return
-			}(),
+			want:    nil,
+			wantErr: fmt.Errorf("Invalid cipher suite: dummy"),
 		},
 		{
 			name: "Check disable cipher suites containing SHA-1",
@@ -1430,17 +1426,23 @@ func Test_cipherSuites(t *testing.T) {
 				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
 				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
 			},
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := cipherSuites(tt.args.dcs)
+			got, err := cipherSuites(tt.args.dcs)
 			sort.Slice(got, func(i, j int) bool {
 				return got[i] < got[j]
 			})
 			sort.Slice(tt.want, func(i, j int) bool {
 				return tt.want[i] < tt.want[j]
 			})
+			if tt.wantErr != nil {
+				if err.Error() != tt.wantErr.Error() {
+					t.Errorf("cipherSuites() error = %s, wantErr %s", err.Error(), tt.wantErr.Error())
+				}
+			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("cipherSuites() = %v, want %v", got, tt.want)
 			}
