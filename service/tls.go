@@ -73,7 +73,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 
 	cs, err := cipherSuites(cfg.DisableCipherSuites)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot cipherSuite(cfg.DisableCipherSuites)")
+		return nil, nil, errors.Wrap(err, "cipherSuite(cfg.DisableCipherSuites)")
 	}
 
 	t := &tls.Config{
@@ -95,7 +95,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 
 	isEnableCertRefresh, err := isValidDuration(cfg.CertRefreshPeriod)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot isValidDuration(cfg.CertRefreshPeriod)")
+		return nil, nil, errors.Wrap(err, "isValidDuration(cfg.CertRefreshPeriod)")
 	}
 	if isEnableCertRefresh {
 		// GetCertificate can only be used with TLSCertificateCache.
@@ -259,12 +259,11 @@ func cipherSuites(dcs []string) ([]uint16, error) {
 	ciphers := defaultCipherSuitesMap()
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
-			if _, ok := ciphers[cipher]; ok {
-				delete(ciphers, cipher)
-			} else {
+			if _, ok := ciphers[cipher]; !ok {
 				err := glg.Errorf("Invalid cipher suite: %s", cipher)
 				return nil, err
 			}
+			delete(ciphers, cipher)
 		}
 	}
 	for cipherName, cipherId := range ciphers {
