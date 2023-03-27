@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/kpango/glg"
 )
 
 func TestNewTLSConfig(t *testing.T) {
@@ -1397,7 +1398,7 @@ func Test_cipherSuites(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: fmt.Errorf("Invalid cipher suite: dummy"),
+			wantErr: glg.Errorf("Invalid cipher suite: dummy"),
 		},
 		{
 			name: "Check disable cipher suites containing SHA-1",

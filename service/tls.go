@@ -22,7 +22,6 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -263,7 +262,7 @@ func cipherSuites(dcs []string) ([]uint16, error) {
 			if _, ok := ciphers[cipher]; ok {
 				delete(ciphers, cipher)
 			} else {
-				err := fmt.Errorf("Invalid cipher suite: %s", cipher)
+				err := glg.Errorf("Invalid cipher suite: %s", cipher)
 				return nil, err
 			}
 		}
