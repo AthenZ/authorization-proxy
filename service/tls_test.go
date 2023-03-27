@@ -785,7 +785,7 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 			},
 			wantConfig: nil,
 			wantCache:  nil,
-			wantErr:    errors.New("cannot isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
+			wantErr:    errors.New("isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
 			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
 				if gotConfig != nil {
 					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotConfig, &wantConfig)
