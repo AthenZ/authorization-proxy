@@ -89,6 +89,14 @@ func TestNew(t *testing.T) {
 						KeyPath:           "test/data/dummyServer.key",
 						CAPath:            "test/data/dummyCa.pem",
 						CertRefreshPeriod: "24h",
+						DisableCipherSuites: []string{
+							"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+							"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+							"TLS_RSA_WITH_AES_256_CBC_SHA",
+							"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+							"TLS_RSA_WITH_AES_128_CBC_SHA",
+							"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+						},
 					},
 					HealthCheck: HealthCheck{
 						Port:     6082,

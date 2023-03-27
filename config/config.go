@@ -92,6 +92,9 @@ type TLS struct {
 
 	// CertRefreshPeriod represents the duration to read the server certificate again.
 	CertRefreshPeriod string `yaml:"certRefreshPeriod"`
+
+	// DisableCipherSuites represents list of disable ciphersuites
+	DisableCipherSuites []string `yaml:"disableCipherSuites"`
 }
 
 // HealthCheck represents the health check server configuration.

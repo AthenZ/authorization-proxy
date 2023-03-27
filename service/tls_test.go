@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -17,6 +18,7 @@ import (
 	"time"
 
 	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/kpango/glg"
 )
 
 func TestNewTLSConfig(t *testing.T) {
@@ -28,9 +30,10 @@ func TestNewTLSConfig(t *testing.T) {
 	}
 	defaultArgs := args{
 		cfg: config.TLS{
-			CertPath: "../test/data/dummyServer.crt",
-			KeyPath:  "../test/data/dummyServer.key",
-			CAPath:   "../test/data/dummyCa.pem",
+			CertPath:            "../test/data/dummyServer.crt",
+			KeyPath:             "../test/data/dummyServer.key",
+			CAPath:              "../test/data/dummyCa.pem",
+			DisableCipherSuites: nil,
 		},
 	}
 
@@ -782,7 +785,7 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 			},
 			wantConfig: nil,
 			wantCache:  nil,
-			wantErr:    errors.New("cannot isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
+			wantErr:    errors.New("isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
 			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
 				if gotConfig != nil {
 					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotConfig, &wantConfig)
@@ -1358,6 +1361,91 @@ func Test_isValidDuration(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("isValidDuration() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_cipherSuites(t *testing.T) {
+	type args struct {
+		dcs []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []uint16
+		wantErr error
+	}{
+		{
+			name: "Check TLS.DisableCipherSuites == nil, default cipher suites is available",
+			args: args{
+				dcs: nil,
+			},
+			want: func() (cipherSuites []uint16) {
+				ciphers := defaultCipherSuitesMap()
+				for _, id := range ciphers {
+					cipherSuites = append(cipherSuites, id)
+				}
+				return
+			}(),
+			wantErr: nil,
+		},
+		{
+			name: "Check cipher suite does not exist, invalid cipher suites",
+			args: args{
+				dcs: []string{
+					"dummy",
+				},
+			},
+			want:    nil,
+			wantErr: glg.Errorf("Invalid cipher suite: dummy"),
+		},
+		{
+			name: "Check disable cipher suites containing SHA-1",
+			args: args{
+				dcs: []string{
+					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_RSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+				},
+			},
+			want: []uint16{
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := cipherSuites(tt.args.dcs)
+			sort.Slice(got, func(i, j int) bool {
+				return got[i] < got[j]
+			})
+			sort.Slice(tt.want, func(i, j int) bool {
+				return tt.want[i] < tt.want[j]
+			})
+			if tt.wantErr != nil {
+				if err.Error() != tt.wantErr.Error() {
+					t.Errorf("cipherSuites() error = %s, wantErr %s", err.Error(), tt.wantErr.Error())
+				}
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("cipherSuites() = %v, want %v", got, tt.want)
 			}
 		})
 	}

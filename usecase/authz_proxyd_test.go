@@ -257,7 +257,7 @@ func TestNew(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): cannot isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"abcdefg\"",
+			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"abcdefg\"",
 		},
 	}
 	for _, tt := range tests {

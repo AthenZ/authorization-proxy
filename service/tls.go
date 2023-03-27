@@ -25,6 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -69,6 +70,12 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 // Server and CA Certificate, and private key will read from files from file paths defined in environment variables.
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCertificateCache, error) {
 	var tcc *TLSCertificateCache
+
+	cs, err := cipherSuites(cfg.DisableCipherSuites)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cipherSuite(cfg.DisableCipherSuites)")
+	}
+
 	t := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		CurvePreferences: []tls.CurveID{
@@ -79,9 +86,8 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 		},
 		SessionTicketsDisabled: true,
 		ClientAuth:             tls.NoClientCert,
+		CipherSuites:           cs,
 	}
-
-	var err error
 
 	cert := config.GetActualValue(cfg.CertPath)
 	key := config.GetActualValue(cfg.KeyPath)
@@ -89,7 +95,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 
 	isEnableCertRefresh, err := isValidDuration(cfg.CertRefreshPeriod)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cannot isValidDuration(cfg.CertRefreshPeriod)")
+		return nil, nil, errors.Wrap(err, "isValidDuration(cfg.CertRefreshPeriod)")
 	}
 	if isEnableCertRefresh {
 		// GetCertificate can only be used with TLSCertificateCache.
@@ -241,4 +247,53 @@ func isValidDuration(durationString string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// cipherSuites returns list of available cipher suites
+func cipherSuites(dcs []string) ([]uint16, error) {
+	var (
+		availableCipherSuites     []uint16
+		availableCipherSuitesName []string
+	)
+
+	ciphers := defaultCipherSuitesMap()
+	if len(dcs) != 0 {
+		for _, cipher := range dcs {
+			if _, ok := ciphers[cipher]; !ok {
+				err := glg.Errorf("Invalid cipher suite: %s", cipher)
+				return nil, err
+			}
+			delete(ciphers, cipher)
+		}
+	}
+	for cipherName, cipherId := range ciphers {
+		availableCipherSuites = append(availableCipherSuites, cipherId)
+		availableCipherSuitesName = append(availableCipherSuitesName, cipherName)
+	}
+	glg.Infof("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
+
+	return availableCipherSuites, nil
+}
+
+// defaultCipherSuitesMap returns a map of name and id in default cipher suites
+func defaultCipherSuitesMap() map[string]uint16 {
+	var (
+		// allowInsecureCipherSuites is a list of cipher suites supported in tls.InsecureCipherSuites()
+		// Default cipher suites is a list of tls.CipherSuites() and allowInsecureCipherSuites
+		allowInsecureCipherSuites = map[string]uint16{
+			"TLS_RSA_WITH_3DES_EDE_CBC_SHA":       tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA": tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+		}
+	)
+
+	ciphers := make(map[string]uint16)
+	for _, c := range tls.CipherSuites() {
+		ciphers[c.Name] = c.ID
+	}
+	for _, c := range tls.InsecureCipherSuites() {
+		if _, ok := allowInsecureCipherSuites[c.Name]; ok {
+			ciphers[c.Name] = c.ID
+		}
+	}
+	return ciphers
 }

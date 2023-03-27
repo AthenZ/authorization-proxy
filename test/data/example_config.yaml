@@ -11,6 +11,13 @@ server:
     keyPath: "test/data/dummyServer.key"
     caPath: "test/data/dummyCa.pem"
     certRefreshPeriod: "24h"
+    disableCipherSuites:
+      - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+      - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+      - TLS_RSA_WITH_AES_256_CBC_SHA
+      - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+      - TLS_RSA_WITH_AES_128_CBC_SHA
+      - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
   healthCheck:
     port: 6082
     endpoint: /healthz
