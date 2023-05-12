@@ -287,6 +287,7 @@ type Log struct {
 
 // Transport exposes a subset of Transport parameters. reference: https://github.com/golang/go/blob/master/src/net/http/transport.go#L95
 type Transport struct {
+	DialContext            DialContext   `yaml:"dialContext,omitempty"`
 	TLSHandshakeTimeout    time.Duration `yaml:"tlsHandshakeTimeout,omitempty"`
 	DisableKeepAlives      bool          `yaml:"disableKeepAlives,omitempty"`
 	DisableCompression     bool          `yaml:"disableCompression,omitempty"`
@@ -300,6 +301,11 @@ type Transport struct {
 	WriteBufferSize        int           `yaml:"writeBufferSize,omitempty"`
 	ReadBufferSize         int           `yaml:"readBufferSize,omitempty"`
 	ForceAttemptHTTP2      bool          `yaml:"forceAttemptHTTP2,omitempty"`
+}
+
+// DialContext exposes a subset of DialContext parameters. reference: https://github.com/golang/go/blob/master/src/net/http/transport.go#L318
+type DialContext struct {
+	Timeout time.Duration `yaml:"timeout"`
 }
 
 // OriginLog represents log configuration from origin
