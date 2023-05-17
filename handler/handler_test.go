@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -593,6 +594,18 @@ func Test_updateDialContext(t *testing.T) {
 			want: &http.Transport{
 				DialContext: (&net.Dialer{
 					Timeout: 10 * time.Second,
+				}).DialContext,
+			},
+		},
+		{
+			name: "check if dialContext.timeout is negative, timeout is math.MaxInt64",
+			args: args{
+				cfg:         &http.Transport{},
+				dialTimeout: -1,
+			},
+			want: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout: math.MaxInt64,
 				}).DialContext,
 			},
 		},
