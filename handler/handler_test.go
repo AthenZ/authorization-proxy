@@ -664,7 +664,7 @@ func Test_transportFromCfg(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := transportFromCfg(tt.args.cfg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("transportFromCfg() = %+v, want %+v", got, tt.want)
+				t.Errorf("transportFromCfg() = %v, want %v", got, tt.want)
 			}
 		})
 	}
