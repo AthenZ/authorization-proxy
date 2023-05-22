@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -88,12 +89,21 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 		ModifyResponse: modifyResponse,
 		Transport: &transport{
 			prov:         prov,
-			RoundTripper: transportFromCfg(cfg.Transport),
+			RoundTripper: updateDialContext(transportFromCfg(cfg.Transport), cfg.Transport.DialContext.Timeout),
 			cfg:          cfg,
 			noAuthPaths:  mapPathToAssertion(cfg.NoAuthPaths),
 		},
 		ErrorHandler: handleError,
 	}
+}
+
+func updateDialContext(t *http.Transport, dialTimeout time.Duration) *http.Transport {
+	if dialTimeout != time.Duration(0) {
+		t.DialContext = (&net.Dialer{
+			Timeout: dialTimeout,
+		}).DialContext
+	}
+	return t
 }
 
 func transportFromCfg(cfg config.Transport) *http.Transport {

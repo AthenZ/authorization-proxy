@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
@@ -560,6 +562,61 @@ func TestNew(t *testing.T) {
 			got := New(tt.args.cfg, tt.args.bp, tt.args.prov)
 			if err := tt.checkFunc(got); err != nil {
 				t.Errorf("New() error: %v", err)
+			}
+		})
+	}
+}
+
+func Test_updateDialContext(t *testing.T) {
+	type args struct {
+		cfg         *http.Transport
+		dialTimeout time.Duration
+	}
+	tests := []struct {
+		name string
+		args args
+		want *http.Transport
+	}{
+		{
+			name: "check dialContext.timeout == 0 is not used",
+			args: args{
+				cfg:         &http.Transport{},
+				dialTimeout: 0,
+			},
+			want: &http.Transport{},
+		},
+		{
+			name: "check dialContext.timeout != 0 is used",
+			args: args{
+				cfg:         &http.Transport{},
+				dialTimeout: 10 * time.Second,
+			},
+			want: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout: 10 * time.Second,
+				}).DialContext,
+			},
+		},
+		{
+			name: "check if dialContext.timeout is negative, timeout is math.MaxInt64",
+			args: args{
+				cfg:         &http.Transport{},
+				dialTimeout: -1,
+			},
+			want: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout: math.MaxInt64,
+				}).DialContext,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := updateDialContext(tt.args.cfg, tt.args.dialTimeout)
+			p1 := reflect.ValueOf(got.DialContext).Pointer()
+			p2 := reflect.ValueOf(tt.want.DialContext).Pointer()
+			if p1 != p2 {
+				t.Errorf("updateDialContext() = %+v, want %+v", p1, p2)
 			}
 		})
 	}

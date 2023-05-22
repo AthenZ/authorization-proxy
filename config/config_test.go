@@ -140,6 +140,9 @@ func TestNew(t *testing.T) {
 						WriteBufferSize:        0,
 						ReadBufferSize:         0,
 						ForceAttemptHTTP2:      true,
+						DialContext: DialContext{
+							Timeout: 1 * time.Second,
+						},
 					},
 					OriginLog: OriginLog{
 						StatusCode: StatusCode{
