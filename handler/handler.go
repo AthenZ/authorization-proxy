@@ -103,6 +103,7 @@ func updateDialContext(t *http.Transport, dialTimeout time.Duration) *http.Trans
 			Timeout: dialTimeout,
 		}).DialContext
 	}
+	glg.Debugf("proxy transport: %+v\n", t)
 	return t
 }
 
@@ -164,7 +165,6 @@ func transportFromCfg(cfg config.Transport) *http.Transport {
 		t.ForceAttemptHTTP2 = cfg.ForceAttemptHTTP2
 	}
 
-	glg.Debugf("proxy transport: %+v\n", t)
 	return t
 }
 
