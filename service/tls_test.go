@@ -1368,7 +1368,8 @@ func Test_isValidDuration(t *testing.T) {
 
 func Test_cipherSuites(t *testing.T) {
 	type args struct {
-		dcs []string
+		dcs  []string
+		eics []string
 	}
 	tests := []struct {
 		name    string
@@ -1379,10 +1380,14 @@ func Test_cipherSuites(t *testing.T) {
 		{
 			name: "Check TLS.DisableCipherSuites == nil, default cipher suites is available",
 			args: args{
-				dcs: nil,
+				dcs:  nil,
+				eics: nil,
 			},
 			want: func() (cipherSuites []uint16) {
-				ciphers := defaultCipherSuitesMap()
+				ciphers := make(map[string]uint16)
+				for _, c := range tls.CipherSuites() {
+					ciphers[c.Name] = c.ID
+				}
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
@@ -1396,6 +1401,7 @@ func Test_cipherSuites(t *testing.T) {
 				dcs: []string{
 					"dummy",
 				},
+				eics: nil,
 			},
 			want:    nil,
 			wantErr: glg.Errorf("Invalid cipher suite: dummy"),
@@ -1404,15 +1410,14 @@ func Test_cipherSuites(t *testing.T) {
 			name: "Check disable cipher suites containing SHA-1",
 			args: args{
 				dcs: []string{
-					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_RSA_WITH_AES_256_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
 				},
+				eics: nil,
 			},
 			want: []uint16{
 				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
@@ -1429,10 +1434,54 @@ func Test_cipherSuites(t *testing.T) {
 			},
 			wantErr: nil,
 		},
+		{
+			name: "Check enable insecure cipher suites",
+			args: args{
+				dcs: []string{
+					"TLS_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_RSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+				},
+				eics: []string{
+					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+				},
+			},
+			want: []uint16{
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Check insecure cipher suite does not exist, invalid insecure cipher suites",
+			args: args{
+				dcs: nil,
+				eics: []string{
+					"insecureDummy",
+				},
+			},
+			want:    nil,
+			wantErr: glg.Errorf("Invalid insecure cipher suite: insecureDummy"),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := cipherSuites(tt.args.dcs)
+			got, err := cipherSuites(tt.args.dcs, tt.args.eics)
 			sort.Slice(got, func(i, j int) bool {
 				return got[i] < got[j]
 			})

@@ -97,6 +97,10 @@ func TestNew(t *testing.T) {
 							"TLS_RSA_WITH_AES_128_CBC_SHA",
 							"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
 						},
+						EnableInsecureCipherSuites: []string{
+							"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+							"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
+						},
 					},
 					HealthCheck: HealthCheck{
 						Port:     6082,

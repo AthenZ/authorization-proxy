@@ -71,7 +71,7 @@ func NewTLSConfig(cfg config.TLS) (*tls.Config, error) {
 func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCertificateCache, error) {
 	var tcc *TLSCertificateCache
 
-	cs, err := cipherSuites(cfg.DisableCipherSuites)
+	cs, err := cipherSuites(cfg.DisableCipherSuites, cfg.EnableInsecureCipherSuites)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cipherSuite(cfg.DisableCipherSuites)")
 	}
@@ -250,13 +250,16 @@ func isValidDuration(durationString string) (bool, error) {
 }
 
 // cipherSuites returns list of available cipher suites
-func cipherSuites(dcs []string) ([]uint16, error) {
+func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 	var (
 		availableCipherSuites     []uint16
 		availableCipherSuitesName []string
 	)
 
-	ciphers := defaultCipherSuitesMap()
+	ciphers := make(map[string]uint16)
+	for _, c := range tls.CipherSuites() {
+		ciphers[c.Name] = c.ID
+	}
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
 			if _, ok := ciphers[cipher]; !ok {
@@ -266,6 +269,19 @@ func cipherSuites(dcs []string) ([]uint16, error) {
 			delete(ciphers, cipher)
 		}
 	}
+	if len(eics) != 0 {
+		insecureCiphers := make(map[string]uint16)
+		for _, c := range tls.InsecureCipherSuites() {
+			insecureCiphers[c.Name] = c.ID
+		}
+		for _, cipher := range eics {
+			if _, ok := insecureCiphers[cipher]; !ok {
+				err := glg.Errorf("Invalid insecure cipher suite: %s", cipher)
+				return nil, err
+			}
+			ciphers[cipher] = insecureCiphers[cipher]
+		}
+	}
 	for cipherName, cipherId := range ciphers {
 		availableCipherSuites = append(availableCipherSuites, cipherId)
 		availableCipherSuitesName = append(availableCipherSuitesName, cipherName)
@@ -273,27 +289,4 @@ func cipherSuites(dcs []string) ([]uint16, error) {
 	glg.Infof("available cipher suites: %v", strings.Join(availableCipherSuitesName, ":"))
 
 	return availableCipherSuites, nil
-}
-
-// defaultCipherSuitesMap returns a map of name and id in default cipher suites
-func defaultCipherSuitesMap() map[string]uint16 {
-	var (
-		// allowInsecureCipherSuites is a list of cipher suites supported in tls.InsecureCipherSuites()
-		// Default cipher suites is a list of tls.CipherSuites() and allowInsecureCipherSuites
-		allowInsecureCipherSuites = map[string]uint16{
-			"TLS_RSA_WITH_3DES_EDE_CBC_SHA":       tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-			"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA": tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		}
-	)
-
-	ciphers := make(map[string]uint16)
-	for _, c := range tls.CipherSuites() {
-		ciphers[c.Name] = c.ID
-	}
-	for _, c := range tls.InsecureCipherSuites() {
-		if _, ok := allowInsecureCipherSuites[c.Name]; ok {
-			ciphers[c.Name] = c.ID
-		}
-	}
-	return ciphers
 }
