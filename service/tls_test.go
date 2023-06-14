@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/AthenZ/authorization-proxy/v4/config"
-	"github.com/kpango/glg"
 )
 
 func TestNewTLSConfig(t *testing.T) {
@@ -1404,7 +1403,7 @@ func Test_cipherSuites(t *testing.T) {
 				eics: nil,
 			},
 			want:    nil,
-			wantErr: glg.Errorf("Invalid cipher suite: dummy"),
+			wantErr: errors.New("Invalid cipher suite: dummy"),
 		},
 		{
 			name: "Check disable cipher suites containing SHA-1",
@@ -1476,7 +1475,20 @@ func Test_cipherSuites(t *testing.T) {
 				},
 			},
 			want:    nil,
-			wantErr: glg.Errorf("Invalid insecure cipher suite: insecureDummy"),
+			wantErr: errors.New("Invalid insecure cipher suite: insecureDummy"),
+		},
+		{
+			name: "Check the same cipher suite is specified for disableCipherSuites and enableInsecureCipherSuites",
+			args: args{
+				dcs: []string{
+					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+				},
+				eics: []string{
+					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+				},
+			},
+			want:    nil,
+			wantErr: errors.New("Invalid insecure cipher suite: TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA"),
 		},
 	}
 	for _, tt := range tests {

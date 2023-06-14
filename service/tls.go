@@ -251,11 +251,6 @@ func isValidDuration(durationString string) (bool, error) {
 
 // cipherSuites returns list of available cipher suites
 func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
-	var (
-		availableCipherSuites     []uint16
-		availableCipherSuitesName []string
-	)
-
 	ciphers := make(map[string]uint16)
 	for _, c := range tls.CipherSuites() {
 		ciphers[c.Name] = c.ID
@@ -263,7 +258,7 @@ func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
 			if _, ok := ciphers[cipher]; !ok {
-				err := glg.Errorf("Invalid cipher suite: %s", cipher)
+				err := errors.WithMessage(errors.New(cipher), "Invalid cipher suite")
 				return nil, err
 			}
 			delete(ciphers, cipher)
@@ -276,12 +271,16 @@ func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 		}
 		for _, cipher := range eics {
 			if _, ok := insecureCiphers[cipher]; !ok {
-				err := glg.Errorf("Invalid insecure cipher suite: %s", cipher)
+				err := errors.WithMessage(errors.New(cipher), "Invalid insecure cipher suite")
 				return nil, err
 			}
 			ciphers[cipher] = insecureCiphers[cipher]
 		}
 	}
+
+	availableCipherSuites := make([]uint16, 0, len(ciphers))
+	availableCipherSuitesName := make([]string, 0, len(ciphers))
+
 	for cipherName, cipherId := range ciphers {
 		availableCipherSuites = append(availableCipherSuites, cipherId)
 		availableCipherSuitesName = append(availableCipherSuitesName, cipherName)
