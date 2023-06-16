@@ -73,7 +73,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 
 	cs, err := cipherSuites(cfg.DisableCipherSuites, cfg.EnableInsecureCipherSuites)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "cipherSuite(cfg.DisableCipherSuites)")
+		return nil, nil, errors.Wrap(err, "cipherSuite(cfg.DisableCipherSuites, cfg.EnableInsecureCipherSuites)")
 	}
 
 	t := &tls.Config{
