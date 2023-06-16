@@ -95,6 +95,9 @@ type TLS struct {
 
 	// DisableCipherSuites represents list of disable ciphersuites
 	DisableCipherSuites []string `yaml:"disableCipherSuites"`
+
+	// EnableInsecureCipherSuites represents list of enable insecureCipherSuites
+	EnableInsecureCipherSuites []string `yaml:"enableInsecureCipherSuites"`
 }
 
 // HealthCheck represents the health check server configuration.
