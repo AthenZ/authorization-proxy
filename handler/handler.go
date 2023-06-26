@@ -18,6 +18,7 @@ package handler
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -88,10 +89,11 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 		},
 		ModifyResponse: modifyResponse,
 		Transport: &transport{
-			prov:         prov,
-			RoundTripper: updateDialContext(transportFromCfg(cfg.Transport), cfg.Transport.DialContext.Timeout),
-			cfg:          cfg,
-			noAuthPaths:  mapPathToAssertion(cfg.NoAuthPaths),
+			prov:                 prov,
+			RoundTripper:         updateDialContext(transportFromCfg(cfg.Transport), cfg.Transport.DialContext.Timeout),
+			cfg:                  cfg,
+			noAuthPaths:          mapPathToAssertion(cfg.NoAuthPaths),
+			insecureCipherSuites: tls.InsecureCipherSuites(),
 		},
 		ErrorHandler: handleError,
 	}
