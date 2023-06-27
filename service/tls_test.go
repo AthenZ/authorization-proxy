@@ -1390,6 +1390,8 @@ func Test_cipherSuites(t *testing.T) {
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
+				cipherSuites = append(cipherSuites, tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA)
+				cipherSuites = append(cipherSuites, tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA)
 				return
 			}(),
 			wantErr: nil,
@@ -1409,10 +1411,12 @@ func Test_cipherSuites(t *testing.T) {
 			name: "Check disable cipher suites containing SHA-1",
 			args: args{
 				dcs: []string{
+					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_RSA_WITH_AES_256_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
 				},
@@ -1435,6 +1439,43 @@ func Test_cipherSuites(t *testing.T) {
 		},
 		{
 			name: "Check enable insecure cipher suites",
+			args: args{
+				dcs: []string{
+					"TLS_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_RSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
+					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+				},
+				eics: []string{
+					"TLS_RSA_WITH_RC4_128_SHA",
+					"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
+					"TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+				},
+			},
+			want: []uint16{
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_AES_128_GCM_SHA256,
+				tls.TLS_AES_256_GCM_SHA384,
+				tls.TLS_CHACHA20_POLY1305_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+				tls.TLS_RSA_WITH_RC4_128_SHA,
+				tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
+				tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+				tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+			},
+			wantErr: nil,
+		},
+		{
+			name: "Check enable allowInsecureCipherSuites",
 			args: args{
 				dcs: []string{
 					"TLS_RSA_WITH_AES_128_CBC_SHA",
