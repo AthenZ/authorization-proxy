@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"crypto/tls"
 	"errors"
 	"io"
 	"net/http"
@@ -36,10 +37,11 @@ func Test_transport_RoundTrip(t *testing.T) {
 		return a
 	}
 	type fields struct {
-		RoundTripper http.RoundTripper
-		prov         service.Authorizationd
-		cfg          config.Proxy
-		noAuthPaths  []*policy.Assertion
+		RoundTripper         http.RoundTripper
+		prov                 service.Authorizationd
+		cfg                  config.Proxy
+		noAuthPaths          []*policy.Assertion
+		insecureCipherSuites []*tls.CipherSuite
 	}
 	type args struct {
 		r    *http.Request
@@ -381,14 +383,67 @@ func Test_transport_RoundTrip(t *testing.T) {
 			wantErr:        true,
 			wantCloseCount: 1,
 		},
+		{
+			name: "allowed insecure cipher suites success",
+			fields: fields{
+				RoundTripper: &RoundTripperMock{
+					RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 200,
+						}, nil
+					},
+				},
+				prov: &service.AuthorizerdMock{
+					VerifyFunc: func(r *http.Request, act, res string) (authorizerd.Principal, error) {
+						return &PrincipalMock{
+							NameFunc: func() string {
+								return "testPrincipal"
+							},
+							RolesFunc: func() []string {
+								return []string{"testRole1", "testRole2"}
+							},
+							DomainFunc: func() string {
+								return "testDomain"
+							},
+							IssueTimeFunc: func() int64 {
+								return 0
+							},
+							ExpiryTimeFunc: func() int64 {
+								return 0
+							},
+						}, nil
+					},
+				},
+				cfg:                  config.Proxy{},
+				insecureCipherSuites: tls.InsecureCipherSuites(),
+			},
+			args: args{
+				r: func() *http.Request {
+					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					r.TLS = &tls.ConnectionState{
+						CipherSuite: tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+					}
+					return r
+				}(),
+				body: &readCloseCounter{
+					ReadErr: errors.New("readCloseCounter.Read not implemented"),
+				},
+			},
+			want: &http.Response{
+				StatusCode: 200,
+			},
+			wantErr:        false,
+			wantCloseCount: 0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &transport{
-				RoundTripper: tt.fields.RoundTripper,
-				prov:         tt.fields.prov,
-				cfg:          tt.fields.cfg,
-				noAuthPaths:  tt.fields.noAuthPaths,
+				RoundTripper:         tt.fields.RoundTripper,
+				prov:                 tt.fields.prov,
+				cfg:                  tt.fields.cfg,
+				noAuthPaths:          tt.fields.noAuthPaths,
+				insecureCipherSuites: tt.fields.insecureCipherSuites,
 			}
 			if tt.args.body != nil {
 				tt.args.r.Body = tt.args.body
