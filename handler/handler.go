@@ -74,6 +74,7 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 				return
 			}
 			req.Header = r.Header
+			req.RemoteAddr = r.RemoteAddr
 			req.TLS = r.TLS
 			if cfg.PreserveHost {
 				req.Host = r.Host

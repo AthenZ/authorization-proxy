@@ -79,7 +79,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if r.TLS != nil {
 		for _, cipherSuite := range t.insecureCipherSuites {
 			if cipherSuite.ID == r.TLS.CipherSuite {
-				glg.Warnf("A connection was made with a deprecated cipher suite. Domain: %s, Role: [%s], Principal: %s, Cipher Suite: %s", p.Domain(), strings.Join(p.Roles(), ","), p.Name(), cipherSuite.Name)
+				glg.Warnf("A connection was made with a deprecated cipher suite. Client IP adress: %s, Domain: %s, Role: [%s], Principal: %s, Cipher Suite: %s", r.RemoteAddr, p.Domain(), strings.Join(p.Roles(), ","), p.Name(), cipherSuite.Name)
 				break
 			}
 		}
