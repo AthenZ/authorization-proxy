@@ -17,6 +17,7 @@ limitations under the License.
 package handler
 
 import (
+	"crypto/tls"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,6 +37,8 @@ type transport struct {
 	prov        service.Authorizationd
 	cfg         config.Proxy
 	noAuthPaths []*policy.Assertion
+	// List to check for deprecated cipher suites
+	insecureCipherSuites []*tls.CipherSuite
 }
 
 // Based on the following.
@@ -71,6 +74,15 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	p, err := t.prov.Authorize(r, r.Method, r.URL.Path)
 	if err != nil {
 		return nil, errors.Wrap(err, ErrMsgUnverified)
+	}
+
+	if r.TLS != nil {
+		for _, cipherSuite := range t.insecureCipherSuites {
+			if cipherSuite.ID == r.TLS.CipherSuite {
+				glg.Warnf("A connection was made with a deprecated cipher suite. Client IP adress: %s, Domain: %s, Role: [%s], Principal: %s, Cipher Suite: %s", r.RemoteAddr, p.Domain(), strings.Join(p.Roles(), ","), p.Name(), cipherSuite.Name)
+				break
+			}
+		}
 	}
 
 	req2 := cloneRequest(r) // per RoundTripper contract
