@@ -158,6 +158,7 @@ func TestNewDebugRoutes(t *testing.T) {
 						return errors.New("pattern not match")
 					}
 
+					// compare function pointer of the handler
 					px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
 					py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
 					if px == py {
