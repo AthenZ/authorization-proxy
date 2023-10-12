@@ -25,7 +25,7 @@
 # 	sleep 3
 
 deps:
-	rm ./go.sum
+	rm -f ./go.sum
 	cp ./go.mod.default ./go.mod
 	GO111MODULE=on go mod tidy
 
