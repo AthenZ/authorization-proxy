@@ -7,6 +7,7 @@ import (
 	"net/http/pprof"
 	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
@@ -156,7 +157,10 @@ func TestNewDebugRoutes(t *testing.T) {
 					if gotValue.Pattern != wantValue.Pattern {
 						return errors.New("pattern not match")
 					}
-					if reflect.ValueOf(gotValue.HandlerFunc).Pointer() != reflect.ValueOf(wantValue.HandlerFunc).Pointer() {
+
+					px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
+					py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
+					if px == py {
 						return errors.New(gotValue.Name + " handler not match")
 					}
 				}
