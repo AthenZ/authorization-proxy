@@ -47,7 +47,9 @@ func TestNewDebugRoutes(t *testing.T) {
 						return errors.New("pattern not match")
 					}
 					// toHandler() should return a new function with different pointer
-					// if reflect.ValueOf(gotValue.HandlerFunc).Pointer() != reflect.ValueOf(wantValue.HandlerFunc).Pointer() {
+					// px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
+					// py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
+					// if px == py {
 					// 	return errors.New(gotValue.Name + " handler not match")
 					// }
 				}
@@ -200,7 +202,9 @@ func TestNewDebugRoutes(t *testing.T) {
 						return errors.New("pattern not match")
 					}
 					// toHandler() should return a new function with different pointer
-					// if reflect.ValueOf(gotValue.HandlerFunc).Pointer() != reflect.ValueOf(wantValue.HandlerFunc).Pointer() {
+					// px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
+					// py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
+					// if px == py {
 					// 	return errors.New(gotValue.Name + " handler not match")
 					// }
 				}
