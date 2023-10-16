@@ -1,7 +1,7 @@
 github.com/AthenZ/athenz v1.11.43 h1:mRJBQEsAJN+gtLim6vlfI36NFZiXJxQLGIlyGIxfN10=
 github.com/AthenZ/athenz v1.11.43/go.mod h1:pLEsKJPEGGPtsp1YTisfS5tpFXqGC+EreaUDJwP/A8k=
-github.com/AthenZ/athenz-authorizer/v5 v5.5.2-0.20231016013954-182fa03191ec h1:KS82Z6bQmkCZLar0JbHtVFu1Tx7FcbGZk8Ds0BooaJk=
-github.com/AthenZ/athenz-authorizer/v5 v5.5.2-0.20231016013954-182fa03191ec/go.mod h1:WXL+x349690VcELKsQh0srR30OoV68RYLRrVZ/T5qeU=
+github.com/AthenZ/athenz-authorizer/v5 v5.5.2 h1:Wbmv1AKk+9Z1UejEPDCxm4Vxy1a9H3QwaGyh/TI7Lhw=
+github.com/AthenZ/athenz-authorizer/v5 v5.5.2/go.mod h1:WXL+x349690VcELKsQh0srR30OoV68RYLRrVZ/T5qeU=
 github.com/ardielle/ardielle-go v1.5.2 h1:TilHTpHIQJ27R1Tl/iITBzMwiUGSlVfiVhwDNGM3Zj4=
 github.com/ardielle/ardielle-go v1.5.2/go.mod h1:I4hy1n795cUhaVt/ojz83SNVCYIGsAFAONtv2Dr7HUI=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
