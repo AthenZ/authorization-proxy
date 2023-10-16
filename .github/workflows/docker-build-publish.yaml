@@ -26,7 +26,7 @@ on:
 env:
   DOCKER_BUILDX_PLATFORM: linux/amd64
   DOCKER_REGISTRY_OWNER: athenz
-  GOLANG_VERSION: ^1.19
+  DOCKER_REGISTRY_USER: abvaidya
 
 jobs:
   build:
@@ -84,23 +84,9 @@ jobs:
         id: setup-go
         # You may pin to the exact commit or the version.
         # uses: https://github.com/actions/setup-go/tags
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
-          go-version: ${{ env.GOLANG_VERSION }}
-
-      # This action allows caching dependencies and build outputs to improve workflow execution time.
-      # https://github.com/actions/cache
-      -
-        name: Cache Go Modules
-        id: cache-go
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+          go-version: "stable"
 
       # A GitHub Action for golang tests
       -
@@ -180,7 +166,7 @@ jobs:
           # Server address of Docker registry. If not set then will default to Docker Hub
           registry: ${{ env.DOCKER_REGISTRY_URL }} # optional
           # Username used to log against the Docker registry
-          username: ${{ env.DOCKER_REGISTRY_OWNER }} # optional
+          username: ${{ env.DOCKER_REGISTRY_USER }} # optional
           # Password or personal access token used to log against the Docker registry
           password: ${{ env.DOCKER_REGISTRY_TOKEN }} # optional
           # Log out from the Docker registry at the end of a job
@@ -211,12 +197,15 @@ jobs:
         id: build_and_push
         # You may pin to the exact commit or the version.
         # uses: https://github.com/docker/build-push-action/tags
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
+          # push: true
+          # load: false
+          # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_OWNER }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ env.DOCKER_BUILDX_PLATFORM }}
           build-args: |
