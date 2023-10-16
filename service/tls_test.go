@@ -1390,8 +1390,6 @@ func Test_cipherSuites(t *testing.T) {
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
-				cipherSuites = append(cipherSuites, tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA)
-				cipherSuites = append(cipherSuites, tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA)
 				return
 			}(),
 			wantErr: nil,
@@ -1411,12 +1409,10 @@ func Test_cipherSuites(t *testing.T) {
 			name: "Check disable cipher suites containing SHA-1",
 			args: args{
 				dcs: []string{
-					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_RSA_WITH_AES_256_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
 				},
@@ -1452,6 +1448,8 @@ func Test_cipherSuites(t *testing.T) {
 					"TLS_RSA_WITH_RC4_128_SHA",
 					"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
 					"TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
 				},
 			},
 			want: []uint16{
