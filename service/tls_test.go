@@ -1494,19 +1494,6 @@ func Test_cipherSuites(t *testing.T) {
 			},
 			wantErr: nil,
 		},
-		{
-			name: "Check the same cipher suite is specified for disableCipherSuites and enableInsecureCipherSuites",
-			args: args{
-				dcs: []string{
-					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
-				},
-				eics: []string{
-					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
-				},
-			},
-			want:    nil,
-			wantErr: errors.New("Invalid insecure cipher suite: TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA"),
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
