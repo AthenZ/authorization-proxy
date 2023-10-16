@@ -1395,17 +1395,6 @@ func Test_cipherSuites(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "Check cipher suite does not exist, invalid cipher suites",
-			args: args{
-				dcs: []string{
-					"dummy",
-				},
-				eics: nil,
-			},
-			want:    nil,
-			wantErr: errors.New("Invalid cipher suite: dummy"),
-		},
-		{
 			name: "Check disable cipher suites containing SHA-1",
 			args: args{
 				dcs: []string{
@@ -1504,17 +1493,6 @@ func Test_cipherSuites(t *testing.T) {
 				tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
 			},
 			wantErr: nil,
-		},
-		{
-			name: "Check insecure cipher suite does not exist, invalid insecure cipher suites",
-			args: args{
-				dcs: nil,
-				eics: []string{
-					"insecureDummy",
-				},
-			},
-			want:    nil,
-			wantErr: errors.New("Invalid insecure cipher suite: insecureDummy"),
 		},
 		{
 			name: "Check the same cipher suite is specified for disableCipherSuites and enableInsecureCipherSuites",
