@@ -255,20 +255,20 @@ func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
 			if _, ok := ciphers[cipher]; !ok {
-				glg.Warnf("Already disabled cipher suite: %s", cipher)
+				glg.Warnf("Skip disable, already disabled cipher suite: %s", cipher)
 				continue
 			}
 			delete(ciphers, cipher)
 		}
 	}
 	if len(eics) != 0 {
-		insecureCiphers := make(map[string]uint16)
+		insecureCiphers := make(map[string]uint16, len(tls.InsecureCipherSuites()))
 		for _, c := range tls.InsecureCipherSuites() {
 			insecureCiphers[c.Name] = c.ID
 		}
 		for _, cipher := range eics {
 			if _, ok := insecureCiphers[cipher]; !ok {
-				glg.Warnf("Invalid insecure cipher suite: %s", cipher)
+				glg.Warnf("Skip enable, invalid insecure cipher suite: %s", cipher)
 				continue
 			}
 			ciphers[cipher] = insecureCiphers[cipher]
@@ -289,7 +289,7 @@ func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 
 // defaultCipherSuitesMap returns a map of name and id in default cipher suites
 func defaultCipherSuitesMap() map[string]uint16 {
-	ciphers := make(map[string]uint16)
+	ciphers := make(map[string]uint16, len(tls.CipherSuites()))
 	for _, c := range tls.CipherSuites() {
 		ciphers[c.Name] = c.ID
 	}
