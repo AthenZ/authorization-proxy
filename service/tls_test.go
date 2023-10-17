@@ -1383,40 +1383,45 @@ func Test_cipherSuites(t *testing.T) {
 				eics: nil,
 			},
 			want: func() (cipherSuites []uint16) {
-				ciphers := make(map[string]uint16)
+				ciphers := make(map[string]uint16, len(tls.CipherSuites()))
 				for _, c := range tls.CipherSuites() {
 					ciphers[c.Name] = c.ID
 				}
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
-				cipherSuites = append(cipherSuites, tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA)
-				cipherSuites = append(cipherSuites, tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA)
 				return
 			}(),
 			wantErr: nil,
 		},
 		{
-			name: "Check cipher suite does not exist, invalid cipher suites",
+			name: "Check default cipher suite is used when cipher suite specified in disableCipherSuites is invalid",
 			args: args{
 				dcs: []string{
 					"dummy",
 				},
 				eics: nil,
 			},
-			want:    nil,
-			wantErr: errors.New("Invalid cipher suite: dummy"),
+			want: func() (cipherSuites []uint16) {
+				ciphers := make(map[string]uint16, len(tls.CipherSuites()))
+				for _, c := range tls.CipherSuites() {
+					ciphers[c.Name] = c.ID
+				}
+				for _, id := range ciphers {
+					cipherSuites = append(cipherSuites, id)
+				}
+				return
+			}(),
+			wantErr: nil,
 		},
 		{
 			name: "Check disable cipher suites containing SHA-1",
 			args: args{
 				dcs: []string{
-					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_RSA_WITH_AES_256_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA",
-					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA",
 					"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
 				},
@@ -1452,6 +1457,8 @@ func Test_cipherSuites(t *testing.T) {
 					"TLS_RSA_WITH_RC4_128_SHA",
 					"TLS_ECDHE_ECDSA_WITH_RC4_128_SHA",
 					"TLS_ECDHE_RSA_WITH_RC4_128_SHA",
+					"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA",
+					"TLS_RSA_WITH_3DES_EDE_CBC_SHA",
 				},
 			},
 			want: []uint16{
@@ -1508,18 +1515,27 @@ func Test_cipherSuites(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "Check insecure cipher suite does not exist, invalid insecure cipher suites",
+			name: "Check default cipher suite is used when cipher suite specified in enableInsecureCipherSuites is invalid",
 			args: args{
 				dcs: nil,
 				eics: []string{
 					"insecureDummy",
 				},
 			},
-			want:    nil,
-			wantErr: errors.New("Invalid insecure cipher suite: insecureDummy"),
+			want: func() (cipherSuites []uint16) {
+				ciphers := make(map[string]uint16, len(tls.CipherSuites()))
+				for _, c := range tls.CipherSuites() {
+					ciphers[c.Name] = c.ID
+				}
+				for _, id := range ciphers {
+					cipherSuites = append(cipherSuites, id)
+				}
+				return
+			}(),
+			wantErr: nil,
 		},
 		{
-			name: "Check the same cipher suite is specified for disableCipherSuites and enableInsecureCipherSuites",
+			name: "Check valid cipher suite is configured when both disableCipherSuites and enableInsecureCipherSuites are specified",
 			args: args{
 				dcs: []string{
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
@@ -1528,8 +1544,18 @@ func Test_cipherSuites(t *testing.T) {
 					"TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA",
 				},
 			},
-			want:    nil,
-			wantErr: errors.New("Invalid insecure cipher suite: TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA"),
+			want: func() (cipherSuites []uint16) {
+				ciphers := make(map[string]uint16, len(tls.CipherSuites()))
+				for _, c := range tls.CipherSuites() {
+					ciphers[c.Name] = c.ID
+				}
+				delete(ciphers, "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA")
+				for _, id := range ciphers {
+					cipherSuites = append(cipherSuites, id)
+				}
+				return
+			}(),
+			wantErr: nil,
 		},
 	}
 	for _, tt := range tests {
