@@ -1,3 +1,17 @@
+// Copyright 2023 LY Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package router
 
 import (
@@ -7,6 +21,7 @@ import (
 	"net/http/pprof"
 	"reflect"
 	"testing"
+	"unsafe"
 
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
@@ -46,7 +61,9 @@ func TestNewDebugRoutes(t *testing.T) {
 						return errors.New("pattern not match")
 					}
 					// toHandler() should return a new function with different pointer
-					// if reflect.ValueOf(gotValue.HandlerFunc).Pointer() != reflect.ValueOf(wantValue.HandlerFunc).Pointer() {
+					// px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
+					// py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
+					// if px == py {
 					// 	return errors.New(gotValue.Name + " handler not match")
 					// }
 				}
@@ -156,7 +173,11 @@ func TestNewDebugRoutes(t *testing.T) {
 					if gotValue.Pattern != wantValue.Pattern {
 						return errors.New("pattern not match")
 					}
-					if reflect.ValueOf(gotValue.HandlerFunc).Pointer() != reflect.ValueOf(wantValue.HandlerFunc).Pointer() {
+
+					// compare function pointer of the handler
+					px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
+					py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
+					if px == py {
 						return errors.New(gotValue.Name + " handler not match")
 					}
 				}
@@ -195,7 +216,9 @@ func TestNewDebugRoutes(t *testing.T) {
 						return errors.New("pattern not match")
 					}
 					// toHandler() should return a new function with different pointer
-					// if reflect.ValueOf(gotValue.HandlerFunc).Pointer() != reflect.ValueOf(wantValue.HandlerFunc).Pointer() {
+					// px := *(*unsafe.Pointer)(unsafe.Pointer(&gotValue.HandlerFunc))
+					// py := *(*unsafe.Pointer)(unsafe.Pointer(&wantValue.HandlerFunc))
+					// if px == py {
 					// 	return errors.New(gotValue.Name + " handler not match")
 					// }
 				}

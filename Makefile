@@ -25,7 +25,7 @@
 # 	sleep 3
 
 deps:
-	rm ./go.sum
+	rm -f ./go.sum
 	cp ./go.mod.default ./go.mod
 	GO111MODULE=on go mod tidy
 
@@ -46,3 +46,8 @@ deps:
 # 	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
 # 	go tool cover -html=coverage.out -o coverage.html
 # 	rm -f coverage.out
+
+check-license-header:
+	# go install github.com/apache/skywalking-eyes/cmd/license-eye@latest
+	license-eye -c .licenserc.yaml header check
+	# license-eye -c .licenserc.yaml header fix

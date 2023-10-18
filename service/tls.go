@@ -1,18 +1,16 @@
-/*
-Copyright (C)  2018 Yahoo Japan Corporation Athenz team.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2023 LY Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package service
 
@@ -255,21 +253,21 @@ func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 	if len(dcs) != 0 {
 		for _, cipher := range dcs {
 			if _, ok := ciphers[cipher]; !ok {
-				err := errors.WithMessage(errors.New(cipher), "Invalid cipher suite")
-				return nil, err
+				glg.Warnf("Skip disable, already disabled cipher suite: %s", cipher)
+				continue
 			}
 			delete(ciphers, cipher)
 		}
 	}
 	if len(eics) != 0 {
-		insecureCiphers := make(map[string]uint16)
+		insecureCiphers := make(map[string]uint16, len(tls.InsecureCipherSuites()))
 		for _, c := range tls.InsecureCipherSuites() {
 			insecureCiphers[c.Name] = c.ID
 		}
 		for _, cipher := range eics {
 			if _, ok := insecureCiphers[cipher]; !ok {
-				err := errors.WithMessage(errors.New(cipher), "Invalid insecure cipher suite")
-				return nil, err
+				glg.Warnf("Skip enable, invalid insecure cipher suite: %s", cipher)
+				continue
 			}
 			ciphers[cipher] = insecureCiphers[cipher]
 		}
@@ -289,23 +287,9 @@ func cipherSuites(dcs []string, eics []string) ([]uint16, error) {
 
 // defaultCipherSuitesMap returns a map of name and id in default cipher suites
 func defaultCipherSuitesMap() map[string]uint16 {
-	var (
-		// allowInsecureCipherSuites is a list of cipher suites supported in tls.InsecureCipherSuites()
-		// Default cipher suites is a list of tls.CipherSuites() and allowInsecureCipherSuites
-		allowInsecureCipherSuites = map[string]uint16{
-			"TLS_RSA_WITH_3DES_EDE_CBC_SHA":       tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-			"TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA": tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
-		}
-	)
-
-	ciphers := make(map[string]uint16)
+	ciphers := make(map[string]uint16, len(tls.CipherSuites()))
 	for _, c := range tls.CipherSuites() {
 		ciphers[c.Name] = c.ID
-	}
-	for _, c := range tls.InsecureCipherSuites() {
-		if _, ok := allowInsecureCipherSuites[c.Name]; ok {
-			ciphers[c.Name] = c.ID
-		}
 	}
 	return ciphers
 }

@@ -13,15 +13,14 @@
 
 - [What is Authorization Proxy](#what-is-authorization-proxy)
 - [Use case](#use-case)
-    - [Authorization and Authorization request](#authorization-and-authorization-request)
-        - [Athenz authorizer](#athenz-authorizer)
-        - [Authorization success](#authorization-success)
-        - [Authorization failed](#authorization-failed)
-    - [Mapping rules](#mapping-rules)
-    - [HTTP request headers](#http-request-headers)
+  - [Authorization and Authorization request](#authorization-and-authorization-request)
+    - [Athenz authorizer](#athenz-authorizer)
+    - [Authorization success](#authorization-success)
+    - [Authorization failed](#authorization-failed)
+  - [Mapping rules](#mapping-rules)
+  - [HTTP request headers](#http-request-headers)
 - [Features to Debug](#features-to-debug)
 - [Configuration](#configuration)
-- [Contributor License Agreement](#contributor-license-agreement)
 - [About releases](#about-releases)
 
 <!-- /TOC -->
@@ -35,7 +34,7 @@ Client request can be authenticated and authorized by:
 1. Role token in the HTTP/HTTPS request header
 1. Role certificate on mTLS
 
-Requires go 1.19 or later.
+Requires go 1.20 or later.
 
 ## Use case
 
@@ -103,14 +102,8 @@ For detail explanation, please read [config.go](./config/config.go).
 
 ---
 
-## Contributor License Agreement
-
-This project requires contributors to agree to a [Contributor License Agreement (CLA)](https://gist.github.com/ydnjp/3095832f100d5c3d2592).
-
-Note that only for contributions to the `authorization-proxy` repository on the [GitHub](https://github.com/AthenZ/authorization-proxy), the contributors of them shall be deemed to have agreed to the CLA without individual written agreements.
-
 ## About releases
 
 - Releases
-    - [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
-    - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)
+  - [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
+  - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)

@@ -31,7 +31,7 @@ make test
 
 ## Dependency management
 
-The Authorization Proxy project uses [Go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to manage dependencies on external packages. This requires a working Go environment with version 1.19 or greater installed.
+The Authorization Proxy project uses [Go modules](https://golang.org/cmd/go/#hdr-Modules__module_versions__and_more) to manage dependencies on external packages. This requires a working Go environment with version 1.20 or greater installed.
 
 To add or update a new dependency, use the `go get` command:
 
@@ -56,4 +56,4 @@ You have to commit the changes to `go.mod` and `go.sum` before submitting the pu
 
 ### Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant](https://www.contributor-covenant.org/), version 2.0, available at <https://www.contributor-covenant.org/version/2/0/code_of_conduct.html>.
+- [Athenz Community Code of Conduct](./CODE_OF_CONDUCT.md)
