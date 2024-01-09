@@ -103,8 +103,8 @@ type TLS struct {
 
 // Metrics represents the metrics server configuration.
 type Metrics struct {
-	// Port represents the metrics server listening port.
-	Port int `yaml:"port"`
+	// MetricsServerAddr represents the metrics server listening address.
+	MetricsServerAddr string `yaml:"metricsServerAddr"`
 }
 
 // HealthCheck represents the health check server configuration.

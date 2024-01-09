@@ -16,7 +16,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -47,9 +46,10 @@ func NewMetrics(cfg config.Metrics) (Metrics, error) {
 	m.cfg = cfg
 
 	if !m.metricsSrvEnable() {
-		glg.Info("Metrics server is disabled with empty options: port[%d]", cfg.Port)
+		glg.Info("Metrics server is disabled with empty options: address[%d]", cfg.MetricsServerAddr)
 		return m, nil
 	}
+	glg.Infof("Starting metrics exporter[%s]", m.cfg.MetricsServerAddr)
 	latency := prometheus.NewSummary(prometheus.SummaryOpts{
 		Name: "latency",
 		Help: "latency",
@@ -60,7 +60,7 @@ func NewMetrics(cfg config.Metrics) (Metrics, error) {
 	mux.Handle(path, promhttp.Handler())
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", m.cfg.Port),
+		Addr:    m.cfg.MetricsServerAddr,
 		Handler: mux,
 	}
 
@@ -151,5 +151,5 @@ func (m *metrics) GetLatencyInstrumentation() prometheus.Summary {
 }
 
 func (m *metrics) metricsSrvEnable() bool {
-	return m.cfg.Port > 0
+	return m.cfg.MetricsServerAddr != ""
 }
