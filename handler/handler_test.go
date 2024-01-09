@@ -36,13 +36,15 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/infra"
 	"github.com/AthenZ/authorization-proxy/v4/service"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNew(t *testing.T) {
 	type args struct {
-		cfg  config.Proxy
-		bp   httputil.BufferPool
-		prov service.Authorizationd
+		cfg                    config.Proxy
+		bp                     httputil.BufferPool
+		prov                   service.Authorizationd
+		latencyInstrumentation prometheus.Summary
 	}
 	type test struct {
 		name      string

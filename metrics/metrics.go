@@ -16,9 +16,11 @@ package metrics
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"sync"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -35,25 +37,30 @@ type metrics struct {
 	latency    prometheus.Summary
 	srvRunning bool
 
-	// cfg config.Metrics
+	cfg config.Metrics
 
 	mu sync.RWMutex
 }
 
-func NewMetrics() (Metrics, error) {
+func NewMetrics(cfg config.Metrics) (Metrics, error) {
 	m := &metrics{}
+	m.cfg = cfg
+
+	if !m.metricsSrvEnable() {
+		glg.Info("Metrics server is disabled with empty options: port[%d]", cfg.Port)
+		return m, nil
+	}
 	latency := prometheus.NewSummary(prometheus.SummaryOpts{
 		Name: "latency",
 		Help: "latency",
 	})
 	prometheus.MustRegister(latency)
-	port := "9793"
 	path := "/metrics"
 	mux := http.NewServeMux()
 	mux.Handle(path, promhttp.Handler())
 
 	srv := &http.Server{
-		Addr:    ":" + port,
+		Addr:    fmt.Sprintf(":%d", m.cfg.Port),
 		Handler: mux,
 	}
 
@@ -68,25 +75,28 @@ func (m *metrics) ListenAndServe(ctx context.Context) <-chan []error {
 		sech  = make(chan error, 1)
 	)
 	wg := new(sync.WaitGroup)
-	wg.Add(1)
+	if m.metricsSrvEnable() {
+		wg.Add(1)
 
-	go func() {
-		m.mu.Lock()
-		m.srvRunning = true
-		m.mu.Unlock()
-		wg.Done()
+		go func() {
+			m.mu.Lock()
+			m.srvRunning = true
+			m.mu.Unlock()
+			wg.Done()
 
-		glg.Info("metrics server starting")
-		select {
-		case <-ctx.Done():
-		case sech <- m.srv.ListenAndServe():
-		}
-		glg.Info("metrics server closed")
+			glg.Info("metrics server starting")
+			select {
+			case <-ctx.Done():
+			case sech <- m.srv.ListenAndServe():
+			}
+			glg.Info("metrics server closed")
 
-		m.mu.Lock()
-		m.srvRunning = false
-		m.mu.Unlock()
-	}()
+			m.mu.Lock()
+			m.srvRunning = false
+			m.mu.Unlock()
+		}()
+
+	}
 
 	go func() {
 		defer close(echan)
@@ -138,4 +148,8 @@ func (m *metrics) ListenAndServe(ctx context.Context) <-chan []error {
 
 func (m *metrics) GetLatencyInstrumentation() prometheus.Summary {
 	return m.latency
+}
+
+func (m *metrics) metricsSrvEnable() bool {
+	return m.cfg.Port > 0
 }

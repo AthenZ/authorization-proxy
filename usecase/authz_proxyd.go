@@ -64,7 +64,7 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		handler.WithRoleTokenConfig(cfg.Authorization.RoleToken),
 		handler.WithAuthorizationd(athenz),
 	)
-	metrics, err := metrics.NewMetrics()
+	metrics, err := metrics.NewMetrics(cfg.Metrics)
 	if err != nil {
 		return nil, errors.Wrap(err, "metricsd returned error")
 	}

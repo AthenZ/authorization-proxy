@@ -37,6 +37,9 @@ type Config struct {
 	// Server represents the authorization proxy and the health check server configuration.
 	Server Server `yaml:"server"`
 
+	// Metrics represents the metrics server configuration.
+	Metrics Metrics `yaml:"metrics"`
+
 	// Athenz represents the Athenz server connection configuration.
 	Athenz Athenz `yaml:"athenz"`
 
@@ -96,6 +99,12 @@ type TLS struct {
 
 	// EnableInsecureCipherSuites represents list of enable insecureCipherSuites
 	EnableInsecureCipherSuites []string `yaml:"enableInsecureCipherSuites"`
+}
+
+// Metrics represents the metrics server configuration.
+type Metrics struct {
+	// Port represents the metrics server listening port.
+	Port int `yaml:"port"`
 }
 
 // HealthCheck represents the health check server configuration.
