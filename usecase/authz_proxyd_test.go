@@ -25,8 +25,10 @@ import (
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/AthenZ/authorization-proxy/v4/metrics"
 	"github.com/AthenZ/authorization-proxy/v4/service"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNew(t *testing.T) {
@@ -72,6 +74,9 @@ func TestNew(t *testing.T) {
 						CertRefreshPeriod: "24h",
 					},
 				},
+				Metrics: config.Metrics{
+					MetricsServerAddr: "localhost:9793",
+				},
 				Proxy: config.Proxy{
 					BufferSize: 512,
 				},
@@ -93,6 +98,9 @@ func TestNew(t *testing.T) {
 					}
 					if got.(*authzProxyDaemon).server == nil {
 						return errors.New("got.server is nil")
+					}
+					if got.(*authzProxyDaemon).metrics == nil {
+						return errors.New("got.metrics is nil")
 					}
 					if got.(*authzProxyDaemon).tlsCertificateCache == nil {
 						return errors.New("got.tlsCertificateCache is nil")
@@ -358,6 +366,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 		cfg                 config.Config
 		athenz              service.Authorizationd
 		server              service.Server
+		metrics             metrics.Metrics
 		tlsCertificateCache *service.TLSCertificateCache
 	}
 	type args struct {
@@ -416,6 +425,20 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 								ech <- []error{ctx.Err()}
 							}()
 							return ech
+						},
+					},
+					metrics: &metrics.MetricsMock{
+						ListenAndServeFunc: func(ctx context.Context) <-chan []error {
+							ech := make(chan []error)
+							go func() {
+								defer close(ech)
+								<-ctx.Done()
+								ech <- []error{ctx.Err()}
+							}()
+							return ech
+						},
+						GetLatencyInstrumentationFunc: func() prometheus.Summary {
+							return nil
 						},
 					},
 					tlsCertificateCache: defaultTLSCache,
@@ -635,6 +658,20 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 							return ech
 						},
 					},
+					metrics: &metrics.MetricsMock{
+						ListenAndServeFunc: func(ctx context.Context) <-chan []error {
+							ech := make(chan []error)
+							go func() {
+								defer close(ech)
+								<-ctx.Done()
+								ech <- []error{ctx.Err()}
+							}()
+							return ech
+						},
+						GetLatencyInstrumentationFunc: func() prometheus.Summary {
+							return nil
+						},
+					},
 					tlsCertificateCache: defaultTLSCache,
 				},
 				args: args{
@@ -708,6 +745,20 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 								ech <- []error{dummyErr, ctx.Err()}
 							}()
 							return ech
+						},
+					},
+					metrics: &metrics.MetricsMock{
+						ListenAndServeFunc: func(ctx context.Context) <-chan []error {
+							ech := make(chan []error)
+							go func() {
+								defer close(ech)
+								<-ctx.Done()
+								ech <- []error{ctx.Err()}
+							}()
+							return ech
+						},
+						GetLatencyInstrumentationFunc: func() prometheus.Summary {
+							return nil
 						},
 					},
 					tlsCertificateCache: defaultTLSCache,
@@ -835,6 +886,7 @@ func Test_authzProxyDaemon_Start(t *testing.T) {
 				cfg:                 tt.fields.cfg,
 				athenz:              tt.fields.athenz,
 				server:              tt.fields.server,
+				metrics:             tt.fields.metrics,
 				tlsCertificateCache: tt.fields.tlsCertificateCache,
 			}
 			got := g.Start(tt.args.ctx)

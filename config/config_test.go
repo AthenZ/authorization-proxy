@@ -221,6 +221,9 @@ func TestNew(t *testing.T) {
 					Level: "debug",
 					Color: true,
 				},
+				Metrics: Metrics{
+					MetricsServerAddr: "localhost:9793",
+				},
 			},
 		},
 	}

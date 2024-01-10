@@ -41,13 +41,13 @@ type metrics struct {
 	mu sync.RWMutex
 }
 
-func NewMetrics(cfg config.Metrics) (Metrics, error) {
+func NewMetrics(cfg config.Metrics) Metrics {
 	m := &metrics{}
 	m.cfg = cfg
 
 	if !m.metricsSrvEnable() {
 		glg.Info("Metrics server is disabled with empty options: address[%d]", cfg.MetricsServerAddr)
-		return m, nil
+		return m
 	}
 	glg.Infof("Starting metrics exporter[%s]", m.cfg.MetricsServerAddr)
 	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
@@ -66,7 +66,7 @@ func NewMetrics(cfg config.Metrics) (Metrics, error) {
 
 	m.srv = srv
 	m.latency = latency
-	return m, nil
+	return m
 }
 
 func (m *metrics) ListenAndServe(ctx context.Context) <-chan []error {

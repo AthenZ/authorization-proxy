@@ -124,3 +124,5 @@ authorization:
 log:
   level: debug
   color: true
+metrics:
+  metricsServerAddr: "localhost:9793"

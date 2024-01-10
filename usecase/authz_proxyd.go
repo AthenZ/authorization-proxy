@@ -64,10 +64,7 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		handler.WithRoleTokenConfig(cfg.Authorization.RoleToken),
 		handler.WithAuthorizationd(athenz),
 	)
-	metrics, err := metrics.NewMetrics(cfg.Metrics)
-	if err != nil {
-		return nil, errors.Wrap(err, "metricsd returned error")
-	}
+	metrics := metrics.NewMetrics(cfg.Metrics)
 
 	serverOption := []service.Option{
 		service.WithServerConfig(cfg.Server),
@@ -163,7 +160,7 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 		})
 	}
 
-	// handle metricsd error
+	// handle metrics server error, return on server shutdown done
 	if g.metrics != nil {
 		eg.Go(func() error {
 			errs := <-g.metrics.ListenAndServe(ctx)
