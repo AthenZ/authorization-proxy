@@ -44,7 +44,7 @@ func TestNew(t *testing.T) {
 		cfg                    config.Proxy
 		bp                     httputil.BufferPool
 		prov                   service.Authorizationd
-		latencyInstrumentation prometheus.Summary
+		latencyInstrumentation prometheus.Histogram
 	}
 	type test struct {
 		name      string
@@ -572,10 +572,30 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			name: "check latency ",
+			args: args{
+				latencyInstrumentation: prometheus.NewHistogram(prometheus.HistogramOpts{
+					Name: "latency",
+					Help: "latency",
+				}),
+			},
+			checkFunc: func(h http.Handler) error {
+				got := h.(*httputil.ReverseProxy).Transport.(*transport).latencyInstrumentation
+				want := prometheus.NewHistogram(prometheus.HistogramOpts{
+					Name: "latency",
+					Help: "latency",
+				})
+				if got.Desc().String() != want.Desc().String() {
+					return errors.Errorf("unexpected latencyInstrumentation, got: %v, want: %v", got, want)
+				}
+				return nil
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.args.cfg, tt.args.bp, tt.args.prov)
+			got := New(tt.args.cfg, tt.args.bp, tt.args.prov, tt.args.latencyInstrumentation)
 			if err := tt.checkFunc(got); err != nil {
 				t.Errorf("New() error: %v", err)
 			}
