@@ -39,7 +39,7 @@ type transport struct {
 	noAuthPaths []*policy.Assertion
 	// List to check for deprecated cipher suites
 	insecureCipherSuites   []*tls.CipherSuite
-	latencyInstrumentation prometheus.Summary
+	latencyInstrumentation prometheus.Histogram
 }
 
 // Based on the following.
@@ -49,7 +49,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	defer func() {
 		if t.latencyInstrumentation != nil && startTime != (time.Time{}) {
 			endTime := time.Since(startTime)
-			t.latencyInstrumentation.Observe(float64(endTime.Nanoseconds()))
+			t.latencyInstrumentation.Observe(float64(endTime.Seconds()))
 		}
 	}()
 	// bypass authoriztion

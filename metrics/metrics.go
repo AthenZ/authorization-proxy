@@ -50,7 +50,7 @@ func NewMetrics(cfg config.Metrics) (Metrics, error) {
 		return m, nil
 	}
 	glg.Infof("Starting metrics exporter[%s]", m.cfg.MetricsServerAddr)
-	latency := prometheus.NewSummary(prometheus.SummaryOpts{
+	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "latency",
 		Help: "latency",
 	})

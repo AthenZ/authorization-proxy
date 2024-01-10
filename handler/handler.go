@@ -39,7 +39,7 @@ import (
 type Func func(http.ResponseWriter, *http.Request) error
 
 // New creates a handler for handling different HTTP requests based on the given services. It also contains a reverse proxy for handling proxy request.
-func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, latencyInstrumentation prometheus.Summary) http.Handler {
+func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, latencyInstrumentation prometheus.Histogram) http.Handler {
 
 	scheme := "http"
 	if cfg.Scheme != "" {
