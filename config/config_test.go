@@ -222,7 +222,7 @@ func TestNew(t *testing.T) {
 					Color: true,
 				},
 				Metrics: Metrics{
-					MetricsServerAddr: "localhost:9793",
+					MetricsServerAddr: ":9793",
 				},
 			},
 		},

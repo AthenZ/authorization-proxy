@@ -65,6 +65,7 @@ func NewMetrics(cfg config.Metrics) Metrics {
 	}
 
 	m.srv = srv
+	m.srv.SetKeepAlivesEnabled(true)
 	m.latency = latency
 	return m
 }
