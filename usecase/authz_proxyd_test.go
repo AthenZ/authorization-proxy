@@ -75,7 +75,7 @@ func TestNew(t *testing.T) {
 					},
 				},
 				Metrics: config.Metrics{
-					MetricsServerAddr: "localhost:9793",
+					MetricsServerAddr: ":9793",
 				},
 				Proxy: config.Proxy{
 					BufferSize: 512,
