@@ -12,25 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metrics
+package service
 
 import (
-	"context"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// MetricsMock is a mock of Metrics
-type MetricsMock struct {
-	ListenAndServeFunc            func(context.Context) <-chan []error
-	GetLatencyInstrumentationFunc func() prometheus.Summary
+type Metrics interface {
+	GetLatencyInstrumentation() prometheus.Histogram
 }
 
-// ListenAndServe is a mock implementation of Server.ListenAndServe
-func (mm *MetricsMock) ListenAndServe(ctx context.Context) <-chan []error {
-	return mm.ListenAndServeFunc(ctx)
+type metrics struct {
+	latency prometheus.Histogram
 }
 
-func (mm *MetricsMock) GetLatencyInstrumentation() prometheus.Summary {
-	return mm.GetLatencyInstrumentationFunc()
+func NewMetrics() Metrics {
+	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "origin_latency",
+		Help: "origin_latency",
+	})
+	prometheus.MustRegister(latency)
+	m := &metrics{
+		latency: latency,
+	}
+	return m
+}
+
+func (m *metrics) GetLatencyInstrumentation() prometheus.Histogram {
+	return m.latency
 }

@@ -578,7 +578,7 @@ func TestNew(t *testing.T) {
 				Help: "latency",
 			})
 			return test{
-				name: "check latency ",
+				name: "check latencyInstrumentation is used",
 				args: args{
 					latencyInstrumentation: latencyInstrumentation,
 				},
