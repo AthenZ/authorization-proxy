@@ -15,6 +15,7 @@
 package service
 
 import (
+	"github.com/kpango/glg"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -31,7 +32,16 @@ func NewMetrics() Metrics {
 		Name: "origin_latency",
 		Help: "origin_latency",
 	})
-	prometheus.MustRegister(latency)
+	err := prometheus.Register(latency)
+
+	if err != nil {
+		if registered, ok := err.(prometheus.AlreadyRegisteredError); ok {
+			prometheus.Unregister(registered.ExistingCollector)
+			prometheus.MustRegister(latency)
+		} else {
+			glg.Errorf("Failed to register collector: %v", err)
+		}
+	}
 	m := &metrics{
 		latency: latency,
 	}
