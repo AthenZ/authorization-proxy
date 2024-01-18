@@ -15,48 +15,60 @@
 package service
 
 import (
+	"reflect"
 	"testing"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNewMetrics(t *testing.T) {
-	tests := []struct {
+	type test struct {
 		name string
-	}{
+	}
+	tests := []test{
 		{
-			name: "should return Metrics interface",
+			name: "NewMetrics() returns Metrics with valid latency histogram",
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := NewMetrics()
-			if _, ok := m.(Metrics); !ok {
-				t.Errorf("NewMetrics() error: %v", m)
+			got := NewMetrics()
+			gotMetrics, ok := got.(*metrics)
+			if !ok {
+				t.Errorf("NewMetrics() return value is not of type *metrics")
+			}
+			if reflect.TypeOf(gotMetrics.latency) != reflect.TypeOf(prometheus.NewHistogram(prometheus.HistogramOpts{})) {
+				t.Errorf("NewMetrics() latency field should be of type prometheus.Histogram")
 			}
 		})
 	}
 }
 
 func TestGetLatencyInstrumentation(t *testing.T) {
+	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "origin_latency",
+		Help: "origin_latency",
+	})
+	m := &metrics{
+		latency: latency,
+	}
 	type test struct {
 		name string
+		want prometheus.Histogram
 	}
 	tests := []test{
 		func() test {
 			return test{
-				name: "check GetLatencyInstrumentation() return prometheus.Histogram",
+				name: "GetLatencyInstrumentation() exactly return m.latency",
+				want: latency,
 			}
 		}(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := NewMetrics()
-			if m == nil {
-				t.Error("NewMetrics() error")
-			}
-			latency := m.GetLatencyInstrumentation()
-			if latency == nil {
-				t.Errorf("GetLatencyInstrumentation() error: %v", latency)
+			got := m.GetLatencyInstrumentation()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetLatencyInstrumentation() = %v, want %v", got, tt.want)
 			}
 		})
 	}
