@@ -28,7 +28,6 @@ import (
 
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
@@ -39,8 +38,7 @@ import (
 type Func func(http.ResponseWriter, *http.Request) error
 
 // New creates a handler for handling different HTTP requests based on the given services. It also contains a reverse proxy for handling proxy request.
-func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, latencyInstrumentation prometheus.Histogram) http.Handler {
-
+func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, metrics service.Metrics) http.Handler {
 	scheme := "http"
 	if cfg.Scheme != "" {
 		scheme = cfg.Scheme
@@ -90,12 +88,12 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, 
 		},
 		ModifyResponse: modifyResponse,
 		Transport: &transport{
-			prov:                   prov,
-			RoundTripper:           updateDialContext(transportFromCfg(cfg.Transport), cfg.Transport.DialContext.Timeout),
-			cfg:                    cfg,
-			noAuthPaths:            mapPathToAssertion(cfg.NoAuthPaths),
-			insecureCipherSuites:   tls.InsecureCipherSuites(),
-			latencyInstrumentation: latencyInstrumentation,
+			prov:                 prov,
+			RoundTripper:         updateDialContext(transportFromCfg(cfg.Transport), cfg.Transport.DialContext.Timeout),
+			cfg:                  cfg,
+			noAuthPaths:          mapPathToAssertion(cfg.NoAuthPaths),
+			insecureCipherSuites: tls.InsecureCipherSuites(),
+			metrics:              metrics,
 		},
 		ErrorHandler: handleError,
 	}

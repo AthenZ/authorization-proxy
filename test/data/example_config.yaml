@@ -30,7 +30,7 @@ server:
     dump: true
     profiling: true
   metrics:
-    port: 9793
+    port: 6084
 athenz:
   url: https://athenz.io:4443/zts/v1
   timeout: 30s

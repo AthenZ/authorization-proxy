@@ -220,6 +220,44 @@ func TestNew(t *testing.T) {
 				},
 			}
 		}(),
+		func() test {
+			cfg := config.Config{
+				Athenz: config.Athenz{
+					URL: "athenz.io",
+				},
+				Authorization: config.Authorization{
+					AthenzDomains: []string{"dummyDom1", "dummyDom2"},
+					PublicKey: config.PublicKey{
+						SysAuthDomain:   "dummy.sys.auth",
+						RefreshPeriod:   "10s",
+						ETagExpiry:      "10s",
+						ETagPurgePeriod: "10s",
+					},
+					Policy: config.Policy{
+						ExpiryMargin:  "10s",
+						RefreshPeriod: "10s",
+						PurgePeriod:   "10s",
+					},
+					AccessToken: config.AccessToken{
+						Enable: true,
+					},
+				},
+				Server: config.Server{
+					Metrics: config.Metrics{
+						Port: 6085,
+					},
+				},
+			}
+			service.NewMetrics()
+			return test{
+				name: "return error if Metrics.Port is set and registration of metrics failed",
+				args: args{
+					cfg: cfg,
+				},
+				wantErr:    true,
+				wantErrStr: "cannot NewMetrics(): cannot register metrics: duplicate metrics collector registration attempted",
+			}
+		}(),
 		{
 			name: "new error",
 			args: args{

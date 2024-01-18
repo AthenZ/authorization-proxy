@@ -16,38 +16,45 @@ package service
 
 import (
 	"github.com/kpango/glg"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	HTTP_ORIGIN_LATENCY = "http_origin_latency_in_seconds"
+)
+
 type Metrics interface {
-	GetLatencyInstrumentation() prometheus.Histogram
+	Observe(string, float64) error
 }
 
 type metrics struct {
-	latency prometheus.Histogram
+	httpOriginLatency prometheus.Histogram
 }
 
-func NewMetrics() Metrics {
-	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "origin_latency",
-		Help: "origin_latency",
-	})
-	err := prometheus.Register(latency)
-
-	if err != nil {
-		if registered, ok := err.(prometheus.AlreadyRegisteredError); ok {
-			prometheus.Unregister(registered.ExistingCollector)
-			prometheus.MustRegister(latency)
-		} else {
-			glg.Errorf("Failed to register collector: %v", err)
-		}
-	}
+func NewMetrics() (Metrics, error) {
 	m := &metrics{
-		latency: latency,
+		httpOriginLatency: prometheus.NewHistogram(prometheus.HistogramOpts{
+			Name:    HTTP_ORIGIN_LATENCY,
+			Help:    "Origin latency in seconds",
+			Buckets: prometheus.DefBuckets,
+		}),
 	}
-	return m
+
+	err := prometheus.Register(m.httpOriginLatency)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot register metrics")
+	}
+
+	return m, nil
 }
 
-func (m *metrics) GetLatencyInstrumentation() prometheus.Histogram {
-	return m.latency
+func (m *metrics) Observe(name string, value float64) error {
+	switch name {
+	case HTTP_ORIGIN_LATENCY:
+		m.httpOriginLatency.Observe(value)
+	default:
+		return glg.Errorf("unknown metric name: %s", name)
+	}
+	return nil
 }

@@ -111,7 +111,7 @@ func TestNew(t *testing.T) {
 						Profiling: true,
 					},
 					Metrics: Metrics{
-						Port: 9793,
+						Port: 6084,
 					},
 				},
 				Athenz: Athenz{

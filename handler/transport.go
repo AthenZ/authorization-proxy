@@ -25,7 +25,6 @@ import (
 	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
-	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
@@ -38,8 +37,8 @@ type transport struct {
 	cfg         config.Proxy
 	noAuthPaths []*policy.Assertion
 	// List to check for deprecated cipher suites
-	insecureCipherSuites   []*tls.CipherSuite
-	latencyInstrumentation prometheus.Histogram
+	insecureCipherSuites []*tls.CipherSuite
+	metrics              service.Metrics
 }
 
 // Based on the following.
@@ -47,10 +46,15 @@ type transport struct {
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	var startTime time.Time
 
-	if t.latencyInstrumentation != nil {
+	if t.metrics != nil {
 		defer func() {
-			endTime := time.Since(startTime)
-			t.latencyInstrumentation.Observe(float64(endTime.Seconds()))
+			if !startTime.IsZero() {
+				endTime := time.Since(startTime)
+				err := t.metrics.Observe(service.HTTP_ORIGIN_LATENCY, float64(endTime.Seconds()))
+				if err != nil {
+					glg.Errorf("cannot observe origin latency: %v", err)
+				}
+			}
 		}()
 	}
 	// bypass authoriztion

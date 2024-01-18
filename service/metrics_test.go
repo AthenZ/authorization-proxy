@@ -15,60 +15,113 @@
 package service
 
 import (
-	"reflect"
 	"testing"
 
+	"github.com/kpango/glg"
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNewMetrics(t *testing.T) {
 	type test struct {
-		name string
-	}
-	tests := []test{
-		{
-			name: "NewMetrics() returns Metrics with valid latency histogram",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := NewMetrics()
-			gotMetrics, ok := got.(*metrics)
-			if !ok {
-				t.Errorf("NewMetrics() return value is not of type *metrics")
-			}
-			if reflect.TypeOf(gotMetrics.latency) != reflect.TypeOf(prometheus.NewHistogram(prometheus.HistogramOpts{})) {
-				t.Errorf("NewMetrics() latency field should be of type prometheus.Histogram")
-			}
-		})
-	}
-}
-
-func TestGetLatencyInstrumentation(t *testing.T) {
-	latency := prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name: "origin_latency",
-		Help: "origin_latency",
-	})
-	m := &metrics{
-		latency: latency,
-	}
-	type test struct {
-		name string
-		want prometheus.Histogram
+		name    string
+		wantErr error
 	}
 	tests := []test{
 		func() test {
 			return test{
-				name: "GetLatencyInstrumentation() exactly return m.latency",
-				want: latency,
+				name:    "NewMetrics() success",
+				wantErr: nil,
+			}
+		}(),
+		func() test {
+			return test{
+				name:    "NewMetrics() error",
+				wantErr: errors.New("cannot register metrics: duplicate metrics collector registration attempted"),
 			}
 		}(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := m.GetLatencyInstrumentation()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetLatencyInstrumentation() = %v, want %v", got, tt.want)
+			_, err := NewMetrics()
+			if tt.wantErr == nil && err != nil {
+				t.Errorf("NewMetrics() unexpected error, got: %v, wantErr: %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr != nil {
+				if err == nil {
+					t.Errorf("want error: %v, got nil", tt.wantErr)
+					return
+				}
+				if err.Error() != tt.wantErr.Error() {
+					t.Errorf("NewMetrics() error, got: %v, want: %v", err, tt.wantErr)
+					return
+				}
+			}
+		})
+	}
+}
+
+func TestObserve(t *testing.T) {
+	type fields struct {
+		m           *metrics
+		observeName string
+	}
+	type test struct {
+		name    string
+		fields  fields
+		wantErr error
+	}
+	tests := []test{
+		func() test {
+			return test{
+				name: "Observe() success",
+				fields: fields{
+					m: &metrics{
+						httpOriginLatency: prometheus.NewHistogram(prometheus.HistogramOpts{
+							Name:    "http_origin_latency_in_seconds",
+							Help:    "Origin latency in seconds",
+							Buckets: prometheus.DefBuckets,
+						}),
+					},
+					observeName: HTTP_ORIGIN_LATENCY,
+				},
+				wantErr: nil,
+			}
+		}(),
+		func() test {
+			return test{
+				name: "Observe() error",
+				fields: fields{
+					m: &metrics{
+						httpOriginLatency: prometheus.NewHistogram(prometheus.HistogramOpts{
+							Name:    "http_origin_latency_in_seconds",
+							Help:    "Origin latency in seconds",
+							Buckets: prometheus.DefBuckets,
+						}),
+					},
+					observeName: "dummy",
+				},
+				wantErr: glg.Errorf("unknown metric name: %s", "dummy"),
+			}
+		}(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.fields.m.Observe(tt.fields.observeName, 0.0)
+			if tt.wantErr == nil && err != nil {
+				t.Errorf("Observe() unexpected error, got: %v", err)
+				return
+			}
+			if tt.wantErr != nil {
+				if err == nil {
+					t.Errorf("want error: %v, got nil", tt.wantErr)
+					return
+				}
+				if err.Error() != tt.wantErr.Error() {
+					t.Errorf("Observe() error, got: %v, want: %v", err, tt.wantErr)
+					return
+				}
 			}
 		})
 	}

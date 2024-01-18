@@ -36,15 +36,14 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/infra"
 	"github.com/AthenZ/authorization-proxy/v4/service"
 	"github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 func TestNew(t *testing.T) {
 	type args struct {
-		cfg                    config.Proxy
-		bp                     httputil.BufferPool
-		prov                   service.Authorizationd
-		latencyInstrumentation prometheus.Histogram
+		cfg     config.Proxy
+		bp      httputil.BufferPool
+		prov    service.Authorizationd
+		metrics service.Metrics
 	}
 	type test struct {
 		name      string
@@ -572,29 +571,10 @@ func TestNew(t *testing.T) {
 				return nil
 			},
 		},
-		func() test {
-			latencyInstrumentation := prometheus.NewHistogram(prometheus.HistogramOpts{
-				Name: "latency",
-				Help: "latency",
-			})
-			return test{
-				name: "check latencyInstrumentation is used",
-				args: args{
-					latencyInstrumentation: latencyInstrumentation,
-				},
-				checkFunc: func(h http.Handler) error {
-					got := h.(*httputil.ReverseProxy).Transport.(*transport).latencyInstrumentation
-					if !reflect.DeepEqual(got, latencyInstrumentation) {
-						return errors.New("got does not equal")
-					}
-					return nil
-				},
-			}
-		}(),
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.args.cfg, tt.args.bp, tt.args.prov, tt.args.latencyInstrumentation)
+			got := New(tt.args.cfg, tt.args.bp, tt.args.prov, tt.args.metrics)
 			if err := tt.checkFunc(got); err != nil {
 				t.Errorf("New() error: %v", err)
 			}

@@ -56,6 +56,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 		cfg                  config.Proxy
 		noAuthPaths          []*policy.Assertion
 		insecureCipherSuites []*tls.CipherSuite
+		metrics              service.Metrics
 	}
 	type args struct {
 		r    *http.Request
