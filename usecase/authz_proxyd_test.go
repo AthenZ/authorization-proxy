@@ -250,7 +250,7 @@ func TestNew(t *testing.T) {
 			}
 			service.NewMetrics()
 			return test{
-				name: "return error if Metrics.Port is set and registration of metrics failed",
+				name: "return error if Metrics.Port is set but registration of metrics failed",
 				args: args{
 					cfg: cfg,
 				},

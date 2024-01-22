@@ -450,6 +450,88 @@ func Test_transport_RoundTrip(t *testing.T) {
 			wantErr:        false,
 			wantCloseCount: 0,
 		},
+		{
+			name: "skipped t.metrics.Observe(), if request is not forwarded",
+			fields: fields{
+				RoundTripper: &RoundTripperMock{
+					RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 200,
+						}, nil
+					},
+				},
+				prov: &service.AuthorizerdMock{
+					VerifyFunc: func(r *http.Request, act, res string) (authorizerd.Principal, error) {
+						return nil, errors.New("dummy error")
+					},
+				},
+				cfg: config.Proxy{},
+				metrics: &service.MetricsMock{
+					ObserveFunc: func(name string, value float64) error {
+						panic("t.metrics.Observe() should not be called")
+					},
+				},
+			},
+			args: args{
+				r: func() *http.Request {
+					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					return r
+				}(),
+			},
+			want:           nil,
+			wantErr:        true,
+			wantCloseCount: 0,
+		},
+		{
+			name: "called t.metrics.Observe(), if request is forwarded",
+			fields: fields{
+				RoundTripper: &RoundTripperMock{
+					RoundTripFunc: func(req *http.Request) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 200,
+						}, nil
+					},
+				},
+				prov: &service.AuthorizerdMock{
+					VerifyFunc: func(r *http.Request, act, res string) (authorizerd.Principal, error) {
+						return &PrincipalMock{
+							NameFunc: func() string {
+								return "testPrincipal"
+							},
+							RolesFunc: func() []string {
+								return []string{"testRole1", "testRole2"}
+							},
+							DomainFunc: func() string {
+								return "testDomain"
+							},
+							IssueTimeFunc: func() int64 {
+								return 0
+							},
+							ExpiryTimeFunc: func() int64 {
+								return 0
+							},
+						}, nil
+					},
+				},
+				cfg: config.Proxy{},
+				metrics: &service.MetricsMock{
+					ObserveFunc: func(name string, value float64) error {
+						return nil
+					},
+				},
+			},
+			args: args{
+				r: func() *http.Request {
+					r, _ := http.NewRequest("GET", "http://athenz.io", nil)
+					return r
+				}(),
+			},
+			want: &http.Response{
+				StatusCode: 200,
+			},
+			wantErr:        false,
+			wantCloseCount: 0,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -459,6 +541,7 @@ func Test_transport_RoundTrip(t *testing.T) {
 				cfg:                  tt.fields.cfg,
 				noAuthPaths:          tt.fields.noAuthPaths,
 				insecureCipherSuites: tt.fields.insecureCipherSuites,
+				metrics:              tt.fields.metrics,
 			}
 			if tt.args.body != nil {
 				tt.args.r.Body = tt.args.body
