@@ -29,6 +29,8 @@ server:
     port: 6083
     dump: true
     profiling: true
+  metrics:
+    port: 6084
 athenz:
   url: https://athenz.io:4443/zts/v1
   timeout: 30s

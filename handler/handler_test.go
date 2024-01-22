@@ -40,9 +40,10 @@ import (
 
 func TestNew(t *testing.T) {
 	type args struct {
-		cfg  config.Proxy
-		bp   httputil.BufferPool
-		prov service.Authorizationd
+		cfg     config.Proxy
+		bp      httputil.BufferPool
+		prov    service.Authorizationd
+		metrics service.Metrics
 	}
 	type test struct {
 		name      string
@@ -573,7 +574,7 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := New(tt.args.cfg, tt.args.bp, tt.args.prov)
+			got := New(tt.args.cfg, tt.args.bp, tt.args.prov, tt.args.metrics)
 			if err := tt.checkFunc(got); err != nil {
 				t.Errorf("New() error: %v", err)
 			}

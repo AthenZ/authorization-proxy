@@ -110,6 +110,9 @@ func TestNew(t *testing.T) {
 						Dump:      true,
 						Profiling: true,
 					},
+					Metrics: Metrics{
+						Port: 6084,
+					},
 				},
 				Athenz: Athenz{
 					URL:     "https://athenz.io:4443/zts/v1",
