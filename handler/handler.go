@@ -38,7 +38,7 @@ import (
 type Func func(http.ResponseWriter, *http.Request) error
 
 // New creates a handler for handling different HTTP requests based on the given services. It also contains a reverse proxy for handling proxy request.
-func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) http.Handler {
+func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, metrics service.Metrics) http.Handler {
 	scheme := "http"
 	if cfg.Scheme != "" {
 		scheme = cfg.Scheme
@@ -93,6 +93,7 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd) 
 			cfg:                  cfg,
 			noAuthPaths:          mapPathToAssertion(cfg.NoAuthPaths),
 			insecureCipherSuites: tls.InsecureCipherSuites(),
+			metrics:              metrics,
 		},
 		ErrorHandler: handleError,
 	}
