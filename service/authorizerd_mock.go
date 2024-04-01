@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
+	"github.com/AthenZ/athenz-authorizer/v5/policy"
 )
 
 // AuthorizerdMock is a mock of Authorizerd
@@ -31,7 +32,7 @@ type AuthorizerdMock struct {
 	VerifyRoleTokenFunc   func(ctx context.Context, tok, act, res string) (authorizerd.Principal, error)
 	VerifyRoleJWTFunc     func(ctx context.Context, tok, act, res string) error
 	VerifyRoleCertFunc    func(ctx context.Context, peerCerts []*x509.Certificate, act, res string) (authorizerd.Principal, error)
-	GetPolicyCacheFunc    func(ctx context.Context) map[string]interface{}
+	GetPolicyCacheFunc    func(ctx context.Context) map[string][]*policy.Assertion
 }
 
 // Init is a mock implementation of Authorizerd.Init
@@ -94,6 +95,6 @@ func (am *AuthorizerdMock) AuthorizeRoleCert(ctx context.Context, peerCerts []*x
 }
 
 // GetPolicyCache is a mock implementation of Authorizerd.GetPolicyCache
-func (am *AuthorizerdMock) GetPolicyCache(ctx context.Context) map[string]interface{} {
+func (am *AuthorizerdMock) GetPolicyCache(ctx context.Context) map[string][]*policy.Assertion {
 	return am.GetPolicyCacheFunc(ctx)
 }
