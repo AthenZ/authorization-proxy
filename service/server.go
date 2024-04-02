@@ -27,6 +27,7 @@ import (
 
 	"github.com/mwitkow/grpc-proxy/proxy"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
@@ -61,6 +62,10 @@ type server struct {
 	dsHandler http.Handler
 	dRunning  bool
 
+	// Metrics server
+	msrv     *http.Server
+	mRunning bool
+
 	cfg config.Server
 
 	// ShutdownDelay
@@ -69,7 +74,7 @@ type server struct {
 	// ShutdownTimeout
 	sdt time.Duration
 
-	// mutext lock variable
+	// mutex lock variable
 	mu sync.RWMutex
 }
 
@@ -143,6 +148,14 @@ func NewServer(opts ...Option) (Server, error) {
 		s.dsrv.SetKeepAlivesEnabled(true)
 	}
 
+	if s.metricsSrvEnable() {
+		s.msrv = &http.Server{
+			Addr:    fmt.Sprintf(":%d", s.cfg.Metrics.Port),
+			Handler: createMetricsServiceMux("/metrics"),
+		}
+		s.msrv.SetKeepAlivesEnabled(true)
+	}
+
 	s.sdt, err = time.ParseDuration(s.cfg.ShutdownTimeout)
 	if err != nil {
 		glg.Warn(err)
@@ -168,6 +181,7 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 		gsech = make(chan error, 1)
 		hech  chan error
 		dech  chan error
+		mech  chan error
 	)
 
 	wg := new(sync.WaitGroup)
@@ -261,6 +275,30 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 		}()
 	}
 
+	if s.metricsSrvEnable() {
+		wg.Add(1)
+		mech = make(chan error, 1)
+
+		go func() {
+			s.mu.Lock()
+			s.mRunning = true
+			s.mu.Unlock()
+			wg.Done()
+
+			glg.Info("authorization proxy metrics server starting")
+			select {
+			case <-ctx.Done():
+			case mech <- s.msrv.ListenAndServe():
+			}
+			glg.Info("authorization proxy metrics server closed")
+			close(mech)
+
+			s.mu.Lock()
+			s.mRunning = false
+			s.mu.Unlock()
+		}()
+	}
+
 	go func() {
 		defer close(echan)
 
@@ -291,13 +329,18 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 				glg.Info("authorization proxy debug server will shutdown...")
 				errs = appendErr(errs, s.dShutdown(context.Background()))
 			}
+			if s.mRunning {
+				glg.Info("metrics server will shutdown...")
+				errs = appendErr(errs, s.mShutdown(context.Background()))
+			}
+
 			if len(errs) == 0 {
 				glg.Info("authorization proxy has already shutdown gracefully")
 			}
 			return errs
 		}
 
-		errs := make([]error, 0, 3)
+		errs := make([]error, 0, 4)
 
 		handleErr := func(err error) {
 			if err != nil {
@@ -333,6 +376,10 @@ func (s *server) ListenAndServe(ctx context.Context) <-chan []error {
 			case err := <-dech: // when debug server returns, close running servers and return any error
 				handleErr(err)
 				return
+
+			case err := <-mech: // when metrics server returns, close running servers and return any error
+				handleErr(err)
+				return
 			}
 		}
 	}()
@@ -350,6 +397,12 @@ func (s *server) dShutdown(ctx context.Context) error {
 	dctx, dcancel := context.WithTimeout(ctx, s.sdt)
 	defer dcancel()
 	return s.dsrv.Shutdown(dctx)
+}
+
+func (s *server) mShutdown(ctx context.Context) error {
+	mctx, mcancel := context.WithTimeout(ctx, s.sdt)
+	defer mcancel()
+	return s.msrv.Shutdown(mctx)
 }
 
 // apiShutdown returns any error when shutdown the authorization proxy API server.
@@ -376,6 +429,13 @@ func (s *server) grpcShutdown() {
 func createHealthCheckServiceMux(pattern string) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc(pattern, handleHealthCheckRequest)
+	return mux
+}
+
+// createMetricsServiceMux return a *http.ServeMux object
+func createMetricsServiceMux(pattern string) *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.Handle(pattern, promhttp.Handler())
 	return mux
 }
 
@@ -421,4 +481,8 @@ func (s *server) grpcSrvEnable() bool {
 
 func (s *server) debugSrvEnable() bool {
 	return s.cfg.Debug.Enable
+}
+
+func (s *server) metricsSrvEnable() bool {
+	return s.cfg.Metrics.Port > 0
 }
