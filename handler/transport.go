@@ -50,7 +50,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		defer func() {
 			// skip metrics if request is not forwarded
 			if !startTime.IsZero() {
-				err := t.metrics.Observe(service.HTTP_ORIGIN_LATENCY, float64(time.Since(startTime).Seconds()))
+				err := t.metrics.Observe(service.HttpOriginLatencyMetric, float64(time.Since(startTime).Seconds()))
 				if err != nil {
 					glg.Errorf("cannot observe origin latency on: %s, err: %v", r.URL.Path, err)
 				}

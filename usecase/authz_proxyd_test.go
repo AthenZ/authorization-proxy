@@ -248,7 +248,10 @@ func TestNew(t *testing.T) {
 					},
 				},
 			}
-			service.NewMetrics()
+			service.NewMetrics(
+				service.WithPrincipalCacheSizeFunc(func() int64 { return 0 }),
+				service.WithPrincipalCacheLenFunc(func() int { return 0 }),
+			)
 			return test{
 				name: "return error if Metrics.Port is set but registration of metrics failed",
 				args: args{

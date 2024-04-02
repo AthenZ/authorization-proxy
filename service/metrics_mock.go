@@ -14,11 +14,33 @@
 
 package service
 
+import "github.com/prometheus/client_golang/prometheus"
+
 // MetricsMock is a mock of Metrics
 type MetricsMock struct {
-	ObserveFunc func(string, float64) error
+	ObserveFunc  func(string, float64) error
+	CollectFunc  func(chan<- prometheus.Metric)
+	DescribeFunc func(chan<- *prometheus.Desc)
 }
 
+// Observe is mock implementation of Metrics.Observe
 func (mm *MetricsMock) Observe(name string, value float64) error {
-	return mm.ObserveFunc(name, value)
+	if mm.ObserveFunc != nil {
+		return mm.ObserveFunc(name, value)
+	}
+	return nil
+}
+
+// Collect is mock implementation of Metrics.Collect
+func (mm *MetricsMock) Collect(ch chan<- prometheus.Metric) {
+	if mm.CollectFunc != nil {
+		mm.CollectFunc(ch)
+	}
+}
+
+// Describe is mock implementation of Metrics.Describe
+func (mm *MetricsMock) Describe(ch chan<- *prometheus.Desc) {
+	if mm.DescribeFunc != nil {
+		mm.DescribeFunc(ch)
+	}
 }

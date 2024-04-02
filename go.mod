@@ -32,7 +32,7 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240401002026-b18ce237d629
+	github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240402020014-71763f30c406
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1

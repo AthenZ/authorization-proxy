@@ -84,7 +84,7 @@ func TestObserve(t *testing.T) {
 							Buckets: prometheus.DefBuckets,
 						}),
 					},
-					observeName: HTTP_ORIGIN_LATENCY,
+					observeName: HttpOriginLatencyMetric,
 				},
 				wantErr: nil,
 			}
@@ -123,6 +123,68 @@ func TestObserve(t *testing.T) {
 					return
 				}
 			}
+		})
+	}
+}
+
+func TestCollect(t *testing.T) {
+	type fields struct {
+		m *metrics
+	}
+	type test struct {
+		name   string
+		fields fields
+	}
+	tests := []test{
+		func() test {
+			return test{
+				name: "Collect() success",
+				fields: fields{
+					m: &metrics{
+						principalCacheSizeFunc: func() int64 {
+							return 100
+						},
+					},
+				},
+			}
+		}(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ch := make(chan prometheus.Metric)
+			tt.fields.m.Collect(ch)
+			close(ch)
+		})
+	}
+}
+
+func TestDesc(t *testing.T) {
+	type fields struct {
+		m *metrics
+	}
+	type test struct {
+		name   string
+		fields fields
+	}
+	tests := []test{
+		func() test {
+			return test{
+				name: "Desc() success",
+				fields: fields{
+					m: &metrics{
+						principalCacheLenFunc: func() int {
+							return 100
+						},
+					},
+				},
+			}
+		}(),
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ch := make(chan *prometheus.Desc)
+			tt.fields.m.Describe(ch)
+			close(ch)
 		})
 	}
 }
