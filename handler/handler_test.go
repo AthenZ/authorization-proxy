@@ -690,8 +690,19 @@ func Test_transportFromCfg(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := transportFromCfg(tt.args.cfg); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("transportFromCfg() = %v, want %v", got, tt.want)
+			got := transportFromCfg(tt.args.cfg)
+
+			gotProxy := reflect.ValueOf(got.Proxy).Pointer()
+			wantProxy := reflect.ValueOf(tt.want.Proxy).Pointer()
+			if gotProxy != wantProxy {
+				t.Errorf("transportFromCfg().Proxy = %+v, want.proxy = %+v", gotProxy, wantProxy)
+			}
+
+			// non-nil function pointers cannot be compared by reflect.DeepEqual
+			got.Proxy = nil
+			tt.want.Proxy = nil
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("transportFromCfg() = %+v, want = %+v", got, tt.want)
 			}
 		})
 	}

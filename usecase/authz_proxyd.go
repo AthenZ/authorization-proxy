@@ -199,6 +199,7 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 			return nil, errors.Wrap(err, "newAuthzD(): Athenz.CAPath")
 		}
 		client.Transport = &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
 			TLSClientConfig: &tls.Config{
 				RootCAs: cp,
 			},
