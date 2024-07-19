@@ -9,6 +9,8 @@ replace (
 	github.com/google/go-cmp => github.com/google/go-cmp v0.6.0
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20240409012703-83162a5b38cd
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/common => github.com/prometheus/common v0.48.0
 	golang.org/x/crypto => golang.org/x/crypto v0.22.0
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
 	golang.org/x/image => golang.org/x/image v0.15.0
@@ -36,7 +38,7 @@ require (
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.18.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.33.0
