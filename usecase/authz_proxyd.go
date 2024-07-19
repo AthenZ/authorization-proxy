@@ -69,9 +69,17 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		return nil, errors.Wrap(err, "metricsd returned error")
 	}
 
+	var metrics service.Metrics
+	if cfg.Server.Metrics.Port > 0 {
+		metrics, err = service.NewMetrics()
+		if err != nil {
+			return nil, errors.Wrap(err, "cannot NewMetrics()")
+		}
+	}
+
 	serverOption := []service.Option{
 		service.WithServerConfig(cfg.Server),
-		service.WithRestHandler(handler.New(cfg.Proxy, infra.NewBuffer(cfg.Proxy.BufferSize), athenz, metrics.GetLatencyInstrumentation())),
+		service.WithRestHandler(handler.New(cfg.Proxy, infra.NewBuffer(cfg.Proxy.BufferSize), athenz, metrics)),
 		service.WithDebugHandler(debugMux),
 		service.WithGRPCHandler(gh),
 		service.WithGRPCCloser(closer),

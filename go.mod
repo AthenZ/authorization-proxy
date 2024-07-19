@@ -36,6 +36,7 @@ require (
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.18.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.33.0
