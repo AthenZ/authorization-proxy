@@ -1,7 +1,7 @@
 # GO_VERSION:=$(shell go version)
 
 # .PHONY: all clean bench bench-all profile lint test contributors update install
-.PHONY: deps
+.PHONY: deps test coverage
 
 # all: clean install lint test bench
 
@@ -32,8 +32,13 @@ deps:
 # lint:
 # 	gometalinter --enable-all . | rg -v comment
 
-# test: clean init
-# 	GO111MODULE=on go test --race -v ./...
+test:
+	go test -v -race ./...
+
+coverage:
+	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	rm -f coverage.out
 
 # contributors:
 # 	git log --format='%aN <%aE>' | sort -fu > CONTRIBUTORS
@@ -41,11 +46,6 @@ deps:
 # docker-push:
 # 	sudo docker build --pull=true --file=Dockerfile -t docker.io/athenz/authorization-proxy:latest .
 # 	sudo docker push docker.io/athenz/authorization-proxy:latest
-
-# coverage:
-# 	go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
-# 	go tool cover -html=coverage.out -o coverage.html
-# 	rm -f coverage.out
 
 check-license-header:
 	# go install github.com/apache/skywalking-eyes/cmd/license-eye@latest

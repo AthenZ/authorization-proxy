@@ -194,6 +194,7 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 
 func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 	client := http.DefaultClient
+	client.Transport = http.DefaultTransport
 	if cfg.Athenz.Timeout != "" {
 		t, err := time.ParseDuration(cfg.Athenz.Timeout)
 		if err != nil {
@@ -206,10 +207,8 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "newAuthzD(): Athenz.CAPath")
 		}
-		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: cp,
-			},
+		client.Transport.(*http.Transport).TLSClientConfig = &tls.Config{
+			RootCAs: cp,
 		}
 	}
 
