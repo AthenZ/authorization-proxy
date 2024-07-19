@@ -19,11 +19,13 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
@@ -36,18 +38,27 @@ type transport struct {
 	cfg         config.Proxy
 	noAuthPaths []*policy.Assertion
 	// List to check for deprecated cipher suites
-	insecureCipherSuites []*tls.CipherSuite
+	insecureCipherSuites   []*tls.CipherSuite
+	latencyInstrumentation prometheus.Summary
 }
 
 // Based on the following.
 // https://github.com/golang/oauth2/blob/bf48bf16ab8d622ce64ec6ce98d2c98f916b6303/transport.go
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
+	var startTime time.Time
+	defer func() {
+		if t.latencyInstrumentation != nil && startTime != (time.Time{}) {
+			endTime := time.Since(startTime)
+			t.latencyInstrumentation.Observe(float64(endTime.Nanoseconds()))
+		}
+	}()
 	// bypass authoriztion
 	if len(r.URL.Path) != 0 { // prevent bypassing empty path on default config
 		for _, urlPath := range t.cfg.OriginHealthCheckPaths {
 			if urlPath == r.URL.Path {
 				glg.Info("Authorization checking skipped on: " + r.URL.Path)
 				r.TLS = nil
+				startTime = time.Now()
 				return t.RoundTripper.RoundTrip(r)
 			}
 		}
@@ -55,6 +66,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 			if ass.ResourceRegexp.MatchString(strings.ToLower(r.URL.Path)) {
 				glg.Infof("Authorization checking skipped by %s on: %s", ass.ResourceRegexpString, r.URL.Path)
 				r.TLS = nil
+				startTime = time.Now()
 				return t.RoundTripper.RoundTrip(r)
 			}
 		}
@@ -98,6 +110,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	req2.TLS = nil
 	// req.Body is assumed to be closed by the base RoundTripper.
 	reqBodyClosed = true
+	startTime = time.Now()
 	return t.RoundTripper.RoundTrip(req2)
 }
 
