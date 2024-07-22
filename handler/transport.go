@@ -25,6 +25,7 @@ import (
 	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"

@@ -27,6 +27,7 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/handler"
 	"github.com/AthenZ/authorization-proxy/v4/infra"
+	"github.com/AthenZ/authorization-proxy/v4/metrics"
 	"github.com/AthenZ/authorization-proxy/v4/router"
 	"github.com/AthenZ/authorization-proxy/v4/service"
 
@@ -43,6 +44,7 @@ type authzProxyDaemon struct {
 	cfg                 config.Config
 	athenz              service.Authorizationd
 	server              service.Server
+	metrics             metrics.Metrics
 	grpcServer          service.Server
 	tlsCertificateCache *service.TLSCertificateCache
 }
@@ -62,6 +64,10 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		handler.WithRoleTokenConfig(cfg.Authorization.RoleToken),
 		handler.WithAuthorizationd(athenz),
 	)
+	metrics, err := metrics.NewMetrics()
+	if err != nil {
+		return nil, errors.Wrap(err, "metricsd returned error")
+	}
 
 	var metrics service.Metrics
 	if cfg.Server.Metrics.Port > 0 {
@@ -98,6 +104,7 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		cfg:                 cfg,
 		athenz:              athenz,
 		server:              srv,
+		metrics:             metrics,
 		tlsCertificateCache: tlsCertificateCache,
 	}, nil
 }
@@ -161,6 +168,27 @@ func (g *authzProxyDaemon) Start(ctx context.Context) <-chan []error {
 	if g.tlsCertificateCache != nil {
 		eg.Go(func() error {
 			return g.tlsCertificateCache.RefreshCertificate(ctx)
+		})
+	}
+
+	// handle metricsd error
+	if g.metrics != nil {
+		eg.Go(func() error {
+			errs := <-g.metrics.ListenAndServe(ctx)
+			if len(errs) == 0 || len(errs) == 1 && errors.Cause(errs[0]) == ctx.Err() {
+				return nil
+			}
+			glg.Errorf("mech: %v", errs)
+
+			var baseErr error
+			for i, err := range errs {
+				if i == 0 {
+					baseErr = err
+				} else {
+					baseErr = errors.Wrap(baseErr, err.Error())
+				}
+			}
+			return baseErr
 		})
 	}
 
