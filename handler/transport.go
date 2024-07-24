@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/athenz-authorizer/v5/policy"
@@ -37,17 +38,32 @@ type transport struct {
 	noAuthPaths []*policy.Assertion
 	// List to check for deprecated cipher suites
 	insecureCipherSuites []*tls.CipherSuite
+	metrics              service.Metrics
 }
 
 // Based on the following.
 // https://github.com/golang/oauth2/blob/bf48bf16ab8d622ce64ec6ce98d2c98f916b6303/transport.go
 func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
+	var startTime time.Time
+
+	if t.metrics != nil {
+		defer func() {
+			// skip metrics if request is not forwarded
+			if !startTime.IsZero() {
+				err := t.metrics.Observe(service.HTTP_ORIGIN_LATENCY, float64(time.Since(startTime).Seconds()))
+				if err != nil {
+					glg.Errorf("cannot observe origin latency on: %s, err: %v", r.URL.Path, err)
+				}
+			}
+		}()
+	}
 	// bypass authoriztion
 	if len(r.URL.Path) != 0 { // prevent bypassing empty path on default config
 		for _, urlPath := range t.cfg.OriginHealthCheckPaths {
 			if urlPath == r.URL.Path {
 				glg.Info("Authorization checking skipped on: " + r.URL.Path)
 				r.TLS = nil
+				startTime = time.Now()
 				return t.RoundTripper.RoundTrip(r)
 			}
 		}
@@ -55,6 +71,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 			if ass.ResourceRegexp.MatchString(strings.ToLower(r.URL.Path)) {
 				glg.Infof("Authorization checking skipped by %s on: %s", ass.ResourceRegexpString, r.URL.Path)
 				r.TLS = nil
+				startTime = time.Now()
 				return t.RoundTripper.RoundTrip(r)
 			}
 		}
@@ -98,6 +115,7 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	req2.TLS = nil
 	// req.Body is assumed to be closed by the base RoundTripper.
 	reqBodyClosed = true
+	startTime = time.Now()
 	return t.RoundTripper.RoundTrip(req2)
 }
 

@@ -72,6 +72,9 @@ type Server struct {
 
 	// Debug represents the debug server configuration.
 	Debug Debug `yaml:"debug"`
+
+	// Metrics represents the metrics server configuration.
+	Metrics `yaml:"metrics"`
 }
 
 // TLS represents the TLS configuration of the authorization proxy.
@@ -96,6 +99,12 @@ type TLS struct {
 
 	// EnableInsecureCipherSuites represents list of enable insecureCipherSuites
 	EnableInsecureCipherSuites []string `yaml:"enableInsecureCipherSuites"`
+}
+
+// Metrics represents the metrics server configuration.
+type Metrics struct {
+	// MetricsServerAddr represents the metrics server listening port.
+	Port int `yaml:"port"`
 }
 
 // HealthCheck represents the health check server configuration.
