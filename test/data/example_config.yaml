@@ -5,7 +5,7 @@ server:
   timeout: 10s
   shutdownTimeout: 10s
   shutdownDelay: 9s
-  disableKeepAlives: false
+  disableKeepAlives: true
   tls:
     enable: true
     certPath: "test/data/dummyServer.crt"

@@ -81,7 +81,7 @@ func TestNew(t *testing.T) {
 					Timeout:           "10s",
 					ShutdownTimeout:   "10s",
 					ShutdownDelay:     "9s",
-					DisableKeepAlives: false,
+					DisableKeepAlives: true,
 					TLS: TLS{
 						Enable:            true,
 						CertPath:          "test/data/dummyServer.crt",
