@@ -77,10 +77,11 @@ func TestNew(t *testing.T) {
 			want: &Config{
 				Version: "v2.0.0",
 				Server: Server{
-					Port:            8082,
-					Timeout:         "10s",
-					ShutdownTimeout: "10s",
-					ShutdownDelay:   "9s",
+					Port:              8082,
+					Timeout:           "10s",
+					ShutdownTimeout:   "10s",
+					ShutdownDelay:     "9s",
+					DisableKeepAlives: true,
 					TLS: TLS{
 						Enable:            true,
 						CertPath:          "test/data/dummyServer.crt",

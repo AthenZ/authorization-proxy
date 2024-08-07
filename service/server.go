@@ -126,7 +126,7 @@ func NewServer(opts ...Option) (Server, error) {
 			Addr:    fmt.Sprintf(":%d", s.cfg.Port),
 			Handler: s.srvHandler,
 		}
-		s.srv.SetKeepAlivesEnabled(true)
+		s.srv.SetKeepAlivesEnabled(!s.cfg.DisableKeepAlives)
 		if s.cfg.TLS.Enable {
 			s.srv.TLSConfig = s.tlsConfig
 		}

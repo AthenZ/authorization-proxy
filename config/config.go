@@ -64,6 +64,9 @@ type Server struct {
 	// ShutdownDelay represents the delay duration between the health check server shutdown and the api server shutdown.
 	ShutdownDelay string `yaml:"shutdownDelay"`
 
+	// DisableKeepAlives represents whether HTTP keep-alive connections should be disabled between the client and the Provider Sidecar.
+	DisableKeepAlives bool `yaml:"disableKeepAlives"`
+
 	// TLS represents the TLS configuration of the authorization proxy.
 	TLS TLS `yaml:"tls"`
 
