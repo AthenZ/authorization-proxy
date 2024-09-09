@@ -17,6 +17,8 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto"
+	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
@@ -109,6 +111,7 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
 			}
+			warnIfRSAPrivateKey(crt.PrivateKey)
 
 			crtHash, err := hash(cert)
 			if err != nil {
@@ -131,6 +134,8 @@ func NewTLSConfigWithTLSCertificateCache(cfg config.TLS) (*tls.Config, *TLSCerti
 			if err != nil {
 				return nil, nil, errors.Wrap(err, "tls.LoadX509KeyPair(cert, key)")
 			}
+			warnIfRSAPrivateKey(crt.PrivateKey)
+
 			t.Certificates = make([]tls.Certificate, 1)
 			t.Certificates[0] = crt
 		}
@@ -204,6 +209,8 @@ func (tcc *TLSCertificateCache) RefreshCertificate(ctx context.Context) error {
 					tcc.serverCertMutex.Unlock()
 					continue
 				}
+				warnIfRSAPrivateKey(newCert.PrivateKey)
+
 				tcc.serverCert.Store(&newCert)
 				tcc.serverCertHash = serverCertHash
 				tcc.serverCertKeyHash = serverCertKeyHash
@@ -292,4 +299,11 @@ func defaultCipherSuitesMap() map[string]uint16 {
 		ciphers[c.Name] = c.ID
 	}
 	return ciphers
+}
+
+// warnIfRSAPrivateKey output warning log if the private key is RSA.
+func warnIfRSAPrivateKey(privateKey crypto.PrivateKey) {
+	if _, ok := privateKey.(*rsa.PrivateKey); ok {
+		glg.Warn("The private key is RSA. Consider using an ECDSA key for better performance.")
+	}
 }
