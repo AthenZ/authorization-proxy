@@ -1868,7 +1868,7 @@ func Test_server_createHealthCheckServiceMux(t *testing.T) {
 			return test{
 				name: "Test create server mux",
 				args: args{
-					pattern: ":8080",
+					pattern: "/healthz",
 				},
 				checkFunc: func(got *http.ServeMux) error {
 					if got == nil {
