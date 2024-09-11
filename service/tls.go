@@ -304,6 +304,6 @@ func defaultCipherSuitesMap() map[string]uint16 {
 // warnIfRSAPrivateKey output warning log if the private key is RSA.
 func warnIfRSAPrivateKey(privateKey crypto.PrivateKey) {
 	if _, ok := privateKey.(*rsa.PrivateKey); ok {
-		glg.Warn("The private key is RSA. Consider using an ECDSA key for better performance.")
+		glg.Warn("The private key used in the server certificate is RSA. Consider using an ECDSA key for better performance.")
 	}
 }
