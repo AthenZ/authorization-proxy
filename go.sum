@@ -1,7 +1,7 @@
 github.com/AthenZ/athenz v1.11.63 h1:jVJFJRMsZg2tIF62Ax4E5GAAxrSouLY00wO4q201wew=
 github.com/AthenZ/athenz v1.11.63/go.mod h1:5rBew3PH1ZUV/FegFMhe/vgEbn9lgOF56gWXq3wxVqs=
-github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240910063414-1aff2635881e h1:yEXC0NWA/wq3/376rn34TvUZcE5FtS4YS8eY6i+hASY=
-github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240910063414-1aff2635881e/go.mod h1:52uBDxKVjdRHsU/4mM+KUre1N2nGAGD4e1FzE/JwGTU=
+github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240911092756-7951463a2fb0 h1:648SeuoTaKvqdMagJ9ocGjwxYlMwyiVxigmuAdHkVJ8=
+github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240911092756-7951463a2fb0/go.mod h1:gddjhBAFqVdL3lQmOkh6Cx9ir5Hn5GFKIn3b+23sgII=
 github.com/ardielle/ardielle-go v1.5.2 h1:TilHTpHIQJ27R1Tl/iITBzMwiUGSlVfiVhwDNGM3Zj4=
 github.com/ardielle/ardielle-go v1.5.2/go.mod h1:I4hy1n795cUhaVt/ojz83SNVCYIGsAFAONtv2Dr7HUI=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
@@ -42,8 +42,8 @@ github.com/klauspost/cpuid/v2 v2.2.8 h1:+StwCXwm9PdpiEkPyzBXIy+M9KUb4ODm0Zarf1kS
 github.com/klauspost/cpuid/v2 v2.2.8/go.mod h1:Lcz8mBdAVJIBVzewtcLocK12l3Y+JytZYpaMropDUws=
 github.com/kpango/fastime v1.1.9 h1:xVQHcqyPt5M69DyFH7g1EPRns1YQNap9d5eLhl/Jy84=
 github.com/kpango/fastime v1.1.9/go.mod h1:vyD7FnUn08zxY4b/QFBZVG+9EWMYsNl+QF0uE46urD4=
-github.com/kpango/gache/v2 v2.0.10-0.20240902030901-0ea899935ac8 h1:vbm1/pF5O+aWJ4Y/kt7plD5/pavUqRPjEnjAZ+vCTO8=
-github.com/kpango/gache/v2 v2.0.10-0.20240902030901-0ea899935ac8/go.mod h1:80i1/beUrjL5QrCuanrSobu0SMuQXBTcGjRWtcnjSV0=
+github.com/kpango/gache/v2 v2.0.10-0.20240911053229-c0df2ac39dae h1:bBI6q+fvovn8kyLi4ky9Xppu5RQ2lwCRmogAf4KAQ10=
+github.com/kpango/gache/v2 v2.0.10-0.20240911053229-c0df2ac39dae/go.mod h1:80i1/beUrjL5QrCuanrSobu0SMuQXBTcGjRWtcnjSV0=
 github.com/kpango/glg v1.6.15 h1:nw0xSxpSyrDIWHeb3dvnE08PW+SCbK+aYFETT75IeLA=
 github.com/kpango/glg v1.6.15/go.mod h1:cmsc7Yeu8AS3wHLmN7bhwENXOpxfq+QoqxCIk2FneRk=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
