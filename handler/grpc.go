@@ -65,7 +65,15 @@ func NewGRPC(opts ...GRPCOption) (grpc.StreamHandler, io.Closer) {
 
 	target := net.JoinHostPort(gh.proxyCfg.Host, strconv.Itoa(int(gh.proxyCfg.Port)))
 
-	return proxy.TransparentHandler(func(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
+	return proxy.TransparentHandler(func(ctx context.Context, fullMethodName string) (cctx context.Context, conn *grpc.ClientConn, err error) {
+		for _, methodName := range gh.proxyCfg.OriginHealthCheckPaths {
+			if fullMethodName == methodName {
+				glg.Info("Authorization checking skipped on: " + fullMethodName)
+				conn, err = gh.dialContext(ctx, target, dialOpts...)
+				return ctx, conn, err
+			}
+		}
+
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return ctx, nil, status.Errorf(codes.Unauthenticated, ErrGRPCMetadataNotFound)
@@ -92,7 +100,7 @@ func NewGRPC(opts ...GRPCOption) (grpc.StreamHandler, io.Closer) {
 			ctx = metadata.AppendToOutgoingContext(ctx, "X-Athenz-Client-ID", c.ClientID())
 		}
 
-		conn, err := gh.dialContext(ctx, target, dialOpts...)
+		conn, err = gh.dialContext(ctx, target, dialOpts...)
 		return ctx, conn, err
 	}), gh
 }
