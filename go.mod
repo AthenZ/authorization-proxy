@@ -1,6 +1,6 @@
 module github.com/AthenZ/authorization-proxy/v4
 
-go 1.23.0
+go 1.23.1
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.112.2
@@ -34,7 +34,7 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240911092756-7951463a2fb0
+	github.com/AthenZ/athenz-authorizer/v5 v5.5.3-0.20240912050851-219dae83328c
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
@@ -62,7 +62,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/kpango/fastime v1.1.9 // indirect
-	github.com/kpango/gache/v2 v2.0.10-0.20240911053229-c0df2ac39dae // indirect
+	github.com/kpango/gache/v2 v2.0.10 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
