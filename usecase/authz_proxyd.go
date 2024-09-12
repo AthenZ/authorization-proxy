@@ -73,7 +73,7 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 
 	serverOption := []service.Option{
 		service.WithServerConfig(cfg.Server),
-		service.WithRestHandler(handler.New(cfg.Proxy, infra.NewBuffer(cfg.Proxy.BufferSize), athenz, metrics)),
+		service.WithRestHandler(handler.New(cfg.Proxy, infra.NewSimpleBuffer(cfg.Proxy.BufferSize), athenz, metrics)),
 		service.WithDebugHandler(debugMux),
 		service.WithGRPCHandler(gh),
 		service.WithGRPCCloser(closer),
