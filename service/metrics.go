@@ -100,7 +100,7 @@ func (m *metrics) Collect(ch chan<- prometheus.Metric) {
 	var metric prometheus.Metric
 	var err error
 	metric, err = prometheus.NewConstMetric(
-		prometheus.NewDesc("CACHED_PRINCIPAL_BYTES_METRIC", CACHED_PRINCIPAL_BYTES_HELP, nil, nil),
+		prometheus.NewDesc(CACHED_PRINCIPAL_BYTES_METRIC, CACHED_PRINCIPAL_BYTES_HELP, nil, nil),
 		prometheus.GaugeValue,
 		float64(m.principalCacheSizeFunc()),
 	)
