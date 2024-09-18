@@ -34,6 +34,9 @@ import (
 	"github.com/AthenZ/authorization-proxy/v4/service"
 )
 
+// DefaultMaxIdleConnsPerHost is the default value for transport MaxIdleConnsPerHost
+const DefaultMaxIdleConnsPerHost = 100
+
 // Func represents the a handle function type
 type Func func(http.ResponseWriter, *http.Request) error
 
@@ -142,6 +145,7 @@ func transportFromCfg(cfg config.Transport) *http.Transport {
 	if !isZero(cfg.MaxIdleConnsPerHost) {
 		t.MaxIdleConnsPerHost = cfg.MaxIdleConnsPerHost
 	}
+	t.MaxConnsPerHost = DefaultMaxIdleConnsPerHost
 	if !isZero(cfg.MaxConnsPerHost) {
 		t.MaxConnsPerHost = cfg.MaxConnsPerHost
 	}
