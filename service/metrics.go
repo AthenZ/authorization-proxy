@@ -15,6 +15,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -71,12 +73,12 @@ func NewMetrics(opts ...MetricsOption) (Metrics, error) {
 
 	err := prometheus.Register(m.httpOriginLatency)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot register metrics")
+		return nil, errors.Wrap(err, fmt.Sprintf("cannot register metrics %v", HTTP_ORIGIN_LATENCY))
 	}
 
 	err = prometheus.Register(m)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot register metrics")
+		return nil, errors.Wrap(err, fmt.Sprintf("cannot register metrics %v or %v", CACHED_PRINCIPAL_BYTES_METRIC, CACHED_PRINCIPAL_ENTRIES_METRIC))
 	}
 
 	return m, nil
@@ -94,14 +96,11 @@ func (m *metrics) Observe(name string, value float64) error {
 
 // Collect is implementation of prometheus.Collector.Collect
 func (m *metrics) Collect(ch chan<- prometheus.Metric) {
-	// m.mutex.RLock()
-	// defer m.mutex.RUnlock()
-
 	// principal cache metrics
 	var metric prometheus.Metric
 	var err error
 	metric, err = prometheus.NewConstMetric(
-		prometheus.NewDesc(CACHED_PRINCIPAL_BYTES_METRIC, CACHED_PRINCIPAL_BYTES_HELP, nil, nil),
+		prometheus.NewDesc("CACHED_PRINCIPAL_BYTES_METRIC", CACHED_PRINCIPAL_BYTES_HELP, nil, nil),
 		prometheus.GaugeValue,
 		float64(m.principalCacheSizeFunc()),
 	)
