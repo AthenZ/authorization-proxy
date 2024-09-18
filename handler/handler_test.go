@@ -651,7 +651,9 @@ func Test_transportFromCfg(t *testing.T) {
 			args: args{
 				cfg: config.Transport{},
 			},
-			want: &http.Transport{},
+			want: &http.Transport{
+				MaxIdleConnsPerHost: 100,
+			},
 		},
 		{
 			name: "transport from custom values",
