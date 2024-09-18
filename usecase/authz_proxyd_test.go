@@ -255,7 +255,7 @@ func TestNew(t *testing.T) {
 					cfg: cfg,
 				},
 				wantErr:    true,
-				wantErrStr: "cannot NewMetrics(): cannot register metrics: duplicate metrics collector registration attempted",
+				wantErrStr: "cannot NewMetrics(): cannot register metrics http_origin_latency_in_seconds: duplicate metrics collector registration attempted",
 			}
 		}(),
 		{
