@@ -65,7 +65,10 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 
 	var metrics service.Metrics
 	if cfg.Server.Metrics.Port > 0 {
-		metrics, err = service.NewMetrics()
+		metrics, err = service.NewMetrics(
+			service.WithPrincipalCacheSizeFunc(athenz.GetPrincipalCacheSize),
+			service.WithPrincipalCacheLenFunc(athenz.GetPrincipalCacheLen),
+		)
 		if err != nil {
 			return nil, errors.Wrap(err, "cannot NewMetrics()")
 		}
