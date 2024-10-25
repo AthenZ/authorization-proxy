@@ -34,7 +34,7 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 v5.6.0
+	github.com/AthenZ/athenz-authorizer/v5 v5.6.1-0.20241025081257-2fa44c9c0bf4
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
@@ -63,7 +63,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
 	github.com/kpango/fastime v1.1.9 // indirect
-	github.com/kpango/gache/v2 v2.0.11 // indirect
+	github.com/kpango/gache/v2 v2.1.0 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
