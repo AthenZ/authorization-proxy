@@ -32,6 +32,6 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 update-go
+	github.com/AthenZ/athenz-authorizer/v5 latest
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 )
