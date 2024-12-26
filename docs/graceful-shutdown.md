@@ -30,7 +30,7 @@ To enable it, set `shutdownTimeout` and `shutdownDelay` to value > 0 in the `con
         type: RollingUpdate
     ```
 1. make sure the `readinessProbe` for sidecar is set
-    - make sure `periodSeconds` > `timeoutSeconds`, else the behavior is undefined
+    - make sure `periodSeconds > timeoutSeconds` (the behavior for `timeoutSeconds > periodSeconds` is NOT well-defined in K8s)
     - sample
     ```yaml
     apiVersion: apps/v1
