@@ -1,6 +1,6 @@
 module github.com/AthenZ/authorization-proxy/v4
 
-go 1.20
+go 1.23.4
 
 replace (
 	cloud.google.com/go => cloud.google.com/go latest
