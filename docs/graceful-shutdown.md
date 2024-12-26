@@ -94,20 +94,20 @@ gantt
     pod start, sidecar process start: milestone, 00:00.000, 30ms
     pod termination start, got SIGTERM, sidecar shutdown: milestone, 00:04.500, 30ms
     terminationGracePeriodSeconds (default 30s): 00:04.500, 30s
+    sidecar process exit: milestone, 00:23.500, 30ms
 
-    section Sidecar Proxy/API
-    sidecar proxy/API start: milestone, 00:00.500, 30ms
+    section Sidecar Proxy/API Server
+    proxy/API server start: milestone, 00:00.500, 30ms
     shutdownDelay: 00:04.500, 9s
     shutdownTimeout: 00:13.500, 10s
-    shutdown gracefully: milestone, 00:13.500, 30ms
-    server shutdown if NO alive connections: milestone, 00:16.500, 30ms
-    shutdown forcefully if timeout: milestone, 00:23.500, 30ms
-    sidecar exit: milestone, 00:23.500, 30ms
+    proxy/API server shutdown gracefully: milestone, 00:13.500, 30ms
+    will shutdown if NO alive connections: milestone, 00:16.500, 30ms
+    proxy/API server shutdown forcefully if timeout: milestone, 00:23.500, 30ms
 
-    section Sidecar Health Check
-    sidecar health check start: milestone, 00:01.000, 30ms
+    section Sidecar Health Check Server
+    HC server start: milestone, 00:01.000, 30ms
     ✅ 200 OK: 00:03.000, 500ms
-    server shutdown: milestone, 00:04.500, 30ms
+    HC server shutdown: milestone, 00:04.500, 30ms
     ❌ 1st Connection Refused: 00:06.000, 500ms
     ❌ 2nd Connection Refused: 00:09.000, 500ms
     ❌ 3rd Connection Refused: 00:12.000, 500ms
