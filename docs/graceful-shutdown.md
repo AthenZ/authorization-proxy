@@ -15,7 +15,7 @@ To enable it, set `shutdownTimeout` and `shutdownDelay` to value > 0 in the `con
 ## Rolling update in K8s with graceful shutdown
 
 > [!NOTE]  
-> The following set of sample values should be sufficient for most cases. Please fine-tune the values only if you encounter unexpected issues and fully understand the relationship between them.
+> The following set of sample values should be sufficient for most cases. Please fine-tune the values ONLY IF you encounter unexpected issues and fully understand the relationship between them.
 
 1. make sure the `strategy` is set in the deployment
     - sample
