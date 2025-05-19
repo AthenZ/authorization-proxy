@@ -1117,6 +1117,40 @@ func Test_newAuthzD(t *testing.T) {
 			},
 			want: true,
 		},
+		{
+			name: "test outputAuthorizedPrincipalName true",
+			args: args{
+				cfg: config.Config{
+					Athenz: config.Athenz{
+						URL:     "athenz.io",
+						Timeout: "30s",
+						CAPath:  "../test/data/dummyCa.pem",
+					},
+					Authorization: config.Authorization{
+						AthenzDomains: []string{"dummyDom1", "dummyDom2"},
+						PublicKey: config.PublicKey{
+							SysAuthDomain:   "dummy.sys.auth",
+							RefreshPeriod:   "10s",
+							ETagExpiry:      "10s",
+							ETagPurgePeriod: "10s",
+						},
+						Policy: config.Policy{
+							ExpiryMargin:  "10s",
+							RefreshPeriod: "10s",
+							PurgePeriod:   "10s",
+						},
+						RoleToken: config.RoleToken{
+							Enable:         true,
+							RoleAuthHeader: "Athenz-Role-Auth",
+						},
+					},
+					Log: config.Log{
+						OutputAuthorizedPrincipalName: true,
+					},
+				},
+			},
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
