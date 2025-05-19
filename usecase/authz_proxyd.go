@@ -310,9 +310,9 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 	}
 
 	var logOpts []authorizerd.Option
-	if cfg.Log.EnableAuthorizedPrincipalName {
+	if cfg.Log.OutputAuthorizedPrincipalName {
 		logOpts = []authorizerd.Option{
-			authorizerd.WithEnableAuthorizedPrincipalLog(),
+			authorizerd.WithOutputAuthorizedPrincipalLog(),
 		}
 	}
 

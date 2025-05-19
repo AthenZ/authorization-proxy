@@ -298,7 +298,7 @@ type Log struct {
 	Color bool `yaml:"color"`
 
 	// Output the name of the authenticated Principal to the log
-	EnableAuthorizedPrincipalName bool `yaml:"enableAuthorizedPrincipalName"`
+	OutputAuthorizedPrincipalName bool `yaml:"outputAuthorizedPrincipalName"`
 }
 
 // Transport exposes a subset of Transport parameters. reference: https://github.com/golang/go/blob/master/src/net/http/transport.go#L95
