@@ -66,12 +66,9 @@ require (
 	github.com/kpango/fastime v1.1.9 // indirect
 	github.com/kpango/gache/v2 v2.1.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.2 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/httprc/v3 v3.0.0-beta1 // indirect
-	github.com/lestrrat-go/iter v1.0.2 // indirect
-	github.com/lestrrat-go/jwx v1.2.30 // indirect
 	github.com/lestrrat-go/jwx/v3 v3.0.0 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
