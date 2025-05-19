@@ -55,9 +55,6 @@ type Server struct {
 	// Port represents the server listening port.
 	Port int `yaml:"port"`
 
-	// Timeout represents the maximum request handling duration.
-	Timeout string `yaml:"timeout"`
-
 	// ShutdownTimeout represents the duration before force shutdown.
 	ShutdownTimeout string `yaml:"shutdownTimeout"`
 
@@ -126,6 +123,8 @@ type Debug struct {
 
 	// Port represents debug server port.
 	Port int `yaml:"port"`
+	// Timeout represents the maximum request handling duration for debug server.
+	Timeout string `yaml:"timeout"`
 
 	// Dump represents whether to enable memory dump functionality.
 	Dump bool `yaml:"dump"`
