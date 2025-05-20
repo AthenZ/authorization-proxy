@@ -8,19 +8,13 @@ replace (
 	github.com/golang/protobuf => github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp => github.com/google/go-cmp v0.6.0
 	github.com/google/pprof => github.com/google/pprof v0.0.0-20240409012703-83162a5b38cd
-	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
-	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/common => github.com/prometheus/common v0.48.0
-	golang.org/x/crypto => golang.org/x/crypto v0.22.0
 	golang.org/x/exp => golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8
 	golang.org/x/image => golang.org/x/image v0.15.0
 	golang.org/x/lint => golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/mobile => golang.org/x/mobile v0.0.0-20240404231514-09dbf07665ed
 	golang.org/x/mod => golang.org/x/mod v0.17.0
-	golang.org/x/net => golang.org/x/net v0.24.0
 	golang.org/x/oauth2 => golang.org/x/oauth2 v0.19.0
-	golang.org/x/sync => golang.org/x/sync v0.7.0
-	golang.org/x/sys => golang.org/x/sys v0.19.0
 	golang.org/x/term => golang.org/x/term v0.19.0
 	golang.org/x/text => golang.org/x/text v0.14.0
 	golang.org/x/time => golang.org/x/time v0.5.0
@@ -38,7 +32,7 @@ require (
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.18.0
+	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/client_model v0.5.0
 	golang.org/x/sync v0.12.0
 	google.golang.org/grpc v1.71.0
@@ -52,7 +46,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.8.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
@@ -79,7 +73,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250227231956-55c901821b1e // indirect
