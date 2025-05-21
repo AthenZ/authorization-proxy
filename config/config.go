@@ -123,6 +123,7 @@ type Debug struct {
 
 	// Port represents debug server port.
 	Port int `yaml:"port"`
+
 	// Timeout represents the maximum request handling duration for debug server.
 	Timeout string `yaml:"timeout"`
 
