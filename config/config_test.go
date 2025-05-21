@@ -222,8 +222,9 @@ func TestNew(t *testing.T) {
 					},
 				},
 				Log: Log{
-					Level: "debug",
-					Color: true,
+					Level:                         "debug",
+					Color:                         true,
+					OutputAuthorizedPrincipalName: false,
 				},
 			},
 		},

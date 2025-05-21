@@ -127,3 +127,4 @@ authorization:
 log:
   level: debug
   color: true
+  outputAuthorizedPrincipalName: false
