@@ -2,7 +2,6 @@
 version: v2.0.0
 server:
   port: 8082
-  timeout: 10s
   shutdownTimeout: 10s
   shutdownDelay: 9s
   disableKeepAlives: true
@@ -28,6 +27,7 @@ server:
   debug:
     enable: false
     port: 6083
+    timeout: 10s
     dump: true
     profiling: true
   metrics:

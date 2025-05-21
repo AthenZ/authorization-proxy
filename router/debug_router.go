@@ -34,9 +34,9 @@ func NewDebugRouter(cfg config.Server, a service.Authorizationd) *http.ServeMux 
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 32
 	mux := http.NewServeMux()
 
-	dur, err := time.ParseDuration(cfg.Timeout)
+	dur, err := time.ParseDuration(cfg.Debug.Timeout)
 	if err != nil {
-		dur = time.Second * 3
+		dur = time.Second * 10
 	}
 
 	for _, route := range NewDebugRoutes(cfg.Debug, a) {
