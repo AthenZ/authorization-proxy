@@ -28,7 +28,7 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 v5.6.3-0.20250519070715-ca8fa488da2d
+	github.com/AthenZ/athenz-authorizer/v5 v5.7.0
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
@@ -73,7 +73,7 @@ require (
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250227231956-55c901821b1e // indirect
