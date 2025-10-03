@@ -13,7 +13,7 @@ RUN GO111MODULE=on go mod download
 
 FROM base AS builder
 
-ENV APP_NAME authorization-proxy
+ENV APP_NAME=authorization-proxy
 ARG APP_VERSION='development version'
 
 COPY . .
@@ -40,9 +40,9 @@ RUN ldd "/usr/bin/${APP_NAME}"\
 # Start From Scratch For Running Environment
 FROM scratch
 # FROM alpine:latest
-LABEL maintainer "cncf-athenz-maintainers@lists.cncf.io"
+LABEL maintainer="cncf-athenz-maintainers@lists.cncf.io"
 
-ENV APP_NAME authorization-proxy
+ENV APP_NAME=authorization-proxy
 
 # Copy certificates for SSL/TLS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
