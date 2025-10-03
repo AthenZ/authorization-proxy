@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS base
+FROM golang:1.25-alpine AS base
 
 RUN set -eux \
     && apk --no-cache add ca-certificates \
@@ -29,6 +29,7 @@ RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
     GOOS=$(go env GOOS) \
     GOARCH=$(go env GOARCH) \
     GO111MODULE=on \
+    GOEXPERIMENT=noswissmap \
     go build -ldflags "-X 'main.Version=${VERSION} at ${BUILD_TIME} by ${GO_VERSION}' -linkmode=external" -a -o "/usr/bin/${APP_NAME}"
 
 # confirm dependency libraries & cleanup
