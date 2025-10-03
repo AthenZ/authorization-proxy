@@ -68,17 +68,17 @@ func NewGRPC(opts ...GRPCOption) (grpc.StreamHandler, io.Closer) {
 	return proxy.TransparentHandler(func(ctx context.Context, fullMethodName string) (context.Context, *grpc.ClientConn, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
-			return ctx, nil, status.Errorf(codes.Unauthenticated, ErrGRPCMetadataNotFound)
+			return ctx, nil, status.Error(codes.Unauthenticated, ErrGRPCMetadataNotFound)
 		}
 
 		rts := md.Get(gh.roleCfg.RoleAuthHeader)
 		if len(rts) == 0 {
-			return ctx, nil, status.Errorf(codes.Unauthenticated, ErrRoleTokenNotFound)
+			return ctx, nil, status.Error(codes.Unauthenticated, ErrRoleTokenNotFound)
 		}
 
 		p, err := gh.authorizationd.AuthorizeRoleToken(ctx, rts[0], gRPC, fullMethodName)
 		if err != nil {
-			return ctx, nil, status.Errorf(codes.Unauthenticated, err.Error())
+			return ctx, nil, status.Error(codes.Unauthenticated, err.Error())
 		}
 
 		ctx = metadata.AppendToOutgoingContext(ctx,
