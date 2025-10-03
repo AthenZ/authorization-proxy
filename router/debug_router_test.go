@@ -141,7 +141,14 @@ func Test_routing(t *testing.T) {
 					gotStatusCode := response.StatusCode
 
 					if got != want || gotStatusCode != wantStatusCode {
-						return fmt.Errorf("Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d", request, got, want, gotStatusCode, wantStatusCode)
+						return fmt.Errorf(
+							"Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d",
+							request,
+							got,
+							want,
+							gotStatusCode,
+							wantStatusCode,
+						)
 					}
 
 					return nil
@@ -187,7 +194,14 @@ func Test_routing(t *testing.T) {
 						gotStatusCode := response.StatusCode
 
 						if got != want || gotStatusCode != wantStatusCode {
-							return fmt.Errorf("Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d", request, got, want, gotStatusCode, wantStatusCode)
+							return fmt.Errorf(
+								"Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d",
+								request,
+								got,
+								want,
+								gotStatusCode,
+								wantStatusCode,
+							)
 						}
 					}
 					return nil
@@ -207,7 +221,7 @@ func Test_routing(t *testing.T) {
 					},
 					t: time.Second * 10,
 					h: func(rw http.ResponseWriter, r *http.Request) error {
-						return fmt.Errorf(testStr)
+						return errors.New(testStr)
 					},
 				},
 				checkFunc: func(server http.Handler) error {
@@ -223,7 +237,14 @@ func Test_routing(t *testing.T) {
 					gotStatusCode := response.StatusCode
 
 					if got != want || gotStatusCode != wantStatusCode {
-						return fmt.Errorf("Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d", request, got, want, gotStatusCode, wantStatusCode)
+						return fmt.Errorf(
+							"Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d",
+							request,
+							got,
+							want,
+							gotStatusCode,
+							wantStatusCode,
+						)
 					}
 
 					return nil
@@ -243,7 +264,7 @@ func Test_routing(t *testing.T) {
 					},
 					t: time.Second * 10,
 					h: func(rw http.ResponseWriter, r *http.Request) error {
-						return fmt.Errorf(testStr)
+						return errors.New(testStr)
 					},
 				},
 				checkFunc: func(server http.Handler) error {
@@ -259,7 +280,14 @@ func Test_routing(t *testing.T) {
 					gotStatusCode := response.StatusCode
 
 					if got != want || gotStatusCode != wantStatusCode {
-						return fmt.Errorf("Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d", request, got, want, gotStatusCode, wantStatusCode)
+						return fmt.Errorf(
+							"Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d",
+							request,
+							got,
+							want,
+							gotStatusCode,
+							wantStatusCode,
+						)
 					}
 
 					return nil
@@ -276,7 +304,7 @@ func Test_routing(t *testing.T) {
 				args: args{
 					t: time.Second * 10,
 					h: func(rw http.ResponseWriter, r *http.Request) error {
-						return fmt.Errorf(testStr)
+						return errors.New(testStr)
 					},
 				},
 				checkFunc: func(server http.Handler) error {
@@ -292,7 +320,14 @@ func Test_routing(t *testing.T) {
 					gotStatusCode := response.StatusCode
 
 					if got != want || gotStatusCode != wantStatusCode {
-						return fmt.Errorf("Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d", request, got, want, gotStatusCode, wantStatusCode)
+						return fmt.Errorf(
+							"Handler could not handle the request: request: %v  got response: %v  want: %v  got statuscode: %d  want statuscode: %d",
+							request,
+							got,
+							want,
+							gotStatusCode,
+							wantStatusCode,
+						)
 					}
 
 					return nil
