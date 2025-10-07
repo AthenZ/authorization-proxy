@@ -4,7 +4,6 @@ go 1.25.1
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.123.0
-	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.7.0
 	github.com/kpango/gache/v2 => github.com/kpango/gache/v2 v2.1.1
 	github.com/kpango/glg => github.com/kpango/glg v1.6.15
 	github.com/pkg/errors => github.com/pkg/errors v0.9.1
@@ -17,7 +16,7 @@ replace (
 )
 
 require (
-	github.com/AthenZ/athenz-authorizer/v5 v5.0.0-00010101000000-000000000000
+	github.com/AthenZ/athenz-authorizer/v5 v5.7.0
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-20181017164139-0f1106ef9c76
 	github.com/pkg/errors v0.9.1
