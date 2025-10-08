@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS base
+FROM golang:1.25-alpine AS base
 
 RUN set -eux \
     && apk --no-cache add ca-certificates \
@@ -13,7 +13,7 @@ RUN GO111MODULE=on go mod download
 
 FROM base AS builder
 
-ENV APP_NAME authorization-proxy
+ENV APP_NAME=authorization-proxy
 ARG APP_VERSION='development version'
 
 COPY . .
@@ -29,6 +29,7 @@ RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
     GOOS=$(go env GOOS) \
     GOARCH=$(go env GOARCH) \
     GO111MODULE=on \
+    GOEXPERIMENT=noswissmap \
     go build -ldflags "-X 'main.Version=${VERSION} at ${BUILD_TIME} by ${GO_VERSION}' -linkmode=external" -a -o "/usr/bin/${APP_NAME}"
 
 # confirm dependency libraries & cleanup
@@ -39,9 +40,9 @@ RUN ldd "/usr/bin/${APP_NAME}"\
 # Start From Scratch For Running Environment
 FROM scratch
 # FROM alpine:latest
-LABEL maintainer "cncf-athenz-maintainers@lists.cncf.io"
+LABEL maintainer="cncf-athenz-maintainers@lists.cncf.io"
 
-ENV APP_NAME authorization-proxy
+ENV APP_NAME=authorization-proxy
 
 # Copy certificates for SSL/TLS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
