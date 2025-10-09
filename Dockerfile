@@ -29,7 +29,6 @@ RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
     GOOS=$(go env GOOS) \
     GOARCH=$(go env GOARCH) \
     GO111MODULE=on \
-    GOEXPERIMENT=noswissmap \
     go build -ldflags "-X 'main.Version=${VERSION} at ${BUILD_TIME} by ${GO_VERSION}' -linkmode=external" -a -o "/usr/bin/${APP_NAME}"
 
 # confirm dependency libraries & cleanup
