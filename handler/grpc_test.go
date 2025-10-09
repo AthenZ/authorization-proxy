@@ -17,18 +17,20 @@ package handler
 import (
 	"context"
 	"crypto/tls"
+	"errors"
+	"fmt"
 	"io"
 	"net"
 	"reflect"
-	"sync"
+	"strings"
 	"testing"
 	"time"
 
 	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
+	"github.com/kpango/gache/v2"
 	"github.com/mwitkow/grpc-proxy/proxy"
-	"github.com/pkg/errors"
 	"golang.org/x/sync/singleflight"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -67,10 +69,10 @@ func TestNewGRPC(t *testing.T) {
 	}
 	defaultCheckFunc := func(got grpc.StreamHandler, got1 io.Closer, want grpc.StreamHandler, want1 io.Closer) error {
 		if !reflect.DeepEqual(got, want) {
-			return errors.Errorf("NewGRPC() got = %v, want %v", got, want)
+			return fmt.Errorf("NewGRPC() got = %v, want %v", got, want)
 		}
 		if !reflect.DeepEqual(got1, want1) {
-			return errors.Errorf("NewGRPC() got = %v, want %v", got1, want1)
+			return fmt.Errorf("NewGRPC() got = %v, want %v", got1, want1)
 		}
 		return nil
 	}
@@ -240,8 +242,10 @@ func TestNewGRPC(t *testing.T) {
 						}
 					}()
 
-					if err := checkGRPCSrvRunning("127.0.0.1:19999", ""); !errors.Is(err, status.Errorf(codes.Unauthenticated, ErrRoleTokenNotFound)) {
-						return errors.Errorf("unexpected err, got: %s", err)
+					wantErr := errors.Join(status.Error(codes.Unauthenticated, ErrAccessTokenDisabled),
+						status.Error(codes.Unauthenticated, ErrRoleTokenNotFound))
+					if err := checkGRPCSrvRunning("127.0.0.1:19999", ""); !strings.Contains(err.Error(), wantErr.Error()) {
+						return fmt.Errorf("unexpected err, \ngot: %v,\nwant: %v", err, wantErr)
 					}
 					if targetExecuted {
 						return errors.New("target server is executed")
@@ -320,7 +324,7 @@ func TestNewGRPC(t *testing.T) {
 					}()
 
 					if err := checkGRPCSrvRunning("127.0.0.1:19994", "roletok"); errors.Is(err, errors.New("rpc error: code = Unauthenticated desc = unauthenticated")) {
-						return errors.Errorf("unexpected err, got: %s", err)
+						return fmt.Errorf("unexpected err, got: %s", err)
 					}
 					if targetExecuted {
 						return errors.New("target server is executed")
@@ -464,7 +468,7 @@ func TestGRPCHandler_Close(t *testing.T) {
 		roleCfg        config.RoleToken
 		authorizationd service.Authorizationd
 		tlsCfg         *tls.Config
-		connMap        sync.Map
+		connMap        gache.Map[string, *grpc.ClientConn]
 		group          singleflight.Group
 	}
 	type test struct {
@@ -476,12 +480,12 @@ func TestGRPCHandler_Close(t *testing.T) {
 		{
 			name: "close success when map is empty",
 			fields: fields{
-				connMap: sync.Map{},
+				connMap: gache.Map[string, *grpc.ClientConn]{},
 			},
 			wantErr: false,
 		},
 		func() test {
-			connMap := sync.Map{}
+			connMap := gache.Map[string, *grpc.ClientConn]{}
 			conn, err := grpc.Dial("127.0.0.1", grpc.WithCodec(proxy.Codec()), grpc.WithInsecure())
 			if err != nil {
 				t.Error(err)
@@ -523,7 +527,7 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 		roleCfg        config.RoleToken
 		authorizationd service.Authorizationd
 		tlsCfg         *tls.Config
-		connMap        sync.Map
+		connMap        gache.Map[string, *grpc.ClientConn]
 		group          singleflight.Group
 	}
 	type args struct {
@@ -542,10 +546,10 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 	}
 	defaultCheckFunc := func(gotConn, wantConn *grpc.ClientConn, gotErr, wantErr error) error {
 		if !errors.Is(gotErr, wantErr) {
-			return errors.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
+			return fmt.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
 		}
 		if !reflect.DeepEqual(gotConn, wantConn) {
-			return errors.Errorf("GRPCHandler.dialContext() = %v, want %v", gotConn, wantConn)
+			return fmt.Errorf("GRPCHandler.dialContext() = %v, want %v", gotConn, wantConn)
 		}
 		return nil
 	}
@@ -557,7 +561,7 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 				t.Error(err)
 			}
 
-			connMap := sync.Map{}
+			connMap := gache.Map[string, *grpc.ClientConn]{}
 			connMap.Store(target, conn)
 
 			return test{
@@ -574,14 +578,14 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 				},
 				checkFunc: func(gotConn, wantConn *grpc.ClientConn, gotErr, wantErr error) error {
 					if !errors.Is(gotErr, wantErr) {
-						return errors.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
+						return fmt.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
 					}
 
 					if gotConn.Target() != target {
-						return errors.Errorf("invalid target, got: %s", gotConn.Target())
+						return fmt.Errorf("invalid target, got: %s", gotConn.Target())
 					}
 					if s := gotConn.GetState(); s != connectivity.Idle && s != connectivity.Ready && s != connectivity.Connecting {
-						return errors.Errorf("connection not ready, state: %s", gotConn.GetState())
+						return fmt.Errorf("connection not ready, state: %s", gotConn.GetState())
 					}
 					return nil
 				},
@@ -598,7 +602,7 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 			}
 			conn.Close()
 
-			connMap := sync.Map{}
+			connMap := gache.Map[string, *grpc.ClientConn]{}
 			connMap.Store(target, conn)
 
 			return test{
@@ -615,14 +619,14 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 				},
 				checkFunc: func(gotConn, wantConn *grpc.ClientConn, gotErr, wantErr error) error {
 					if !errors.Is(gotErr, wantErr) {
-						return errors.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
+						return fmt.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
 					}
 
 					if gotConn.Target() != target {
-						return errors.Errorf("invalid target, got: %s", gotConn.Target())
+						return fmt.Errorf("invalid target, got: %s", gotConn.Target())
 					}
 					if s := gotConn.GetState(); s != connectivity.Idle && s != connectivity.Ready && s != connectivity.Connecting {
-						return errors.Errorf("connection not ready, state: %s", gotConn.GetState())
+						return fmt.Errorf("connection not ready, state: %s", gotConn.GetState())
 					}
 					return nil
 				},
@@ -633,7 +637,7 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 		}(),
 		func() test {
 			target := "127.0.0.1:10085"
-			connMap := sync.Map{}
+			connMap := gache.Map[string, *grpc.ClientConn]{}
 
 			return test{
 				name: "return new connection with empty cache",
@@ -649,14 +653,14 @@ func TestGRPCHandler_dialContext(t *testing.T) {
 				},
 				checkFunc: func(gotConn, wantConn *grpc.ClientConn, gotErr, wantErr error) error {
 					if !errors.Is(gotErr, wantErr) {
-						return errors.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
+						return fmt.Errorf("GRPCHandler.dialContext() error = %v, wantErr %v", gotErr, wantErr)
 					}
 
 					if gotConn.Target() != target {
-						return errors.Errorf("invalid target, got: %s", gotConn.Target())
+						return fmt.Errorf("invalid target, got: %s", gotConn.Target())
 					}
 					if s := gotConn.GetState(); s != connectivity.Idle && s != connectivity.Ready && s != connectivity.Connecting {
-						return errors.Errorf("connection not ready, state: %s", gotConn.GetState())
+						return fmt.Errorf("connection not ready, state: %s", gotConn.GetState())
 					}
 					return nil
 				},

@@ -20,17 +20,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kpango/glg"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/errgroup"
-
+	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/handler"
 	"github.com/AthenZ/authorization-proxy/v4/infra"
 	"github.com/AthenZ/authorization-proxy/v4/router"
 	"github.com/AthenZ/authorization-proxy/v4/service"
-
-	authorizerd "github.com/AthenZ/athenz-authorizer/v5"
+	"github.com/kpango/glg"
+	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 // AuthzProxyDaemon represents Authorization Proxy daemon behavior.
@@ -61,6 +59,7 @@ func New(cfg config.Config) (AuthzProxyDaemon, error) {
 		handler.WithProxyConfig(cfg.Proxy),
 		handler.WithRoleTokenConfig(cfg.Authorization.RoleToken),
 		handler.WithAuthorizationd(athenz),
+		handler.WithAccessTokenConfig(cfg.Authorization.AccessToken),
 	)
 
 	var metrics service.Metrics

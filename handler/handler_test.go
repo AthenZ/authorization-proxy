@@ -871,3 +871,191 @@ func Test_handleError(t *testing.T) {
 		})
 	}
 }
+
+func Test_trimBearer(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{
+			name: "Uppercase Bearer",
+			in:   "Bearer abc123",
+			want: "abc123",
+		},
+		{
+			name: "Lowercase bearer",
+			in:   "bearer xyz456",
+			want: "xyz456",
+		},
+		{
+			name: "Not a bearer prefix",
+			in:   "ABC abc123",
+			want: "ABC abc123",
+		},
+		{
+			name: "Too short string",
+			in:   "Beare ",
+			want: "Beare ",
+		},
+		{
+			name: "Bearer but no space after",
+			in:   "Bearerabc123",
+			want: "Bearerabc123",
+		},
+		{
+			name: "bearer but no token",
+			in:   "bearer ",
+			want: "",
+		},
+		{
+			name: "Bearer but no token",
+			in:   "Bearer ",
+			want: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := trimBearer(tt.in)
+			if got != tt.want {
+				t.Errorf("trimBearer(%q) = %q; want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+// wildcardMatch has the signature: func wildcardMatch(str, pattern string) bool
+// This test table uses (target, pattern) in that order.
+func Test_wildcardMatch(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		pattern string
+		target  string
+		want    bool
+	}{
+		// basic cases
+		{"empty pattern and empty target", "", "", true},
+		{"empty pattern and non-empty target", "", "test", false},
+		{"non-empty pattern and empty target", "test", "", false},
+		{"exact match", "test", "test", true},
+		{"no match", "test", "different", false},
+
+		// wildcard '*' cases
+		{"single wildcard", "*", "anything", true},
+		{"single wildcard empty", "*", "", true},
+		{"prefix wildcard", "test*", "testing", true},
+		{"prefix wildcard no match", "test*", "other", false},
+		{"suffix wildcard", "*test", "mytest", true},
+		{"suffix wildcard no match", "*test", "testing", false}, // ends with "ing", not "test"
+		{"middle wildcard", "te*st", "test", true},
+		{"middle wildcard complex", "te*st", "teXXXst", true},
+		{"multiple wildcards", "*test*", "mytestcase", true},
+		{"only literals under stars", "*abc*", "zzzabczzz", true},
+
+		// consecutive '*' should behave like a single '*'
+		{"pattern with consecutive wildcards collapse", "test**case", "testcase", true},
+		{"pattern starting with wildcard", "*test", "test", true},
+		{"pattern ending with wildcard", "test*", "test", true},
+		{"complex multi-star order match", "a*b*c", "aXbYc", true},
+		{"complex multi-star order no match", "a*b*c", "aXcYb", false},
+
+		// '?' single-byte wildcard
+		{"single '?'", "te?t", "test", true},
+		{"single '?' no match", "te?t", "tet", false},
+		{"multiple '?'", "a??c", "abzc", true},
+		{"'?' with surrounding '*'", "*?*", "x", true},
+		{"'?' and exact length required without '*'", "??", "a", false},
+		{"'?' matches any single byte (ASCII)", "?", "A", true},
+
+		// '\' escape behavior: next byte is literal
+		{"escape '*'", `foo\*bar`, "foo*bar", true},
+		{"escape '?'", `foo\?bar`, "foo?bar", true},
+		{"escape '\\' literal backslash", `foo\\bar`, `foo\bar`, true},
+		{"escape before non-meta acts as literal", `\a`, "a", true},
+		{"escape prevents wildcarding", `\*`, "anything", false},
+		{"dangling escape at end is invalid", `abc\`, "abc", false},
+		{"escape then mismatch", `a\*c`, "aXc", false},
+		{"escaped question should not match any byte", `\?`, "X", false},
+		{"escaped backslash must match one backslash", `\\`, `\`, true},
+
+		// mix of meta and escapes
+		{"mix: star and escaped star then suffix", `*\*tail`, "xx*tail", true},
+		{"mix: star then escaped question then exact", `*\?z`, "123?z", true},
+		{"mix: escaped question not matched by '?'", `\?`, "?", true},
+
+		// path-like patterns
+		{"API path wildcard", "/api/*/users", "/api/v1/users", true},
+		{"API path wildcard not match when its non ascii", "/api/*/users", "/api/v1/users/test", false},
+		{"health check path", "/health*", "/healthz", true},
+		{"domain wildcard simple", "*.example.com", "api.example.com", true},
+		{"domain wildcard no subdomain", "*.example.com", "example.com", false},
+
+		// UTF-8 (byte-wise semantics): 'あ' is 3 bytes; '?' matches 1 byte
+		{"utf8: '?' does not match full rune", "?", "あ", false},
+		{"utf8: '???' matches one rune", "???", "あ", true},
+		{"utf8: '*?*' can cover bytes around", "*?*", "あ", true},
+
+		// boundary / empty segments around stars
+		{"empty segments around stars", "**a**", "a", true},
+		{"empty segments no target", "**", "", true},
+		{"empty pattern non-empty target", "", "a", false},
+
+		// heavy backtracking shape (should still be fast)
+		{"greedy star with later literal", "*aaaaaaaaab", "aaaaaaaaaaaaaaaaab", true},
+		{"greedy star fail at end", "*aaaaaaaaab", "aaaaaaaaaaaaaaaaac", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := wildcardMatch(tt.pattern, tt.target); got != tt.want {
+				t.Errorf("wildcardMatch(%q, %q) = %v, want %v",
+					tt.pattern, tt.target, got, tt.want)
+			}
+		})
+	}
+}
+
+// Additional focused tests for edge correctness.
+func Test_wildcardMatch_EscapesAndQuestion(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		p string
+		s string
+		w bool
+	}{
+		{`a\*b`, "a*b", true},
+		{`a\*b`, "aXb", false},
+		{`a\?b`, "a?b", true},
+		{`a\?b`, "axb", false},
+		{`\\`, `\`, true},
+		{`\\\*`, `\*`, true},
+		{`\\\*`, `**`, false},
+		{`\`, "", false},       // dangling backslash
+		{`abc\`, "abc", false}, // dangling backslash
+		{`\a`, "a", true},      // escape before non-meta -> literal 'a'
+		{`\a`, "b", false},
+	}
+	for i, c := range cases {
+		if got := wildcardMatch(c.p, c.s); got != c.w {
+			t.Fatalf("#%d wildcardMatch(%q,%q)=%v want %v", i, c.p, c.s, got, c.w)
+		}
+	}
+}
+
+func Test_wildcardMatch_UTF8Bytes(t *testing.T) {
+	t.Parallel()
+	// 'あ' is 3 bytes in UTF-8. '?' matches one byte.
+	if got := wildcardMatch("?", "あ"); got {
+		t.Fatalf("expected false: '?' must not match a full 3-byte rune")
+	}
+	if got := wildcardMatch("???", "あ"); !got {
+		t.Fatalf("expected true: '???' should match 3 bytes")
+	}
+	if got := wildcardMatch("??????", "あい"); !got { // 2 runes -> 6 bytes
+		t.Fatalf("expected true for 6-byte match")
+	}
+}

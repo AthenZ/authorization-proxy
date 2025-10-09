@@ -38,6 +38,13 @@ func WithRoleTokenConfig(cfg config.RoleToken) GRPCOption {
 	}
 }
 
+// WithAccessTokenConfig returns a access token config functional option
+func WithAccessTokenConfig(cfg config.AccessToken) GRPCOption {
+	return func(h *GRPCHandler) {
+		h.atCfg = cfg
+	}
+}
+
 // WithAuthorizationd returns a authorizationd functional option
 func WithAuthorizationd(a service.Authorizationd) GRPCOption {
 	return func(h *GRPCHandler) {
