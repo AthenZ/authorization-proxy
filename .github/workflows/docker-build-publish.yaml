@@ -126,7 +126,6 @@ jobs:
 
       # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
       # https://github.com/sysdiglabs/benchmark-dockerfile
-      # TODO: Skipping CIS 4.1 check until https://github.com/yahoojapan/authorization-proxy/pull/95 is fixed.
       -
         name: Post Sysdig Benchmark Dockerfile
         id: postsysdig
@@ -134,7 +133,7 @@ jobs:
           echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
             jq -r .
           echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
-            jq -r '.cis_docker_benchmark_violation_report[] | select(.rule!="CIS 4.1 Create a user for the container") | .violations[]' | \
+            jq -r '.cis_docker_benchmark_violation_report[] | select(true) | .violations[]' | \
             wc -l | \
             xargs -I% test 0 -eq %
 
