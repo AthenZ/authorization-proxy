@@ -328,6 +328,76 @@ func TestNewTLSConfig(t *testing.T) {
 				return nil
 			},
 		},
+		{
+			name: "certificate with trailing dot in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/trailing_dot_server.crt",
+					KeyPath:  "../test/data/trailing_dot_server.key",
+				},
+			},
+			want:    &tls.Config{MinVersion: tls.VersionTLS12},
+			wantErr: false,
+			checkFunc: func(got, want *tls.Config) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with leading dot in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/leading_dot_server.crt",
+					KeyPath:  "../test/data/leading_dot_server.key",
+				},
+			},
+			want:    &tls.Config{MinVersion: tls.VersionTLS12},
+			wantErr: false,
+			checkFunc: func(got, want *tls.Config) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with empty label in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/empty_label_server.crt",
+					KeyPath:  "../test/data/empty_label_server.key",
+				},
+			},
+			want:    &tls.Config{MinVersion: tls.VersionTLS12},
+			wantErr: false,
+			checkFunc: func(got, want *tls.Config) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with long label in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/long_label_server.crt",
+					KeyPath:  "../test/data/long_label_server.key",
+				},
+			},
+			want:    &tls.Config{MinVersion: tls.VersionTLS12},
+			wantErr: false,
+			checkFunc: func(got, want *tls.Config) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with malformed email in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/malformed_email_server.crt",
+					KeyPath:  "../test/data/malformed_email_server.key",
+				},
+			},
+			want:    &tls.Config{MinVersion: tls.VersionTLS12},
+			wantErr: false,
+			checkFunc: func(got, want *tls.Config) error {
+				return nil
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -336,7 +406,7 @@ func TestNewTLSConfig(t *testing.T) {
 			}
 
 			got, err := NewTLSConfig(tt.args.cfg)
-			if err != nil {
+			if (err != nil) != tt.wantErr {
 				t.Errorf("NewTLSConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -801,11 +871,86 @@ func TestNewTLSConfigWithTLSCertificateCache(t *testing.T) {
 			wantErr:    errors.New("isValidDuration(cfg.CertRefreshPeriod): time: invalid duration \"invalid duration\""),
 			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
 				if gotConfig != nil {
-					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotConfig, &wantConfig)
+					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotConfig, &wantCache)
 				}
 				if gotCache != nil {
 					return fmt.Errorf("gotConfig not nil :\tgot %d \twant %d", &gotCache, &wantCache)
 				}
+				return nil
+			},
+		},
+		{
+			name: "certificate with trailing dot in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/trailing_dot_server.crt",
+					KeyPath:  "../test/data/trailing_dot_server.key",
+				},
+			},
+			wantConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+			wantCache:  nil,
+			wantErr:    nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with leading dot in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/leading_dot_server.crt",
+					KeyPath:  "../test/data/leading_dot_server.key",
+				},
+			},
+			wantConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+			wantCache:  nil,
+			wantErr:    nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with empty label in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/empty_label_server.crt",
+					KeyPath:  "../test/data/empty_label_server.key",
+				},
+			},
+			wantConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+			wantCache:  nil,
+			wantErr:    nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with long label in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/long_label_server.crt",
+					KeyPath:  "../test/data/long_label_server.key",
+				},
+			},
+			wantConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+			wantCache:  nil,
+			wantErr:    nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
+				return nil
+			},
+		},
+		{
+			name: "certificate with malformed email in SAN should load successfully",
+			args: args{
+				cfg: config.TLS{
+					CertPath: "../test/data/malformed_email_server.crt",
+					KeyPath:  "../test/data/malformed_email_server.key",
+				},
+			},
+			wantConfig: &tls.Config{MinVersion: tls.VersionTLS12},
+			wantCache:  nil,
+			wantErr:    nil,
+			checkFunc: func(gotConfig *tls.Config, gotCache *TLSCertificateCache, wantConfig *tls.Config, wantCache *TLSCertificateCache) error {
 				return nil
 			},
 		},
@@ -898,6 +1043,46 @@ func TestNewX509CertPool(t *testing.T) {
 				}
 				return nil
 			},
+			wantErr: false,
+		},
+		{
+			name: "certificate with trailing dot in SAN should load successfully",
+			args: args{
+				path: "../test/data/trailing_dot_server.crt",
+			},
+			want:    &x509.CertPool{},
+			wantErr: false,
+		},
+		{
+			name: "certificate with leading dot in SAN should load successfully",
+			args: args{
+				path: "../test/data/leading_dot_server.crt",
+			},
+			want:    &x509.CertPool{},
+			wantErr: false,
+		},
+		{
+			name: "certificate with empty label in SAN should load successfully",
+			args: args{
+				path: "../test/data/empty_label_server.crt",
+			},
+			want:    &x509.CertPool{},
+			wantErr: false,
+		},
+		{
+			name: "certificate with long label in SAN should load successfully",
+			args: args{
+				path: "../test/data/long_label_server.crt",
+			},
+			want:    &x509.CertPool{},
+			wantErr: false,
+		},
+		{
+			name: "certificate with malformed email in SAN should load successfully",
+			args: args{
+				path: "../test/data/malformed_email_server.crt",
+			},
+			want:    &x509.CertPool{},
 			wantErr: false,
 		},
 	}
