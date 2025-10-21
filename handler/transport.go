@@ -25,7 +25,6 @@ import (
 	"github.com/AthenZ/athenz-authorizer/v5/policy"
 	"github.com/AthenZ/authorization-proxy/v4/config"
 	"github.com/AthenZ/authorization-proxy/v4/service"
-
 	"github.com/kpango/glg"
 	"github.com/pkg/errors"
 )
@@ -60,8 +59,8 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	// bypass authoriztion
 	if len(r.URL.Path) != 0 { // prevent bypassing empty path on default config
 		for _, urlPath := range t.cfg.OriginHealthCheckPaths {
-			if urlPath == r.URL.Path {
-				glg.Info("Authorization checking skipped on: " + r.URL.Path)
+			if urlPath == r.URL.Path || wildcardMatch(urlPath, r.URL.Path) {
+				glg.Infof("Authorization checking skipped on: %s by pattern %s", r.URL.Path, urlPath)
 				r.TLS = nil
 				startTime = time.Now()
 				return t.RoundTripper.RoundTrip(r)
@@ -94,7 +93,14 @@ func (t *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if r.TLS != nil {
 		for _, cipherSuite := range t.insecureCipherSuites {
 			if cipherSuite.ID == r.TLS.CipherSuite {
-				glg.Warnf("A connection was made with a deprecated cipher suite. Client IP adress: %s, Domain: %s, Role: [%s], Principal: %s, Cipher Suite: %s", r.RemoteAddr, p.Domain(), strings.Join(p.Roles(), ","), p.Name(), cipherSuite.Name)
+				glg.Warnf(
+					"A connection was made with a deprecated cipher suite. Client IP adress: %s, Domain: %s, Role: [%s], Principal: %s, Cipher Suite: %s",
+					r.RemoteAddr,
+					p.Domain(),
+					strings.Join(p.Roles(), ","),
+					p.Name(),
+					cipherSuite.Name,
+				)
 				break
 			}
 		}
