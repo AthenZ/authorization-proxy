@@ -1498,7 +1498,7 @@ func TestTLSCertificateCache_RefreshCertificate(t *testing.T) {
 				serverCertMutex:   tt.fields.serverCertMutex,
 				certRefreshPeriod: tt.fields.certRefreshPeriod,
 			}
-			//errCh := make(chan error)
+			// errCh := make(chan error)
 			go func() error {
 				return tcc.RefreshCertificate(tt.args.ctx)
 			}()
@@ -1589,7 +1589,7 @@ func Test_cipherSuites(t *testing.T) {
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
-				return
+				return cipherSuites
 			}(),
 			wantErr: nil,
 		},
@@ -1609,7 +1609,7 @@ func Test_cipherSuites(t *testing.T) {
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
-				return
+				return cipherSuites
 			}(),
 			wantErr: nil,
 		},
@@ -1723,7 +1723,7 @@ func Test_cipherSuites(t *testing.T) {
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
-				return
+				return cipherSuites
 			}(),
 			wantErr: nil,
 		},
@@ -1746,7 +1746,7 @@ func Test_cipherSuites(t *testing.T) {
 				for _, id := range ciphers {
 					cipherSuites = append(cipherSuites, id)
 				}
-				return
+				return cipherSuites
 			}(),
 			wantErr: nil,
 		},

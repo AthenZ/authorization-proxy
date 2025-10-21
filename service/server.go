@@ -25,14 +25,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/AthenZ/authorization-proxy/v4/config"
+	"github.com/kpango/glg"
 	"github.com/mwitkow/grpc-proxy/proxy"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-
-	"github.com/AthenZ/authorization-proxy/v4/config"
-	"github.com/kpango/glg"
 )
 
 // Server represents a authorization proxy server behavior

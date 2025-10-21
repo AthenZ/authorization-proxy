@@ -271,7 +271,8 @@ func TestNew(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrStr: "cannot newAuthzD(cfg): error create pubkeyd: invalid refresh period: time: invalid duration \"dummy\"",
-		}, {
+		},
+		{
 			name: "return error when grpc TLS cert invalid",
 			args: args{
 				cfg: config.Config{
@@ -291,7 +292,8 @@ func TestNew(t *testing.T) {
 			},
 			wantErr:    true,
 			wantErrStr: "cannot NewTLSConfigWithTLSCertificateCache(cfg.Server.TLS): tls.LoadX509KeyPair(cert, key): tls: failed to find any PEM data in certificate input",
-		}, {
+		},
+		{
 			name: "return error when CertRefreshPeriod invalid (failed to parse)",
 			args: args{
 				cfg: config.Config{
