@@ -210,8 +210,10 @@ jobs:
       uses: docker/build-push-action@v4
       with:
         context: .
-        push: ${{ github.event_name != 'pull_request' }}
-        load: ${{ github.event_name == 'pull_request' }}
+        # push: ${{ github.event_name != 'pull_request' }}
+        push: true
+        # load: ${{ github.event_name == 'pull_request' }}
+        load: false
         tags: ${{ steps.meta.outputs.tags }}
         # push: true
         # load: false
