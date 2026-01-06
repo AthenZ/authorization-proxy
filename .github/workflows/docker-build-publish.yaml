@@ -7,7 +7,7 @@ name: Build and Publish Docker Image
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+  - cron: '0 10 * * *'
   # If any commit message in your push or the HEAD commit of your PR contains the strings
   # [skip ci], [ci skip], [no ci], [skip actions], or [actions skip]
   # workflows triggered on the push or pull_request events will be skipped.
@@ -24,7 +24,7 @@ on:
     branches: [ master ]
 
 env:
-  DOCKER_BUILDX_PLATFORM: linux/amd64
+  DOCKER_BUILDX_PLATFORM: linux/amd64,linux/arm64
   DOCKER_REGISTRY_ORG: athenz
   # DOCKER_REGISTRY_USER: values for docker login is stored in repository variables
   # DOCKER_REGISTRY_TOKEN_NAME: values for docker login is stored in repository variables
@@ -46,184 +46,184 @@ jobs:
       statuses: none
 
     steps:
-      # A GitHub Action to expose useful environment variables.
-      # https://github.com/FranzDiebold/github-env-vars-action
-      -
-        name: GitHub Environment Variables Action
-        id: env
-        # uses: https://github.com/FranzDiebold/github-env-vars-action/tags
-        uses: FranzDiebold/github-env-vars-action@v2
+    # A GitHub Action to expose useful environment variables.
+    # https://github.com/FranzDiebold/github-env-vars-action
+    
+    - name: GitHub Environment Variables Action
+      id: env
+      # uses: https://github.com/FranzDiebold/github-env-vars-action/tags
+      uses: FranzDiebold/github-env-vars-action@v2
 
-      # A GitHub Action to prepare default environment variables.
-      -
-        name: Set Default Environment Variables
-        id: default_env
-        run: |
-          # Use docker.io for Docker Hub if empty
-          [[ "${{ env.DOCKER_REGISTRY_URL}}" = "" ]] && echo "DOCKER_REGISTRY_URL=docker.io" >> $GITHUB_ENV
-          [[ "${{ env.DOCKER_REGISTRY_ORG }}" = "" ]] && echo "DOCKER_REGISTRY_ORG=${{ env.CI_REPOSITORY_OWNER }}" >> $GITHUB_ENV
-          [[ "${{ env.DOCKER_REGISTRY_IMAGE }}" = "" ]] && echo "DOCKER_REGISTRY_IMAGE=${{ env.CI_REPOSITORY_NAME }}" >> $GITHUB_ENV
+    # A GitHub Action to prepare default environment variables.
 
-      # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
-      # https://github.com/actions/checkout
-      -
-        name: Checkout repository
-        id: checkout
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/actions/checkout/tags
-        uses: actions/checkout@v4
+    - name: Set Default Environment Variables
+      id: default_env
+      run: |
+        # Use docker.io for Docker Hub if empty
+        [[ "${{ env.DOCKER_REGISTRY_URL}}" = "" ]] && echo "DOCKER_REGISTRY_URL=docker.io" >> $GITHUB_ENV
+        [[ "${{ env.DOCKER_REGISTRY_ORG }}" = "" ]] && echo "DOCKER_REGISTRY_ORG=${{ env.CI_REPOSITORY_OWNER }}" >> $GITHUB_ENV
+        [[ "${{ env.DOCKER_REGISTRY_IMAGE }}" = "" ]] && echo "DOCKER_REGISTRY_IMAGE=${{ env.CI_REPOSITORY_NAME }}" >> $GITHUB_ENV
 
-      # This action sets up a go environment for use in actions by:
-      # - Optionally downloading and caching a version of Go by version and adding to PATH.
-      # - Registering problem matchers for error output.
-      # https://github.com/actions/setup-go
-      -
-        name: Setup Golang
-        id: setup-go
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/actions/setup-go/tags
-        uses: actions/setup-go@v4
-        with:
-          go-version: "stable"
-          go-version-file: './go.mod'
-          cache: true
+    # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+    # https://github.com/actions/checkout
 
-      # A GitHub Action for golang tests
-      -
-        name: Golang Tests
-        id: go-tests
-        run: |
-          go version
-          rm -rf example
-          go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
-          go tool cover -html=coverage.out -o coverage.html
+    - name: Checkout repository
+      id: checkout
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/actions/checkout/tags
+      uses: actions/checkout@v4
 
-      # https://github.com/apache/skywalking-eyes
-      # issue: go version hard-coded: https://github.com/apache/skywalking-eyes/blob/5dfa68f93380a5e57259faaf95088b7f133b5778/header/action.yml#L47-L51
-      - name: Check License Header
-        uses: apache/skywalking-eyes/header@main
-        with:
-          log: "info" # optional: set the log level. The default value is `info`.
-          config: ".licenserc.yaml" # optional: set the config file. The default value is `.licenserc.yaml`.
-          token: "" # optional: the token that license eye uses when it needs to comment on the pull request. Set to empty ("") to disable commenting on pull request. The default value is ${{ github.token }}
-          mode: "check" # optional: Which mode License-Eye should be run in. Choices are `check` or `fix`. The default value is `check`.
+    # This action sets up a go environment for use in actions by:
+    # - Optionally downloading and caching a version of Go by version and adding to PATH.
+    # - Registering problem matchers for error output.
+    # https://github.com/actions/setup-go
 
-      # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
-      # https://github.com/sysdiglabs/benchmark-dockerfile
-      -
-        name: Sysdig Benchmark Dockerfile
-        id: sysdig
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/sysdiglabs/benchmark-dockerfile/tags
-        uses: sysdiglabs/benchmark-dockerfile@v1.0.0
-        with:
-          # Directory of dockerfiles (default "./")
-          directory: "./"
-          # list of disallowed packages separated by comma (default ")
-          #disallowedPackages: ''
-          # list of trusted base images separated by comma (default "", meaning trust any base image)
-          trustedBaseImages: ""
+    - name: Setup Golang
+      id: setup-go
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/actions/setup-go/tags
+      uses: actions/setup-go@v4
+      with:
+        go-version: "stable"
+        go-version-file: './go.mod'
+        cache: true
 
-      # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
-      # https://github.com/sysdiglabs/benchmark-dockerfile
-      # TODO: Skipping CIS 4.1 check until https://github.com/yahoojapan/authorization-proxy/pull/95 is fixed.
-      -
-        name: Post Sysdig Benchmark Dockerfile
-        id: postsysdig
-        run: |
-          echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
-            jq -r .
-          echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
-            jq -r '.cis_docker_benchmark_violation_report[] | select(.rule!="CIS 4.1 Create a user for the container") | .violations[]' | \
-            wc -l | \
-            xargs -I% test 0 -eq %
+    # A GitHub Action for golang tests
 
-      # Extract metadata (tags, labels) for Docker
-      # https://github.com/docker/metadata-action
-      -
-        name: Extract Docker metadata
-        id: meta
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/docker/metadata-action/tags
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}
-          # for latest tag
-          # latest=auto for tagging latest only for "master" branch
-          flavor: |
-            latest=true
-          # eg. refs/heads/master
-          # eg. refs/pull/318/merge
-          # shorthand for {{major}}.{{minor}}.{{patch}} (can include pre-release)
-          tags: |
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
-            type=ref,event=pr
-            type=semver,pattern=v{{version}}
-            type=schedule,pattern=nightly
+    - name: Golang Tests
+      id: go-tests
+      run: |
+        go version
+        rm -rf example
+        go test -v -race -covermode=atomic -coverprofile=coverage.out ./...
+        go tool cover -html=coverage.out -o coverage.html
 
-      # GitHub Action to login against a Docker registry.
-      # Login against a Docker registry except on PR
-      # https://github.com/docker/login-action
-      -
-        name: Docker Login to registry ${{ env.DOCKER_REGISTRY_URL }}
-        id: login
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/docker/login-action/tags
-        uses: docker/login-action@v3
-        with:
-          # Server address of Docker registry. If not set then will default to Docker Hub
-          registry: ${{ env.DOCKER_REGISTRY_URL }} # optional
-          # Username used to log against the Docker registry
-          username: ${{ vars.DOCKER_REGISTRY_USER }} # optional
-          # Password or personal access token used to log against the Docker registry
-          password: ${{ secrets[vars.DOCKER_REGISTRY_TOKEN_NAME] }} # optional
-          # Log out from the Docker registry at the end of a job
-          logout: true # optional, default is true
+    # https://github.com/apache/skywalking-eyes
+    # issue: go version hard-coded: https://github.com/apache/skywalking-eyes/blob/5dfa68f93380a5e57259faaf95088b7f133b5778/header/action.yml#L47-L51
+    - name: Check License Header
+      uses: apache/skywalking-eyes/header@main
+      with:
+        log: "info" # optional: set the log level. The default value is `info`.
+        config: ".licenserc.yaml" # optional: set the config file. The default value is `.licenserc.yaml`.
+        token: "" # optional: the token that license eye uses when it needs to comment on the pull request. Set to empty ("") to disable commenting on pull request. The default value is ${{ github.token }}
+        mode: "check" # optional: Which mode License-Eye should be run in. Choices are `check` or `fix`. The default value is `check`.
 
-      # GitHub Action to install QEMU static binaries.
-      # https://github.com/docker/setup-qemu-action
-      -
-        name: Set up QEMU
-        id: qemu
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/docker/setup-qemu-action/tags
-        uses: docker/setup-qemu-action@v3
+    # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
+    # https://github.com/sysdiglabs/benchmark-dockerfile
 
-      # GitHub Action to set up Docker Buildx.
-      # https://github.com/docker/setup-buildx-action
-      -
-        name: Set up Docker Buildx
-        id: buildx
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/docker/setup-buildx-action/tags
-        uses: docker/setup-buildx-action@v3
+    - name: Sysdig Benchmark Dockerfile
+      id: sysdig
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/sysdiglabs/benchmark-dockerfile/tags
+      uses: sysdiglabs/benchmark-dockerfile@v1.0.0
+      with:
+        # Directory of dockerfiles (default "./")
+        directory: "./"
+        # list of disallowed packages separated by comma (default ")
+        #disallowedPackages: ''
+        # list of trusted base images separated by comma (default "", meaning trust any base image)
+        trustedBaseImages: ""
 
-      # Build and push Docker image with Buildx (don't push on PR)
-      # https://github.com/docker/build-push-action
-      -
-        name: Build and push Docker image
-        id: build_and_push
-        # You may pin to the exact commit or the version.
-        # uses: https://github.com/docker/build-push-action/tags
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: ${{ github.event_name != 'pull_request' }}
-          load: ${{ github.event_name == 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          # push: true
-          # load: false
-          # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
-          labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ env.DOCKER_BUILDX_PLATFORM }}
-          build-args: |
-            APP_VERSION=${{ steps.meta.outputs.version }}
+    # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
+    # https://github.com/sysdiglabs/benchmark-dockerfile
+    # TODO: Skipping CIS 4.1 check until https://github.com/yahoojapan/authorization-proxy/pull/95 is fixed.
 
-      # Test Docker image
-      -
-        name: Test Docker image
-        id: test_docker
-        run: |
-          docker run --rm ${{ fromJSON(steps.meta.outputs.json).tags[0] }} --version
+    - name: Post Sysdig Benchmark Dockerfile
+      id: postsysdig
+      run: |
+        echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
+          jq -r .
+        echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
+          jq -r '.cis_docker_benchmark_violation_report[] | select(.rule!="CIS 4.1 Create a user for the container") | .violations[]' | \
+          wc -l | \
+          xargs -I% test 0 -eq %
+
+    # Extract metadata (tags, labels) for Docker
+    # https://github.com/docker/metadata-action
+
+    - name: Extract Docker metadata
+      id: meta
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/docker/metadata-action/tags
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}
+        # for latest tag
+        # latest=auto for tagging latest only for "master" branch
+        flavor: |
+          latest=true
+        # eg. refs/heads/master
+        # eg. refs/pull/318/merge
+        # shorthand for {{major}}.{{minor}}.{{patch}} (can include pre-release)
+        tags: |
+          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
+          type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+          type=ref,event=pr
+          type=semver,pattern=v{{version}}
+          type=schedule,pattern=nightly
+
+    # GitHub Action to login against a Docker registry.
+    # Login against a Docker registry except on PR
+    # https://github.com/docker/login-action
+
+    - name: Docker Login to registry ${{ env.DOCKER_REGISTRY_URL }}
+      id: login
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/docker/login-action/tags
+      uses: docker/login-action@v3
+      with:
+        # Server address of Docker registry. If not set then will default to Docker Hub
+        registry: ${{ env.DOCKER_REGISTRY_URL }} # optional
+        # Username used to log against the Docker registry
+        username: ${{ vars.DOCKER_REGISTRY_USER }} # optional
+        # Password or personal access token used to log against the Docker registry
+        password: ${{ secrets[vars.DOCKER_REGISTRY_TOKEN_NAME] }} # optional
+        # Log out from the Docker registry at the end of a job
+        logout: true # optional, default is true
+
+    # GitHub Action to install QEMU static binaries.
+    # https://github.com/docker/setup-qemu-action
+
+    - name: Set up QEMU
+      id: qemu
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/docker/setup-qemu-action/tags
+      uses: docker/setup-qemu-action@v3
+
+    # GitHub Action to set up Docker Buildx.
+    # https://github.com/docker/setup-buildx-action
+
+    - name: Set up Docker Buildx
+      id: buildx
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/docker/setup-buildx-action/tags
+      uses: docker/setup-buildx-action@v3
+
+    # Build and push Docker image with Buildx (don't push on PR)
+    # https://github.com/docker/build-push-action
+
+    - name: Build and push Docker image
+      id: build_and_push
+      # You may pin to the exact commit or the version.
+      # uses: https://github.com/docker/build-push-action/tags
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: ${{ github.event_name != 'pull_request' }}
+        load: ${{ github.event_name == 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        # push: true
+        # load: false
+        # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
+        labels: ${{ steps.meta.outputs.labels }}
+        platforms: ${{ env.DOCKER_BUILDX_PLATFORM }}
+        build-args: |
+          APP_VERSION=${{ steps.meta.outputs.version }}
+
+    # Test Docker image
+
+    - name: Test Docker image
+      id: test_docker
+      run: |
+        docker run --rm ${{ fromJSON(steps.meta.outputs.json).tags[0] }} --version
