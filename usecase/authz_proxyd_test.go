@@ -1055,6 +1055,60 @@ func Test_newAuthzD(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "test success access token enable with custom AccessTokenAuthHeader",
+			args: args{
+				cfg: config.Config{
+					Authorization: config.Authorization{
+						PublicKey: config.PublicKey{
+							SysAuthDomain:   "10s",
+							ETagExpiry:      "10s",
+							ETagPurgePeriod: "10s",
+						},
+						Policy: config.Policy{
+							ExpiryMargin:  "10s",
+							RefreshPeriod: "10s",
+							PurgePeriod:   "10s",
+						},
+						AccessToken: config.AccessToken{
+							Enable:                true,
+							AccessTokenAuthHeader: "X-Auth-Token",
+						},
+					},
+					Athenz: config.Athenz{
+						URL: "dummy-athenz-url",
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "test success access token enable with empty AccessTokenAuthHeader defaults to Authorization",
+			args: args{
+				cfg: config.Config{
+					Authorization: config.Authorization{
+						PublicKey: config.PublicKey{
+							SysAuthDomain:   "10s",
+							ETagExpiry:      "10s",
+							ETagPurgePeriod: "10s",
+						},
+						Policy: config.Policy{
+							ExpiryMargin:  "10s",
+							RefreshPeriod: "10s",
+							PurgePeriod:   "10s",
+						},
+						AccessToken: config.AccessToken{
+							Enable:                true,
+							AccessTokenAuthHeader: "",
+						},
+					},
+					Athenz: config.Athenz{
+						URL: "dummy-athenz-url",
+					},
+				},
+			},
+			want: true,
+		},
+		{
 			name: "test success policy disable",
 			args: args{
 				cfg: config.Config{
