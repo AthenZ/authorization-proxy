@@ -23,7 +23,6 @@ RUN adduser -H -S ${APP_NAME}
 RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
     && GO_VERSION=$(go version | cut -d" " -f3,4) \
     && CGO_ENABLED=1 \
-    CGO_CXXFLAGS="-g -Ofast -march=native" \
     CGO_FFLAGS="-g -Ofast -march=native" \
     CGO_LDFLAGS="-g -Ofast -march=native" \
     GOOS=$(go env GOOS) \
@@ -31,6 +30,18 @@ RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
     GO111MODULE=on \
     GOEXPERIMENT=noswissmap \
     go build -ldflags "-X 'main.Version=${VERSION} at ${BUILD_TIME} by ${GO_VERSION}' -linkmode=external" -a -o "/usr/bin/${APP_NAME}"
+
+# RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
+#     && GO_VERSION=$(go version | cut -d" " -f3,4) \
+#     && CGO_ENABLED=1 \
+#     CGO_CXXFLAGS="-g -Ofast -march=native" \
+#     CGO_FFLAGS="-g -Ofast -march=native" \
+#     CGO_LDFLAGS="-g -Ofast -march=native" \
+#     GOOS=$(go env GOOS) \
+#     GOARCH=$(go env GOARCH) \
+#     GO111MODULE=on \
+#     GOEXPERIMENT=noswissmap \
+#     go build -ldflags "-X 'main.Version=${VERSION} at ${BUILD_TIME} by ${GO_VERSION}' -linkmode=external" -a -o "/usr/bin/${APP_NAME}"
 
 # confirm dependency libraries & cleanup
 RUN ldd "/usr/bin/${APP_NAME}"\
