@@ -24,7 +24,10 @@ on:
     branches: [ master ]
 
 env:
+  # https://hub.docker.com/r/athenz/authorization-proxy/tags
+  DOCKER_REGISTRY_URL: docker.io
   DOCKER_REGISTRY_ORG: athenz
+  DOCKER_REGISTRY_IMAGE: authorization-proxy
   # DOCKER_REGISTRY_USER: values for docker login is stored in repository variables
   # DOCKER_REGISTRY_TOKEN_NAME: values for docker login is stored in repository variables
   TAGS_CONFIG: |
@@ -83,16 +86,6 @@ jobs:
         id: env
         # uses: https://github.com/FranzDiebold/github-env-vars-action/tags
         uses: FranzDiebold/github-env-vars-action@v2
-
-      # A GitHub Action to prepare default environment variables.
-      -
-        name: Set Default Environment Variables
-        id: default_env
-        run: |
-          # Use docker.io for Docker Hub if empty
-          [[ "${{ env.DOCKER_REGISTRY_URL}}" = "" ]] && echo "DOCKER_REGISTRY_URL=docker.io" >> $GITHUB_ENV
-          [[ "${{ env.DOCKER_REGISTRY_ORG }}" = "" ]] && echo "DOCKER_REGISTRY_ORG=${{ env.CI_REPOSITORY_OWNER }}" >> $GITHUB_ENV
-          [[ "${{ env.DOCKER_REGISTRY_IMAGE }}" = "" ]] && echo "DOCKER_REGISTRY_IMAGE=${{ env.CI_REPOSITORY_NAME }}" >> $GITHUB_ENV
 
       # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
       # https://github.com/actions/checkout
