@@ -173,6 +173,9 @@ jobs:
             # Any cron builds (scheduled workflows) push the nightly tag image:
             type=schedule,pattern=nightly
 
+            # TODO: Delete me: Push to nightly tag during the PR:
+            type=raw,value=nightly,enable=${{ github.event_name == 'pull_request' }}
+
       # GitHub Action to login against a Docker registry.
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
