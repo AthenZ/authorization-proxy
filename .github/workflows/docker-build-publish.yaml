@@ -161,8 +161,9 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
-            # If the event is a official tag release starting with "v..."", push the latest tag image:
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            # If the event is a tag release following the semver regex, push the latest tag image:
+            # Semver official regex: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+            type=match,value=latest,group=0,pattern=^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
 
             # If it is PR version, push the pr-<pr-number> tag image:
             type=ref,event=pr
