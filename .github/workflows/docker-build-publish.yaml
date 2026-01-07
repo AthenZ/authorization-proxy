@@ -30,6 +30,7 @@ env:
   DOCKER_REGISTRY_IMAGE: authorization-proxy
   # DOCKER_REGISTRY_USER: values for docker login is stored in repository variables
   # DOCKER_REGISTRY_TOKEN_NAME: values for docker login is stored in repository variables
+  # We define BUILD_MATRIX so that we have multiple platform supported, maybe Windows as well in the future:
   BUILD_MATRIX: |
     {
       "include": [
@@ -55,8 +56,6 @@ env:
     # Any cron builds (scheduled workflows) push the nightly tag image:
     type=schedule,pattern=nightly
 
-    # TODO: Delete me: Push to nightly tag during the PR:
-    type=raw,value=nightly,enable=${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
