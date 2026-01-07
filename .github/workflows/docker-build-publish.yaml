@@ -75,10 +75,11 @@ jobs:
           echo "suffixes=$(echo "$MATRIX_JSON" | jq -r '.include[].suffix' | xargs)" >> $GITHUB_OUTPUT
 
   build:
+    needs: set_config
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.config.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.set_config.outputs.matrix) }}
     permissions:
       actions: none
       checks: none
@@ -263,7 +264,9 @@ jobs:
         run: |
           docker run --rm ${{ fromJSON(steps.meta.outputs.json).tags[0] }} --version
   merge:
-    needs: build # Make sure each build of every platform defined in matrix is completed
+    needs:
+      - build # Make sure each build of every platform defined in matrix is completed
+      - set_config
     runs-on: ubuntu-latest
     steps:
       - uses: docker/login-action@v3
