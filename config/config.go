@@ -279,7 +279,7 @@ type AccessToken struct {
 	// CertOffsetDuration represents the certificate issue time offset when comparing with the issue time of the access token. (for usecase: new cert + old token)
 	CertOffsetDuration string `yaml:"certOffsetDuration"`
 
-	// AccessTokenAuthHeader represents the request header key for extracting the access token. (gRPC only, Not supported in HTTP)
+	// AccessTokenAuthHeader represents the request header key for extracting the access token.
 	AccessTokenAuthHeader string `yaml:"accessTokenAuthHeader"`
 }
 

@@ -121,6 +121,7 @@ authorization:
         - client_id2
     certBackdateDuration: 1h
     certOffsetDuration: 1h
+    accessTokenAuthHeader: Authorization
   roleToken:
     enable: true
     roleAuthHeader: Athenz-Role-Auth

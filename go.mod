@@ -4,7 +4,7 @@ go 1.25.3
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.123.0
-	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.7.0
+	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.8.0
 	github.com/kpango/gache/v2 => github.com/kpango/gache/v2 v2.1.1
 	github.com/kpango/glg => github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20250813121105-2866842de9a5
@@ -53,7 +53,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kpango/fastime v1.1.10 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/dsig v1.0.0 // indirect
 	github.com/lestrrat-go/dsig-secp256k1 v1.0.0 // indirect
@@ -82,7 +81,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.8.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
-	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.30.0 // indirect

@@ -271,6 +271,9 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 	var atOpts []authorizerd.Option
 	var jwkOpts []authorizerd.Option
 	if authzCfg.AccessToken.Enable {
+		if authzCfg.AccessToken.AccessTokenAuthHeader == "" {
+			authzCfg.AccessToken.AccessTokenAuthHeader = "Authorization"
+		}
 		atOpts = []authorizerd.Option{
 			authorizerd.WithAccessTokenParam(
 				authorizerd.NewAccessTokenParam(
@@ -280,6 +283,7 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 					authzCfg.AccessToken.CertOffsetDuration,
 					authzCfg.AccessToken.VerifyClientID,
 					authzCfg.AccessToken.AuthorizedClientIDs,
+					authzCfg.AccessToken.AccessTokenAuthHeader,
 				),
 			),
 		}
@@ -300,6 +304,7 @@ func newAuthzD(cfg config.Config) (service.Authorizationd, error) {
 					"0h",
 					false,
 					nil,
+					"",
 				),
 			),
 		}
