@@ -30,6 +30,13 @@ env:
   DOCKER_REGISTRY_IMAGE: authorization-proxy
   # DOCKER_REGISTRY_USER: values for docker login is stored in repository variables
   # DOCKER_REGISTRY_TOKEN_NAME: values for docker login is stored in repository variables
+  BUILD_MATRIX: |
+    {
+      "include": [
+        { "platform": "linux/amd64", "runner": "ubuntu-latest",    "suffix": "-amd64" },
+        { "platform": "linux/arm64", "runner": "ubuntu-24.04-arm", "suffix": "-arm64" }
+      ]
+    }
   TAGS_CONFIG: |
     # If branch is master, main or default branch, push the latest tag image:
     type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
@@ -56,15 +63,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-        # TODO: Give me image link
-        - platform: linux/amd64
-          runner: ubuntu-latest
-          suffix: -amd64
-        - platform: linux/arm64
-          runner: ubuntu-24.04-arm
-          suffix: -arm64
+      matrix: ${{ fromJson(env.BUILD_MATRIX) }}
     permissions:
       actions: none
       checks: none
@@ -275,12 +274,21 @@ jobs:
 
       - name: Create Manifest List
         run: |
-          # i.e) TAGS=["latest", "master"]
-          TAGS="${{ steps.meta.outputs.tags }}"
+          # i.e) PLATFORM_SUFFIXES=["-amd64", "-arm64"]
+          PLATFORM_SUFFIXES=$(echo '${{ env.BUILD_MATRIX }}' | jq -r '.include[].suffix' | xargs)
           
-          for tag in ${TAGS}; do
+          echo "Target Suffixes: $PLATFORM_SUFFIXES"
+          
+          # Handle all tags required:
+          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
             echo "Merging manifest for tag: $tag"
-            docker buildx imagetools create -t "$tag" \
-              "${tag}-amd64" \
-              "${tag}-arm64"
+            
+            # List sources to merge as one tag:
+            sources=""
+            for suffix in $PLATFORM_SUFFIXES; do
+              sources="$sources ${tag}${suffix}"
+            done
+
+            # Finally merge:
+            docker buildx imagetools create -t "$tag" $sources
           done
