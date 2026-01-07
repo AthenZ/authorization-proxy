@@ -132,6 +132,7 @@ jobs:
       # https://github.com/apache/skywalking-eyes
       # issue: go version hard-coded: https://github.com/apache/skywalking-eyes/blob/5dfa68f93380a5e57259faaf95088b7f133b5778/header/action.yml#L47-L51
       - name: Check License Header
+        if: matrix.platform == 'linux/amd64' # Only in ARM as we only need to check license header from any platform
         uses: apache/skywalking-eyes/header@main
         with:
           log: "info" # optional: set the log level. The default value is `info`.
