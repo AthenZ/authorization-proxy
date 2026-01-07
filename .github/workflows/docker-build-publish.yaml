@@ -292,7 +292,7 @@ jobs:
 
       - name: Create Manifest List
         env:
-          PLATFORM_SUFFIXES: ${{ needs.config.outputs.suffixes }}
+          PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
         run: |
           # i.e) PLATFORM_SUFFIXES=["-amd64", "-arm64"]
           echo "Target Suffixes: $PLATFORM_SUFFIXES"
