@@ -132,7 +132,7 @@ jobs:
       # https://github.com/apache/skywalking-eyes
       # issue: go version hard-coded: https://github.com/apache/skywalking-eyes/blob/5dfa68f93380a5e57259faaf95088b7f133b5778/header/action.yml#L47-L51
       - name: Check License Header
-        if: matrix.platform == 'linux/amd64' # Only in ARM as we only need to check license header from any platform
+        if: matrix.platform == 'linux/amd64' # Only required once for any platform, and will do the most general amd64
         uses: apache/skywalking-eyes/header@main
         with:
           log: "info" # optional: set the log level. The default value is `info`.
@@ -145,6 +145,7 @@ jobs:
       -
         name: Sysdig Benchmark Dockerfile
         id: sysdig
+        if: matrix.platform == 'linux/amd64' # Only required once for any platform, and will do the most general amd64
         # You may pin to the exact commit or the version.
         # uses: https://github.com/sysdiglabs/benchmark-dockerfile/tags
         uses: sysdiglabs/benchmark-dockerfile@v1.0.0
@@ -162,6 +163,7 @@ jobs:
       -
         name: Post Sysdig Benchmark Dockerfile
         id: postsysdig
+        if: matrix.platform == 'linux/amd64' # Only required once for any platform, and will do the most general amd64
         run: |
           echo ${{ toJSON(steps.sysdig.outputs.violation_report) }} | \
             jq -r .
