@@ -220,7 +220,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: true # Always push,
+          push: true # Always push
           load: false # Push any image, and pull from remote if needed for testing
           tags: ${{ steps.meta.outputs.tags }}
           # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
