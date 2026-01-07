@@ -265,6 +265,7 @@ jobs:
         run: |
           docker run --rm ${{ fromJSON(steps.meta.outputs.json).tags[0] }} --version
   merge:
+    # Job "merge" requires images to be uploaded in target registry, and since PR images are not pushed, we can skip this job
     if: github.event_name != 'pull_request'
     needs:
       - set_matrix
