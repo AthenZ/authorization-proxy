@@ -114,8 +114,9 @@ jobs:
         # uses: https://github.com/actions/setup-go/tags
         uses: actions/setup-go@v4
         with:
+          # Fix the following warning: Both go-version and go-version-file inputs are specified, only go-version will be used
           go-version: "stable"
-          go-version-file: './go.mod'
+          # go-version-file: './go.mod'
           cache: true
 
       # A GitHub Action for golang tests
