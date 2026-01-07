@@ -24,14 +24,44 @@ on:
     branches: [ master ]
 
 env:
-  DOCKER_BUILDX_PLATFORM: linux/amd64,linux/arm64
   DOCKER_REGISTRY_ORG: athenz
   # DOCKER_REGISTRY_USER: values for docker login is stored in repository variables
   # DOCKER_REGISTRY_TOKEN_NAME: values for docker login is stored in repository variables
+  TAGS_CONFIG: |
+    # If branch is master, main or default branch, push the latest tag image:
+    type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
+    type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+
+    # If the event is a tag release following the semver regex, push the latest tag image:
+    # Semver official regex: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+    type=match,value=latest,group=0,pattern=^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
+
+    # If it is PR version, push the pr-<pr-number> tag image:
+    type=ref,event=pr
+
+    type=semver,pattern=v{{version}}
+
+    # Any cron builds (scheduled workflows) push the nightly tag image:
+    type=schedule,pattern=nightly
+
+    # TODO: Delete me: Push to nightly tag during the PR:
+    type=raw,value=nightly,enable=${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        # TODO: Give me image link
+        - platform: linux/amd64
+          runner: ubuntu-latest
+          suffix: -amd64
+        - platform: linux/arm64
+          runner: ubuntu-24.04-arm
+          suffix: -arm64
     permissions:
       actions: none
       checks: none
@@ -152,29 +182,11 @@ jobs:
           # latest=auto for tagging latest only for "master" branch
           flavor: |
             latest=false # we want to make sure we only push latest tag from conditions defined ourselves
+            suffix=${{ matrix.suffix }} # make sure that every platform has its own suffix (we will merge them in later phase)
           # eg. refs/heads/master
           # eg. refs/pull/318/merge
           # shorthand for {{major}}.{{minor}}.{{patch}} (can include pre-release)
-          tags: |
-            # If branch is master, main or default branch, push the latest tag image:
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
-
-            # If the event is a tag release following the semver regex, push the latest tag image:
-            # Semver official regex: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-            type=match,value=latest,group=0,pattern=^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$
-
-            # If it is PR version, push the pr-<pr-number> tag image:
-            type=ref,event=pr
-
-            type=semver,pattern=v{{version}}
-
-            # Any cron builds (scheduled workflows) push the nightly tag image:
-            type=schedule,pattern=nightly
-
-            # TODO: Delete me: Push to nightly tag during the PR:
-            type=raw,value=nightly,enable=${{ github.event_name == 'pull_request' }}
+          tags: ${{ env.TAGS_CONFIG }}
 
       # GitHub Action to login against a Docker registry.
       # Login against a Docker registry except on PR
@@ -220,15 +232,16 @@ jobs:
         id: build_and_push
         # You may pin to the exact commit or the version.
         # uses: https://github.com/docker/build-push-action/tags
+        # TODO: Migrate me to v6!
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true # Always push
           load: false # Push any image, and pull from remote if needed for testing
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }} # tags defined here will have its platform suffix
           # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: ${{ env.DOCKER_BUILDX_PLATFORM }}
+          platforms: ${{ matrix.platform }}
           build-args: |
             APP_VERSION=${{ steps.meta.outputs.version }}
 
@@ -238,3 +251,39 @@ jobs:
         id: test_docker
         run: |
           docker run --rm ${{ fromJSON(steps.meta.outputs.json).tags[0] }} --version
+  merge:
+    needs: build # Make sure each build of every platform defined in matrix is completed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          # Server address of Docker registry. If not set then will default to Docker Hub
+          registry: ${{ env.DOCKER_REGISTRY_URL }} # optional
+          # Username used to log against the Docker registry
+          username: ${{ vars.DOCKER_REGISTRY_USER }} # optional
+          # Password or personal access token used to log against the Docker registry
+          password: ${{ secrets[vars.DOCKER_REGISTRY_TOKEN_NAME] }} # optional
+          # Log out from the Docker registry at the end of a job
+          logout: true # optional, default is true
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}
+          flavor: |
+            latest=false
+            # No suffix defined as this will be the merged one!
+          tags: ${{ env.TAGS_CONFIG }}
+
+      - name: Create Manifest List
+        run: |
+          # i.e) TAGS=["latest", "master"]
+          TAGS="${{ steps.meta.outputs.tags }}"
+          
+          for tag in ${TAGS}; do
+            echo "Merging manifest for tag: $tag"
+            docker buildx imagetools create -t "$tag" \
+              "${tag}-amd64" \
+              "${tag}-arm64"
+          done
