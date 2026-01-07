@@ -20,9 +20,11 @@ COPY . .
 
 RUN adduser -H -S ${APP_NAME}
 
+
+
+# 11m 56s
 RUN BUILD_TIME=$(date -u +%Y%m%d-%H%M%S) \
     && GO_VERSION=$(go version | cut -d" " -f3,4) \
-    && CGO_ENABLED=1 \
     CGO_FFLAGS="-g -Ofast -march=native" \
     CGO_LDFLAGS="-g -Ofast -march=native" \
     GOOS=$(go env GOOS) \
