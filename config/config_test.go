@@ -213,8 +213,9 @@ func TestNew(t *testing.T) {
 							"common_name1": {"client_id1", "client_id2"},
 							"common_name2": {"client_id1", "client_id2"},
 						},
-						CertBackdateDuration: "1h",
-						CertOffsetDuration:   "1h",
+						CertBackdateDuration:  "1h",
+						CertOffsetDuration:    "1h",
+						AccessTokenAuthHeader: "Authorization",
 					},
 					RoleToken: RoleToken{
 						Enable:         true,
