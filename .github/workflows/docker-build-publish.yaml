@@ -30,14 +30,6 @@ env:
   DOCKER_REGISTRY_IMAGE: authorization-proxy
   # DOCKER_REGISTRY_USER: values for docker login is stored in repository variables
   # DOCKER_REGISTRY_TOKEN_NAME: values for docker login is stored in repository variables
-  # We define BUILD_MATRIX so that we have multiple platform supported, maybe Windows as well in the future:
-  BUILD_MATRIX: |
-    {
-      "include": [
-        { "platform": "linux/amd64", "runner": "ubuntu-latest",    "suffix": "-amd64" },
-        { "platform": "linux/arm64", "runner": "ubuntu-24.04-arm", "suffix": "-arm64" }
-      ]
-    }
   TAGS_CONFIG: |
     # If branch is master, main or default branch, push the latest tag image:
     type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
@@ -58,11 +50,35 @@ env:
 
 
 jobs:
+  set_config:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+      suffixes: ${{ steps.set.outputs.suffixes }}
+    steps:
+      - id: set
+        run: |
+          # We define BUILD_MATRIX so that we have multiple platform supported,
+          # maybe Windows as well in the future:
+
+          MATRIX_JSON='{
+            "include": [
+              { "platform": "linux/amd64", "runner": "ubuntu-latest",     "suffix": "-amd64" },
+              { "platform": "linux/arm64", "runner": "ubuntu-24.04-arm",  "suffix": "-arm64" }
+            ]
+          }'
+          
+          # Store JSON data:
+          echo "matrix=$(echo "$MATRIX_JSON" | jq -c .)" >> $GITHUB_OUTPUT
+          
+          # Store Suffix list:
+          echo "suffixes=$(echo "$MATRIX_JSON" | jq -r '.include[].suffix' | xargs)" >> $GITHUB_OUTPUT
+
   build:
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(env.BUILD_MATRIX) }}
+      matrix: ${{ fromJson(needs.config.outputs.matrix) }}
     permissions:
       actions: none
       checks: none
@@ -272,10 +288,10 @@ jobs:
           tags: ${{ env.TAGS_CONFIG }}
 
       - name: Create Manifest List
+        env:
+          PLATFORM_SUFFIXES: ${{ needs.config.outputs.suffixes }}
         run: |
           # i.e) PLATFORM_SUFFIXES=["-amd64", "-arm64"]
-          PLATFORM_SUFFIXES=$(echo '${{ env.BUILD_MATRIX }}' | jq -r '.include[].suffix' | xargs)
-          
           echo "Target Suffixes: $PLATFORM_SUFFIXES"
           
           # Handle all tags required:
