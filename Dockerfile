@@ -50,7 +50,9 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 # Copy our dynamic-linked executable and library
 COPY --from=builder /usr/bin/${APP_NAME} /go/bin/${APP_NAME}
-COPY --from=builder /lib/ld-musl-x86_64.so* /lib/
+
+# Copy dynamic-linked libraries for musl, like /lib/ld-musl-x86_64.so* or /lib/ld-musl-arm64.so* etc: 
+COPY --from=builder /lib/ld-musl-*.so* /lib/
 # Copy user
 COPY --from=builder /etc/passwd /etc/passwd
 
