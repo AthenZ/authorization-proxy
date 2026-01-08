@@ -87,7 +87,7 @@ jobs:
       deployments: none
       issues: none
       discussions: none
-      packages: none
+      packages: write # for ghcr read permission
       pull-requests: none
       repository-projects: none
       security-events: none
@@ -239,31 +239,54 @@ jobs:
 
       # Build and push Docker image with Buildx
       # https://github.com/docker/build-push-action
-      -
-        name: Build and push Docker image
-        id: build_and_push
-        # You may pin to the exact commit or the version.``
-        # uses: https://github.com/docker/build-push-action/tags
-        # TODO: Migrate me to v6!
+      # -
+      #   name: Build and push Docker image
+      #   id: build_and_push
+      #   # You may pin to the exact commit or the version.``
+      #   # uses: https://github.com/docker/build-push-action/tags
+      #   # TODO: Migrate me to v6!
+      #   uses: docker/build-push-action@v4
+      #   with:
+      #     context: .
+      #     # Please do not set push=true for PR build as it will push every PR tag to our official registry outside:
+      #     push: ${{ github.event_name != 'pull_request' }}
+      #     load: ${{ github.event_name == 'pull_request' }}
+      #     tags: ${{ steps.meta.outputs.tags }} # tags defined here will have its platform suffix
+      #     # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
+      #     labels: ${{ steps.meta.outputs.labels }}
+      #     platforms: ${{ matrix.platform }}
+      #     build-args: |
+      #       APP_VERSION=${{ steps.meta.outputs.version }}
+
+      - name: Login to Temporary Registry (GitHub Container Registry)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase image id name to follow the docker name rule
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+          echo "GHCR_IMAGE_ID=$(echo $IMAGE_ID | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+      - name: Build and Push to GHCR (Staging)
         uses: docker/build-push-action@v4
         with:
           context: .
-          # Please do not set push=true for PR build as it will push every PR tag to our official registry outside:
-          push: ${{ github.event_name != 'pull_request' }}
-          load: ${{ github.event_name == 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }} # tags defined here will have its platform suffix
-          # tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.DOCKER_REGISTRY_ORG }}/${{ env.DOCKER_REGISTRY_IMAGE }}:nightly
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          # tag i.e) ghcr.io/athenz/authorization-proxy:sha-ck29d1-amd64
+          tags: ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }}
           platforms: ${{ matrix.platform }}
-          build-args: |
-            APP_VERSION=${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       # Test Docker image
       -
         name: Test Docker image
         id: test_docker
         run: |
-          docker run --rm ${{ fromJSON(steps.meta.outputs.json).tags[0] }} --version
+          docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }} --version
   merge:
     # Job "merge" requires images to be uploaded in target registry, and since PR images are not pushed, we can skip this job
     if: github.event_name != 'pull_request'
@@ -271,6 +294,8 @@ jobs:
       - set_matrix
       - build # Make sure each build of every platform defined in matrix is completed
     runs-on: ubuntu-latest
+    permissions:
+      packages: read
     steps:
       - uses: docker/login-action@v3
         with:
@@ -293,23 +318,49 @@ jobs:
             # No suffix defined as this will be the merged one!
           tags: ${{ env.TAGS_CONFIG }}
 
-      - name: Merge and push multi-arch image
+      # - name: Merge and push multi-arch image
+      #   env:
+      #     PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
+      #   run: |
+      #     # i.e) PLATFORM_SUFFIXES=["-amd64", "-arm64"]
+      #     echo "Target Suffixes: $PLATFORM_SUFFIXES"
+          
+      #     # Handle all tags required:
+      #     echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
+      #       echo "Merging manifest for tag: $tag"
+            
+      #       # List sources to merge as one tag:
+      #       sources=""
+      #       for suffix in $PLATFORM_SUFFIXES; do
+      #         sources="$sources ${tag}${suffix}"
+      #       done
+
+      #       # Finally merge:
+      #       docker buildx imagetools create -t "$tag" $sources
+      #     done
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set GHCR Image Name (Lowercase)
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository }}
+          echo "GHCR_IMAGE_ID=$(echo $IMAGE_ID | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Create Manifest and Push to Docker Hub
         env:
           PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
+          SHA_TAG: ${{ github.sha }}
         run: |
-          # i.e) PLATFORM_SUFFIXES=["-amd64", "-arm64"]
-          echo "Target Suffixes: $PLATFORM_SUFFIXES"
-          
-          # Handle all tags required:
-          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
-            echo "Merging manifest for tag: $tag"
+          echo "${{ steps.meta.outputs.tags }}" | while read -r docker_registry_tag; do
+            echo "Merging sources into final tag: $docker_registry_tag"
             
-            # List sources to merge as one tag:
             sources=""
             for suffix in $PLATFORM_SUFFIXES; do
-              sources="$sources ${tag}${suffix}"
+              # i.e) ghcr.io/athenz/authorization-proxy:sha-xxx-amd64
+              sources="$sources ${{ env.GHCR_IMAGE_ID }}:${SHA_TAG}${suffix}"
             done
 
-            # Finally merge:
-            docker buildx imagetools create -t "$tag" $sources
+            docker buildx imagetools create -t "$docker_registry_tag" $sources
           done
