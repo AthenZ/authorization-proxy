@@ -299,21 +299,32 @@ jobs:
 
       - name: Delete Temporary Images using Skopeo
         env:
-          PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
+          OWNER: ${{ github.repository_owner }} 
+          PACKAGE_NAME: authorization-proxy 
           SHA_TAG: ${{ github.sha }}
+          PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "🧹 Starting cleanup for SHA: $SHA_TAG"
-
-          # Get image URL:
-          RAW_IMAGE_ID=ghcr.io/${{ github.repository }}
-          GHCR_IMAGE_ID=$(echo $RAW_IMAGE_ID | tr '[:upper:]' '[:lower:]')
-
-          # Loop and delete
+          echo "🧹 Cleanup using GitHub API..."
+          
           for suffix in $PLATFORM_SUFFIXES; do
-            TARGET_IMAGE="docker://${GHCR_IMAGE_ID}:${SHA_TAG}${suffix}"
+            TAG_NAME="${SHA_TAG}${suffix}"
+            echo "🔍 Finding version ID for tag: $TAG_NAME"
             
-            echo "🗑️ Attempt to delete: $TARGET_IMAGE"
-            skopeo delete "$TARGET_IMAGE" || true
+            VERSION_ID=$(gh api "/orgs/$OWNER/packages/container/$PACKAGE_NAME/versions" \
+              -H "Accept: application/vnd.github+json" \
+              --jq ".[] | select(.metadata.container.tags[]? == \"$TAG_NAME\") | .id")
+            
+            if [ -z "$VERSION_ID" ]; then
+              echo "⚠️ Tag $TAG_NAME not found (already deleted?)"
+              continue
+            fi
+            
+            echo "🗑️ Deleting Version ID: $VERSION_ID (Tag: $TAG_NAME)"
+            
+            # Delete based on ID:
+            gh api -X DELETE "/orgs/$OWNER/packages/container/$PACKAGE_NAME/versions/$VERSION_ID" \
+              -H "Accept: application/vnd.github+json" || true
           done
-
-          echo "✨ All temporary images cleaned up!"
+          
+          echo "✨ Cleanup finished!"
