@@ -228,9 +228,7 @@ jobs:
         run: |
           docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }} --version
   merge:
-    # Job "merge" requires images to be uploaded in target registry, and since PR images are not pushed, we can skip this job
-    # TODO: Test only for now
-    # if: github.event_name != 'pull_request'
+    # if: github.event_name != 'pull_request' # We do not need to push pr images to official registry (Docker.io)
     needs:
       - set_matrix
       - build # Make sure each build of every platform defined in matrix is completed
@@ -284,3 +282,38 @@ jobs:
 
             docker buildx imagetools create -t "$docker_registry_tag" $sources
           done
+  cleanup:
+    name: Cleanup Temporary Images from GitHub Container Registry
+    needs: [set_matrix, build, merge]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write # Permission to delete images from GitHub Container Registry
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete Temporary Images using Skopeo
+        env:
+          PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
+          SHA_TAG: ${{ github.sha }}
+        run: |
+          echo "🧹 Starting cleanup for SHA: $SHA_TAG"
+
+          # Get image URL:
+          RAW_IMAGE_ID=ghcr.io/${{ github.repository }}
+          GHCR_IMAGE_ID=$(echo $RAW_IMAGE_ID | tr '[:upper:]' '[:lower:]')
+
+          # Loop and delete
+          for suffix in $PLATFORM_SUFFIXES; do
+            TARGET_IMAGE="docker://${GHCR_IMAGE_ID}:${SHA_TAG}${suffix}"
+            
+            echo "🗑️ Attempt to delete: $TARGET_IMAGE"
+            skopeo delete "$TARGET_IMAGE" || true
+          done
+
+          echo "✨ All temporary images cleaned up!"
