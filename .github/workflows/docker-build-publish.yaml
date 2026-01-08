@@ -228,7 +228,7 @@ jobs:
         run: |
           docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }} --version
   merge:
-    # if: github.event_name != 'pull_request' # We do not need to push pr images to official registry (Docker.io)
+    if: github.event_name != 'pull_request' # We do not need to push pr images to official registry (Docker.io)
     needs:
       - set_matrix
       - build # Make sure each build of every platform defined in matrix is completed
