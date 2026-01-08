@@ -297,7 +297,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Delete Temporary Images using Skopeo
+      - name: Delete Temporary Images using GitHub API
         env:
           OWNER: ${{ github.repository_owner }} 
           PACKAGE_NAME: authorization-proxy 
