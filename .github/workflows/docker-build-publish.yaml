@@ -296,7 +296,7 @@ jobs:
       - build # Make sure each build of every platform defined in matrix is completed
     runs-on: ubuntu-latest
     permissions:
-      packages: read
+      packages: write # Give read permission WITHOUT making the registry_visibility=Public
     steps:
       - name: Login to Docker registry
         uses: docker/login-action@v3
