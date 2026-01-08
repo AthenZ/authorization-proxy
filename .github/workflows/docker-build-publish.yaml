@@ -289,7 +289,8 @@ jobs:
           docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }} --version
   merge:
     # Job "merge" requires images to be uploaded in target registry, and since PR images are not pushed, we can skip this job
-    if: github.event_name != 'pull_request'
+    # TODO: Test only for now
+    # if: github.event_name != 'pull_request'
     needs:
       - set_matrix
       - build # Make sure each build of every platform defined in matrix is completed
