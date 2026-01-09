@@ -214,8 +214,8 @@ jobs:
         with:
           context: .
           push: true
-          # tag i.e) ghcr.io/athenz/authorization-proxy:sha-ck29d1-amd64
-          tags: ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }}
+          # tag i.e) ghcr.io/athenz/authorization-proxy:xxxxxxxxxx-amd64
+          tags: ${{ env.GHCR_IMAGE_ID }}:${{ github.run_id }}${{ matrix.suffix }}
           platforms: ${{ matrix.platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -225,7 +225,7 @@ jobs:
         name: Test Docker image
         id: test_docker
         run: |
-          docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }} --version
+          docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.run_id }}${{ matrix.suffix }} --version
   merge:
     if: github.event_name != 'pull_request' # We do not need to push pr images to official registry (Docker.io)
     needs:
@@ -268,15 +268,14 @@ jobs:
       - name: Create Manifest and Push to Docker Hub
         env:
           PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
-          SHA_TAG: ${{ github.sha }}
         run: |
           echo "${{ steps.meta.outputs.tags }}" | while read -r docker_registry_tag; do
             echo "Merging sources into final tag: $docker_registry_tag"
             
             sources=""
             for suffix in $PLATFORM_SUFFIXES; do
-              # i.e) ghcr.io/athenz/authorization-proxy:sha-xxx-amd64
-              sources="$sources ${{ env.GHCR_IMAGE_ID }}:${SHA_TAG}${suffix}"
+              # i.e) ghcr.io/athenz/authorization-proxy:xxxxxxxxxx-amd64
+              sources="$sources ${{ env.GHCR_IMAGE_ID }}:${{ github.run_id }}${suffix}"
             done
 
             docker buildx imagetools create -t "$docker_registry_tag" $sources
@@ -300,14 +299,13 @@ jobs:
         env:
           OWNER: ${{ github.repository_owner }} 
           PACKAGE_NAME: authorization-proxy 
-          SHA_TAG: ${{ github.sha }}
           PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🧹 Cleanup using GitHub API..."
           
           for suffix in $PLATFORM_SUFFIXES; do
-            TAG_NAME="${SHA_TAG}${suffix}"
+            TAG_NAME="${{ github.run_id }}${suffix}"
             echo "🔍 Finding version ID for tag: $TAG_NAME"
             
             VERSION_ID=$(gh api "/orgs/$OWNER/packages/container/$PACKAGE_NAME/versions" \
