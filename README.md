@@ -1,5 +1,6 @@
 # Authorization Proxy
 
+
 [![License: Apache](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
 [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)
@@ -70,11 +71,11 @@ The mapping rules describe the elements used in the authorization proxy. You can
 
 The mapping rules are described as below.
 
-| Concept         | Description                                                | Map to (Athenz)  | Example            |
-|-----------------|------------------------------------------------------------|------------------|--------------------|
-| Client Identity | Client Identity presented in the client credentials        | Role             | access token scope |
-| Action          | HTTP/HTTPS request method                                  | Action           | POST               |
-| Resource        | HTTP/HTTPS request URL path, supports wildcard             | Resource         | /api/*             |
+| Concept         | Description                                         | Map to (Athenz) | Example            |
+|-----------------|-----------------------------------------------------|-----------------|--------------------|
+| Client Identity | Client Identity presented in the client credentials | Role            | access token scope |
+| Action          | HTTP/HTTPS request method                           | Action          | POST               |
+| Resource        | HTTP/HTTPS request URL path, supports wildcard      | Resource        | /api/*             |
 
 ⚠️ All the HTTP/HTTPS methods and URI paths are normalized to lower case.
 
@@ -82,14 +83,14 @@ The mapping rules are described as below.
 
 When a request is authorized by the authorization proxy, the following HTTP headers is added in the request.
 
-| HTTP Header Name    | Description                                                              | Example           |
-|---------------------|--------------------------------------------------------------------------|-------------------|
-| X-Athenz-Principal  | Authorized principal                                                     | principal         |
-| X-Athenz-Role       | Authorized role (A comma-separated string if there is more than one)      | role1,role2,role3 |
-| X-Athenz-Domain     | Authorized domain                                                        | domain            |
-| X-Athenz-Client-ID  | Authorized client ID                                                     | client-id         |
-| X-Athenz-Issued-At  | Unix timestamp in second that the authorized identity was issued                          | 1596158946        |
-| X-Athenz-Expires-At | Unix timestamp in second that the authorized identity expires                             | 1596158953        |
+| HTTP Header Name    | Description                                                          | Example           |
+|---------------------|----------------------------------------------------------------------|-------------------|
+| X-Athenz-Principal  | Authorized principal                                                 | principal         |
+| X-Athenz-Role       | Authorized role (A comma-separated string if there is more than one) | role1,role2,role3 |
+| X-Athenz-Domain     | Authorized domain                                                    | domain            |
+| X-Athenz-Client-ID  | Authorized client ID                                                 | client-id         |
+| X-Athenz-Issued-At  | Unix timestamp in second that the authorized identity was issued     | 1596158946        |
+| X-Athenz-Expires-At | Unix timestamp in second that the authorized identity expires        | 1596158953        |
 
 ## Features to Debug
 
@@ -99,11 +100,3 @@ When a request is authorized by the authorization proxy, the following HTTP head
 
 The example configuration file is [here](./test/data/example_config.yaml).
 For detail explanation, please read [config.go](./config/config.go).
-
----
-
-## About releases
-
-- Releases
-  - [![GitHub release (latest by date)](https://img.shields.io/github/v/release/AthenZ/authorization-proxy?style=flat-square&label=Github%20version)](https://github.com/AthenZ/authorization-proxy/releases/latest)
-  - [![Docker Image Version (tag latest)](https://img.shields.io/docker/v/athenz/authorization-proxy/latest?style=flat-square&label=Docker%20version)](https://hub.docker.com/r/athenz/authorization-proxy/tags)

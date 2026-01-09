@@ -27,7 +27,7 @@ make test
 - Add tests relevant to the fixed bug or new feature.
 - Update the README.md with details of changes to the interface, this includes new environment variables, exposed ports, useful file locations and container parameters.
 - Please use `Squash and merge` to merge a PR.
-- Create a git tag to make a release. Docker image with the `latest` tag will also be updated.
+- For release, check out the following: [About release](#about-release)
 
 ## Dependency management
 
@@ -51,6 +51,31 @@ GO111MODULE=on go mod tidy
 ```
 
 You have to commit the changes to `go.mod` and `go.sum` before submitting the pull request.
+
+## About release
+
+This section describes how to release a new version of the Authorization Proxy.
+
+### How to release
+
+> [!TIP]
+> For consistent release DX, please refrain from creating a tag with git command
+
+> [!NOTE]
+> Please note that:
+> - `latest` tag will be updated as well
+> - there is no pr tag release
+
+Create a release with GitHub UI from the following: https://github.com/AthenZ/authorization-proxy/releases
+
+![draft_a_new_release](./images/draft_a_new_release.png)
+
+### Architecture: Release Pipeline
+
+Here is a general architecture of the current [release pipeline](./.github/workflows/docker-build-publish.yaml):
+
+![release_pipeline_architecture](./images/release_pipeline_architecture.png)
+
 
 ## Contributor Covenant Code of Conduct
 
