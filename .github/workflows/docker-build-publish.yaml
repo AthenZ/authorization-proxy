@@ -7,21 +7,21 @@ name: Build and Publish Docker Image
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: "0 10 * * *"
   # If any commit message in your push or the HEAD commit of your PR contains the strings
   # [skip ci], [ci skip], [no ci], [skip actions], or [actions skip]
   # workflows triggered on the push or pull_request events will be skipped.
   # https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
   push:
-    branches: [ master ]
+    branches: [master]
     # Publish semver tags as releases.
-    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
   # If any commit message in your push or the HEAD commit of your PR contains the strings
   # [skip ci], [ci skip], [no ci], [skip actions], or [actions skip]
   # workflows triggered on the push or pull_request events will be skipped.
   # https://github.blog/changelog/2021-02-08-github-actions-skip-pull-request-and-push-workflows-with-skip-ci/
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   # https://hub.docker.com/r/athenz/authorization-proxy/tags
@@ -47,7 +47,6 @@ env:
     # Any cron builds (scheduled workflows) push the nightly tag image:
     type=schedule,pattern=nightly
 
-
 jobs:
   set_matrix:
     runs-on: ubuntu-latest
@@ -66,10 +65,10 @@ jobs:
               { "platform": "linux/arm64", "runner": "ubuntu-24.04-arm",  "suffix": "-arm64" }
             ]
           }'
-          
+
           # Store JSON data:
           echo "matrix=$(echo "$MATRIX_JSON" | jq -c .)" >> $GITHUB_OUTPUT
-          
+
           # Store Suffix list:
           echo "suffixes=$(echo "$MATRIX_JSON" | jq -r '.include[].suffix' | xargs)" >> $GITHUB_OUTPUT
 
@@ -95,16 +94,14 @@ jobs:
     steps:
       # A GitHub Action to expose useful environment variables.
       # https://github.com/FranzDiebold/github-env-vars-action
-      -
-        name: GitHub Environment Variables Action
+      - name: GitHub Environment Variables Action
         id: env
         # uses: https://github.com/FranzDiebold/github-env-vars-action/tags
         uses: FranzDiebold/github-env-vars-action@v2
 
       # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
       # https://github.com/actions/checkout
-      -
-        name: Checkout repository
+      - name: Checkout repository
         id: checkout
         # You may pin to the exact commit or the version.
         # uses: https://github.com/actions/checkout/tags
@@ -114,8 +111,7 @@ jobs:
       # - Optionally downloading and caching a version of Go by version and adding to PATH.
       # - Registering problem matchers for error output.
       # https://github.com/actions/setup-go
-      -
-        name: Setup Golang
+      - name: Setup Golang
         id: setup-go
         # You may pin to the exact commit or the version.
         # uses: https://github.com/actions/setup-go/tags
@@ -127,8 +123,7 @@ jobs:
           cache: true
 
       # A GitHub Action for golang tests
-      -
-        name: Golang Tests
+      - name: Golang Tests
         id: go-tests
         run: |
           go version
@@ -149,8 +144,7 @@ jobs:
 
       # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
       # https://github.com/sysdiglabs/benchmark-dockerfile
-      -
-        name: Sysdig Benchmark Dockerfile
+      - name: Sysdig Benchmark Dockerfile
         id: sysdig
         if: matrix.platform == 'linux/amd64' # Only required once for any platform, and will do the most general amd64
         # You may pin to the exact commit or the version.
@@ -167,8 +161,7 @@ jobs:
       # The Github action runs CIS Dockerfile benchmark against dockerfiles in repository (CIS 4.1, 4.2, 4.3, 4.6, 4.7, 4.9, 4.10)
       # https://github.com/sysdiglabs/benchmark-dockerfile
       # TODO: Skipping CIS 4.1 check until https://github.com/yahoojapan/authorization-proxy/pull/95 is fixed.
-      -
-        name: Post Sysdig Benchmark Dockerfile
+      - name: Post Sysdig Benchmark Dockerfile
         id: postsysdig
         if: matrix.platform == 'linux/amd64' # Only required once for any platform, and will do the most general amd64
         run: |
@@ -181,8 +174,7 @@ jobs:
 
       # GitHub Action to install QEMU static binaries.
       # https://github.com/docker/setup-qemu-action
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         id: qemu
         # You may pin to the exact commit or the version.
         # uses: https://github.com/docker/setup-qemu-action/tags
@@ -190,8 +182,7 @@ jobs:
 
       # GitHub Action to set up Docker Buildx.
       # https://github.com/docker/setup-buildx-action
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         id: buildx
         # You may pin to the exact commit or the version.
         # uses: https://github.com/docker/setup-buildx-action/tags
@@ -221,8 +212,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       # Test Docker image
-      -
-        name: Test Docker image
+      - name: Test Docker image
         id: test_docker
         run: |
           docker run --rm ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }} --version
@@ -298,14 +288,14 @@ jobs:
 
       - name: Delete Temporary Images using GitHub API
         env:
-          OWNER: ${{ github.repository_owner }} 
-          PACKAGE_NAME: authorization-proxy 
+          OWNER: ${{ github.repository_owner }}
+          PACKAGE_NAME: authorization-proxy
           SHA_TAG: ${{ github.sha }}
           PLATFORM_SUFFIXES: ${{ needs.set_matrix.outputs.suffixes }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "🧹 Cleanup using GitHub API..."
-          
+
           for suffix in $PLATFORM_SUFFIXES; do
             TAG_NAME="${SHA_TAG}${suffix}"
             echo "🔍 Finding version ID for tag: $TAG_NAME"
@@ -325,5 +315,5 @@ jobs:
             gh api -X DELETE "/orgs/$OWNER/packages/container/$PACKAGE_NAME/versions/$VERSION_ID" \
               -H "Accept: application/vnd.github+json" || true
           done
-          
+
           echo "✨ Cleanup finished!"
