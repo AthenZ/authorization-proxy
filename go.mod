@@ -4,8 +4,8 @@ go 1.25.3
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.123.0
-	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.8.0
-	github.com/kpango/gache/v2 => github.com/kpango/gache/v2 v2.1.1
+	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.8.1-0.20260225044502-5d1754c8631f
+	github.com/kpango/gache/v2 => github.com/kpango/gache/v2 v2.1.3-0.20260225040843-25c9cc2fe340
 	github.com/kpango/glg => github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20250813121105-2866842de9a5
 	github.com/pkg/errors => github.com/pkg/errors v0.9.1
@@ -20,7 +20,7 @@ replace (
 
 require (
 	github.com/AthenZ/athenz-authorizer/v5 v5.0.0-00010101000000-000000000000
-	github.com/kpango/gache/v2 v2.1.0
+	github.com/kpango/gache/v2 v2.1.3-0.20260225040843-25c9cc2fe340
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
@@ -70,7 +70,7 @@ require (
 	github.com/theparanoids/crypki v1.20.9 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	github.com/zeebo/xxh3 v1.0.2 // indirect
+	github.com/zeebo/xxh3 v1.1.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
@@ -82,7 +82,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.8.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/net v0.46.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251007200510-49b9836ed3ff // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251002232023-7c0ddcbb5797 // indirect
