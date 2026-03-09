@@ -4,7 +4,7 @@ go 1.25.3
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.123.0
-	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.8.1-0.20260302014201-5254e56865ed
+	github.com/AthenZ/athenz-authorizer/v5 => github.com/AthenZ/athenz-authorizer/v5 v5.8.1
 	github.com/kpango/gache/v2 => github.com/kpango/gache/v2 v2.1.3
 	github.com/kpango/glg => github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20250813121105-2866842de9a5
