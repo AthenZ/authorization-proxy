@@ -35,7 +35,7 @@ Client request can be authenticated and authorized by:
 1. Role token in the HTTP/HTTPS request header
 1. Role certificate on mTLS
 
-Requires go 1.25 or later.
+Requires go 1.26 or later.
 
 ## Use case
 
