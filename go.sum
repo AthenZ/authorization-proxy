@@ -1,7 +1,7 @@
 github.com/AthenZ/athenz v1.12.44 h1:TlsWUzufKTrH2uN1dOML5d+EckjK/Xp33TMTfWRLKPU=
 github.com/AthenZ/athenz v1.12.44/go.mod h1:ShtI9AiJwyEOKYeG3u97JZRohQTS2CNeeqBfCI/uBHU=
-github.com/AthenZ/athenz-authorizer/v5 v5.8.4-0.20260724024203-2c5c8092c470 h1:HMBxEULD+MF8wr6zAt4XCrvOLUsHr/xLi3yM50qvP5A=
-github.com/AthenZ/athenz-authorizer/v5 v5.8.4-0.20260724024203-2c5c8092c470/go.mod h1:ZtAD8D38axsSAjyzNU6tcgchhmeUpC2fLvDu7S5HDiY=
+github.com/AthenZ/athenz-authorizer/v5 v5.8.4 h1:Na+y5r+ga8I4+JrSFbzhnJ8slGoK7HutNoaw9kL/cOU=
+github.com/AthenZ/athenz-authorizer/v5 v5.8.4/go.mod h1:ZtAD8D38axsSAjyzNU6tcgchhmeUpC2fLvDu7S5HDiY=
 github.com/ardielle/ardielle-go v1.5.2 h1:TilHTpHIQJ27R1Tl/iITBzMwiUGSlVfiVhwDNGM3Zj4=
 github.com/ardielle/ardielle-go v1.5.2/go.mod h1:I4hy1n795cUhaVt/ojz83SNVCYIGsAFAONtv2Dr7HUI=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
