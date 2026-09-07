@@ -582,6 +582,24 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestNew_DirectorPreservesRequestContext(t *testing.T) {
+	proxy := New(config.Proxy{
+		Host: "127.0.0.1",
+		Port: 8080,
+	}, nil, nil, nil).(*httputil.ReverseProxy)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	req := httptest.NewRequest(http.MethodGet, "http://example.com", nil).WithContext(ctx)
+	proxy.Director(req)
+	cancel()
+
+	select {
+	case <-req.Context().Done():
+	case <-time.After(time.Second):
+		t.Fatal("request context was not canceled")
+	}
+}
+
 func Test_updateDialContext(t *testing.T) {
 	type args struct {
 		cfg         *http.Transport

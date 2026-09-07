@@ -67,9 +67,9 @@ func New(cfg config.Proxy, bp httputil.BufferPool, prov service.Authorizationd, 
 			u := *r.URL
 			u.Scheme = scheme
 			u.Host = host
-			req, err := http.NewRequest(r.Method, u.String(), r.Body)
+			req, err := http.NewRequestWithContext(r.Context(), r.Method, u.String(), r.Body)
 			if err != nil {
-				glg.Error(errors.Wrap(err, "NewRequest returned error"))
+				glg.Error(errors.Wrap(err, "NewRequestWithContext returned error"))
 				r.URL.Scheme = scheme
 				return
 			}
