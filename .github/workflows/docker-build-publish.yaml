@@ -204,7 +204,11 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: true
+          # Fork PRs get a read-only GITHUB_TOKEN (GitHub-enforced, cannot be overridden via `permissions:`),
+          # so pushing to GHCR always fails for pull_request builds. Load into the local Docker daemon instead;
+          # push/schedule/tag builds are unaffected and continue to push as before.
+          push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
           # tag i.e) ghcr.io/athenz/authorization-proxy:sha-ck29d1-amd64
           tags: ${{ env.GHCR_IMAGE_ID }}:${{ github.sha }}${{ matrix.suffix }}
           platforms: ${{ matrix.platform }}
