@@ -209,8 +209,8 @@ func TestDescribe(t *testing.T) {
 	}
 	tests := []test{
 		func() test {
-			wantPrincipalCacheSize := `Desc{fqName: "cached_principal_bytes", help: "Number of bytes cached", constLabels: {}, variableLabels: {}}`
-			wantPrincipalCacheLen := `Desc{fqName: "cached_principal_entries", help: "Number of entries cached", constLabels: {}, variableLabels: {}}`
+			wantPrincipalCacheSize := `Desc{fqName: "cached_principal_bytes", help: "Number of bytes cached", unit: "", constLabels: {}, variableLabels: {}}`
+			wantPrincipalCacheLen := `Desc{fqName: "cached_principal_entries", help: "Number of entries cached", unit: "", constLabels: {}, variableLabels: {}}`
 			m1 := &metrics{}
 
 			return test{
