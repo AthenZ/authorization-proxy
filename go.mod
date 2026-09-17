@@ -24,7 +24,7 @@ require (
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.23.2
+	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model v0.6.2
 	golang.org/x/sync v0.23.0
 	google.golang.org/grpc v1.83.2
