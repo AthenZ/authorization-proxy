@@ -9,7 +9,7 @@ replace (
 	github.com/kpango/glg => github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20250813121105-2866842de9a5
 	github.com/pkg/errors => github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.23.2
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model => github.com/prometheus/client_model v0.6.2
 	golang.org/x/sync => golang.org/x/sync v0.22.0
 	google.golang.org/genproto/googleapis/rpc => google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324
@@ -24,7 +24,7 @@ require (
 	github.com/kpango/glg v1.6.15
 	github.com/mwitkow/grpc-proxy v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.24.0
+	github.com/prometheus/client_golang v1.24.1
 	github.com/prometheus/client_model v0.6.2
 	golang.org/x/sync v0.22.0
 	google.golang.org/grpc v1.82.1
