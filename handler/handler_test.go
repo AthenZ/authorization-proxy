@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"net"
 	"net/http"
@@ -885,6 +886,45 @@ func Test_handleError(t *testing.T) {
 			handleError(tt.args.rw, tt.args.r, tt.args.err)
 			if err := tt.checkFunc(); err != nil {
 				t.Errorf("handleError error: %v", err)
+			}
+		})
+	}
+
+	for _, framing := range []string{"Content-Length: 8\r\n", "Transfer-Encoding: chunked\r\n"} {
+		t.Run(strings.TrimSpace(framing), func(t *testing.T) {
+			authorized := make(chan struct{}, 1)
+			prov := &service.AuthorizerdMock{
+				VerifyFunc: func(*http.Request, string, string) (authorizerd.Principal, error) {
+					authorized <- struct{}{}
+					return nil, errors.New("authorization rejected")
+				},
+			}
+			ts := httptest.NewUnstartedServer(New(config.Proxy{}, nil, prov, nil))
+			ts.Config.ReadTimeout = 100 * time.Millisecond
+			ts.Start()
+			t.Cleanup(ts.Close)
+			conn, err := net.DialTimeout("tcp", ts.Listener.Addr().String(), 5*time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { conn.Close() })
+			if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := fmt.Fprintf(conn, "POST / HTTP/1.1\r\nHost: localhost\r\n%s\r\n", framing); err != nil {
+				t.Fatal(err)
+			}
+			response, err := io.ReadAll(conn)
+			if err != nil {
+				t.Fatalf("rejected request with unfinished body did not finish: %v", err)
+			}
+			if !strings.HasPrefix(string(response), "HTTP/1.1 401 ") {
+				t.Fatalf("expected an authorization rejection, got %q", response)
+			}
+			select {
+			case <-authorized:
+			default:
+				t.Fatal("request did not reach authorization")
 			}
 		})
 	}

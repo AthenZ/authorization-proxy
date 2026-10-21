@@ -26,7 +26,9 @@ import (
 	"net/http/httptest"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -42,13 +44,14 @@ func TestNewServer(t *testing.T) {
 	type args struct {
 		opts []Option
 	}
-	tests := []struct {
+	type test struct {
 		name      string
 		args      args
 		want      Server
 		wantErr   error
 		checkFunc func(got, want Server, gotErr, wantErr error) error
-	}{
+	}
+	tests := []test{
 		{
 			name: "Check health address",
 			args: args{
@@ -350,6 +353,103 @@ func TestNewServer(t *testing.T) {
 				return nil
 			},
 		},
+	}
+	for _, tt := range []struct {
+		name string
+		cfg  config.Server
+		want [4]time.Duration
+	}{
+		{name: "unset preserves existing behavior"},
+		{
+			name: "explicit zero",
+			cfg: config.Server{
+				ReadHeaderTimeout: "0s", ReadTimeout: "0s", WriteTimeout: "0s", IdleTimeout: "0s",
+			},
+		},
+		{
+			name: "configured",
+			cfg: config.Server{
+				ReadHeaderTimeout: "500ms", ReadTimeout: "30s", WriteTimeout: "1m", IdleTimeout: "2m",
+			},
+			want: [4]time.Duration{500 * time.Millisecond, 30 * time.Second, time.Minute, 2 * time.Minute},
+		},
+		{
+			name: "read timeout only leaves Go fallbacks intact",
+			cfg:  config.Server{ReadTimeout: "30s"},
+			want: [4]time.Duration{0, 30 * time.Second, 0, 0},
+		},
+	} {
+		for _, mode := range []string{"http", "https", "grpc"} {
+			cfg := tt.cfg
+			cfg.HealthCheck = config.HealthCheck{Port: 8081, Endpoint: "/healthz"}
+			cfg.Debug = config.Debug{Enable: true, Port: 8082}
+			cfg.Metrics = config.Metrics{Port: 8083}
+			cfg.TLS.Enable = mode == "https"
+			opts := []Option{WithServerConfig(cfg), WithRestHandler(http.NotFoundHandler())}
+			if mode == "https" {
+				opts = append(opts, WithTLSConfig(&tls.Config{}))
+			}
+			if mode == "grpc" {
+				opts = append(opts, WithGRPCHandler(func(interface{}, grpc.ServerStream) error { return nil }))
+			}
+			tests = append(tests, test{
+				name: "HTTP timeouts/" + tt.name + "/" + mode,
+				args: args{opts: opts},
+				checkFunc: func(got, _ Server, gotErr, _ error) error {
+					if gotErr != nil {
+						return gotErr
+					}
+					s := got.(*server)
+					servers := map[string]*http.Server{"health": s.hcsrv, "debug": s.dsrv, "metrics": s.msrv}
+					if mode == "grpc" {
+						if s.srv != nil || s.grpcSrv == nil {
+							return fmt.Errorf("expected the main listener to remain a gRPC server")
+						}
+						defer s.grpcSrv.Stop()
+					} else {
+						servers["proxy"] = s.srv
+						if mode == "https" && (s.srv == nil || s.srv.TLSConfig == nil) {
+							return fmt.Errorf("TLS configuration was lost")
+						}
+					}
+					for name, srv := range servers {
+						if srv == nil {
+							return fmt.Errorf("%s server is nil", name)
+						}
+						actual := [4]time.Duration{srv.ReadHeaderTimeout, srv.ReadTimeout, srv.WriteTimeout, srv.IdleTimeout}
+						if actual != tt.want {
+							return fmt.Errorf("%s timeouts = %v, want %v", name, actual, tt.want)
+						}
+					}
+					return nil
+				},
+			})
+		}
+	}
+	for _, field := range []string{"readHeaderTimeout", "readTimeout", "writeTimeout", "idleTimeout"} {
+		for _, value := range []string{"invalid", "30", "-1s", "999999999999999999999h"} {
+			var cfg config.Server
+			switch field {
+			case "readHeaderTimeout":
+				cfg.ReadHeaderTimeout = value
+			case "readTimeout":
+				cfg.ReadTimeout = value
+			case "writeTimeout":
+				cfg.WriteTimeout = value
+			case "idleTimeout":
+				cfg.IdleTimeout = value
+			}
+			tests = append(tests, test{
+				name: "HTTP timeout validation/" + field + "/" + value,
+				args: args{opts: []Option{WithServerConfig(cfg)}},
+				checkFunc: func(got, _ Server, gotErr, _ error) error {
+					if gotErr == nil || !strings.Contains(gotErr.Error(), "server."+field) || got != nil {
+						return fmt.Errorf("NewServer() = %v, %v; want an error naming server.%s", got, gotErr, field)
+					}
+					return nil
+				},
+			})
+		}
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1430,6 +1530,63 @@ func Test_server_ListenAndServe(t *testing.T) {
 			e := s.ListenAndServe(tt.args.ctx)
 			if err := tt.checkFunc(s, e, tt.want); err != nil {
 				t.Errorf("server.listenAndServe() Error = %v", err)
+			}
+		})
+	}
+}
+
+func TestServerHTTPTimeoutConnections(t *testing.T) {
+	for _, scenario := range []string{"incomplete headers", "read timeout fallback", "unfinished rejected body"} {
+		t.Run(scenario, func(t *testing.T) {
+			var calls atomic.Int32
+			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				calls.Add(1)
+				w.WriteHeader(http.StatusUnauthorized)
+			})
+			cfg := config.Server{
+				HealthCheck: config.HealthCheck{Port: 8081, Endpoint: "/healthz"},
+				Debug:       config.Debug{Enable: true, Port: 8082},
+				Metrics:     config.Metrics{Port: 8083},
+			}
+			if scenario == "incomplete headers" {
+				cfg.ReadHeaderTimeout = "100ms"
+			} else {
+				cfg.ReadTimeout = "100ms"
+			}
+			created, err := NewServer(WithServerConfig(cfg), WithRestHandler(h), WithDebugHandler(h))
+			if err != nil {
+				t.Fatal(err)
+			}
+			s := created.(*server)
+			for name, srv := range map[string]*http.Server{"proxy": s.srv, "health": s.hcsrv, "debug": s.dsrv, "metrics": s.msrv} {
+				t.Run(name, func(t *testing.T) {
+					ts := httptest.NewUnstartedServer(srv.Handler)
+					ts.Config = srv
+					ts.Start()
+					t.Cleanup(ts.Close)
+					conn, err := net.DialTimeout("tcp", ts.Listener.Addr().String(), 5*time.Second)
+					if err != nil {
+						t.Fatal(err)
+					}
+					t.Cleanup(func() { conn.Close() })
+					if err := conn.SetDeadline(time.Now().Add(5 * time.Second)); err != nil {
+						t.Fatal(err)
+					}
+					request := "GET / HTTP/1.1\r\nHost: localhost\r\n"
+					if scenario == "unfinished rejected body" {
+						// No body is sent. The server must bound post-handler body draining.
+						request = "POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 8\r\n\r\n"
+					}
+					if _, err := fmt.Fprint(conn, request); err != nil {
+						t.Fatal(err)
+					}
+					if _, err := io.ReadAll(conn); err != nil {
+						t.Fatalf("server did not close the incomplete request within its timeout: %v", err)
+					}
+				})
+			}
+			if scenario != "unfinished rejected body" && calls.Load() != 0 {
+				t.Fatal("an incomplete header reached the request handler")
 			}
 		})
 	}
