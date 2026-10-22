@@ -1,6 +1,6 @@
 module github.com/AthenZ/authorization-proxy/v4
 
-go 1.26.7
+go 1.26.10
 
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.123.0
@@ -10,11 +10,11 @@ replace (
 	github.com/mwitkow/grpc-proxy => github.com/mwitkow/grpc-proxy v0.0.0-20250813121105-2866842de9a5
 	github.com/pkg/errors => github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.24.1
-	github.com/prometheus/client_model => github.com/prometheus/client_model v0.6.2
-	golang.org/x/sync => golang.org/x/sync v0.22.0
+	github.com/prometheus/client_model => github.com/prometheus/client_model v0.6.3
+	golang.org/x/sync => golang.org/x/sync v0.24.0
 	google.golang.org/genproto/googleapis/rpc => google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324
-	google.golang.org/grpc => google.golang.org/grpc v1.83.2
-	google.golang.org/protobuf => google.golang.org/protobuf v1.36.11
+	google.golang.org/grpc => google.golang.org/grpc v1.84.0
+	google.golang.org/protobuf => google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v2 => gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -25,9 +25,9 @@ require (
 	github.com/mwitkow/grpc-proxy v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.24.1
-	github.com/prometheus/client_model v0.6.2
-	golang.org/x/sync v0.23.0
-	google.golang.org/grpc v1.83.2
+	github.com/prometheus/client_model v0.6.3
+	golang.org/x/sync v0.24.0
+	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/yaml.v2 v2.4.0
 )
