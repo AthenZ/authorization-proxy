@@ -55,6 +55,18 @@ type Server struct {
 	// Port represents the server listening port.
 	Port int `yaml:"port"`
 
+	// ReadHeaderTimeout limits HTTP request header reading. Empty or zero uses ReadTimeout.
+	ReadHeaderTimeout string `yaml:"readHeaderTimeout"`
+
+	// ReadTimeout limits reading an entire HTTP request, including its body. Empty or zero means no timeout.
+	ReadTimeout string `yaml:"readTimeout"`
+
+	// WriteTimeout limits HTTP response writing. Empty or zero means no timeout.
+	WriteTimeout string `yaml:"writeTimeout"`
+
+	// IdleTimeout limits waiting for the next HTTP keep-alive request. Empty or zero uses ReadTimeout.
+	IdleTimeout string `yaml:"idleTimeout"`
+
 	// ShutdownTimeout represents the duration before force shutdown.
 	ShutdownTimeout string `yaml:"shutdownTimeout"`
 

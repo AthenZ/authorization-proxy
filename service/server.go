@@ -109,6 +109,41 @@ func NewServer(opts ...Option) (Server, error) {
 		return nil, errors.New("s.cfg.TLS.Enable is true, but s.tlsConfig is nil.")
 	}
 
+	var readHeaderTimeout, readTimeout, writeTimeout, idleTimeout time.Duration
+	for _, timeout := range []struct {
+		name  string
+		value string
+		dest  *time.Duration
+	}{
+		{"readHeaderTimeout", s.cfg.ReadHeaderTimeout, &readHeaderTimeout},
+		{"readTimeout", s.cfg.ReadTimeout, &readTimeout},
+		{"writeTimeout", s.cfg.WriteTimeout, &writeTimeout},
+		{"idleTimeout", s.cfg.IdleTimeout, &idleTimeout},
+	} {
+		if timeout.value == "" {
+			continue
+		}
+		duration, err := time.ParseDuration(timeout.value)
+		if err != nil {
+			return nil, errors.Wrapf(err, "invalid server.%s", timeout.name)
+		}
+		if duration < 0 {
+			return nil, errors.Errorf("server.%s must not be negative", timeout.name)
+		}
+		*timeout.dest = duration
+	}
+
+	newHTTPServer := func(port int, handler http.Handler) *http.Server {
+		return &http.Server{
+			Addr:              fmt.Sprintf(":%d", port),
+			Handler:           handler,
+			ReadHeaderTimeout: readHeaderTimeout,
+			ReadTimeout:       readTimeout,
+			WriteTimeout:      writeTimeout,
+			IdleTimeout:       idleTimeout,
+		}
+	}
+
 	if s.grpcSrvEnable() {
 		gopts := []grpc.ServerOption{
 			grpc.CustomCodec(proxy.Codec()),
@@ -121,10 +156,7 @@ func NewServer(opts ...Option) (Server, error) {
 
 		s.grpcSrv = grpc.NewServer(gopts...)
 	} else {
-		s.srv = &http.Server{
-			Addr:    fmt.Sprintf(":%d", s.cfg.Port),
-			Handler: s.srvHandler,
-		}
+		s.srv = newHTTPServer(s.cfg.Port, s.srvHandler)
 		s.srv.SetKeepAlivesEnabled(!s.cfg.DisableKeepAlives)
 		if s.cfg.TLS.Enable {
 			s.srv.TLSConfig = s.tlsConfig
@@ -132,26 +164,17 @@ func NewServer(opts ...Option) (Server, error) {
 	}
 
 	if s.hcSrvEnable() {
-		s.hcsrv = &http.Server{
-			Addr:    fmt.Sprintf(":%d", s.cfg.HealthCheck.Port),
-			Handler: createHealthCheckServiceMux(s.cfg.HealthCheck.Endpoint),
-		}
+		s.hcsrv = newHTTPServer(s.cfg.HealthCheck.Port, createHealthCheckServiceMux(s.cfg.HealthCheck.Endpoint))
 		s.hcsrv.SetKeepAlivesEnabled(true)
 	}
 
 	if s.debugSrvEnable() {
-		s.dsrv = &http.Server{
-			Addr:    fmt.Sprintf(":%d", s.cfg.Debug.Port),
-			Handler: s.dsHandler,
-		}
+		s.dsrv = newHTTPServer(s.cfg.Debug.Port, s.dsHandler)
 		s.dsrv.SetKeepAlivesEnabled(true)
 	}
 
 	if s.metricsSrvEnable() {
-		s.msrv = &http.Server{
-			Addr:    fmt.Sprintf(":%d", s.cfg.Metrics.Port),
-			Handler: createMetricsServiceMux("/metrics"),
-		}
+		s.msrv = newHTTPServer(s.cfg.Metrics.Port, createMetricsServiceMux("/metrics"))
 		s.msrv.SetKeepAlivesEnabled(true)
 	}
 

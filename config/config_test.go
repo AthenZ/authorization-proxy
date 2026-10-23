@@ -17,6 +17,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 	"time"
@@ -32,6 +33,7 @@ func TestNew(t *testing.T) {
 	type test struct {
 		name       string
 		args       args
+		content    string
 		beforeFunc func() error
 		afterFunc  func() error
 		want       *Config
@@ -229,9 +231,30 @@ func TestNew(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:    "HTTP timeouts unset",
+			content: "server:\n  port: 8080\n",
+			want:    &Config{Server: Server{Port: 8080}},
+		},
+		{
+			name:    "HTTP timeouts configured",
+			content: "server:\n  readHeaderTimeout: 500ms\n  readTimeout: 30s\n  writeTimeout: 1m\n  idleTimeout: 2m\n",
+			want: &Config{Server: Server{
+				ReadHeaderTimeout: "500ms",
+				ReadTimeout:       "30s",
+				WriteTimeout:      "1m",
+				IdleTimeout:       "2m",
+			}},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.content != "" {
+				tt.args.path = filepath.Join(t.TempDir(), "config.yaml")
+				if err := os.WriteFile(tt.args.path, []byte(tt.content), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
 			if tt.beforeFunc != nil {
 				if err := tt.beforeFunc(); err != nil {
 					t.Error(err)
